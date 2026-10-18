@@ -1029,9 +1029,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.7',APP_NOTES=[
-    '☁️ ऑनलाइन बैकअप: स्टाफ़ टैब में Google से लॉगिन करें, सारा डेटा ऑनलाइन सेव रहेगा',
-    'दूसरे फ़ोन में उसी खाते से लॉगिन करने पर वहाँ भी वही डेटा'
+  var APP_V='1.8',APP_NOTES=[
+    '☁️ ऑनलाइन बैकअप अब नए Firebase प्रोजेक्ट से जुड़ा है',
+    'स्टाफ़ टैब में Google से लॉगिन करें, सारा डेटा ऑनलाइन सेव रहेगा'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1058,9 +1058,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   /* ---------- online backup: Google login, the whole state in Firestore users/{uid} ---------- */
   // The SDK is loaded only after the first login, so the app stays light and works offline.
   // Newer save (S._t) wins. Letter screenshots stay on the phone.
-  var FB_CFG={apiKey:'AIzaSyDBArWe5O4ZVmPDPA63SJyJcLCQ5lQKAvs',authDomain:'priority-note-2d39b.firebaseapp.com',
-    projectId:'priority-note-2d39b',storageBucket:'priority-note-2d39b.firebasestorage.app',
-    messagingSenderId:'150873582114',appId:'1:150873582114:web:eeb53cd118403be087f87b'};
+  var FB_CFG={apiKey:'AIzaSyBR69n1Hfn0d4l17tDXhDmPbLfdtFW8NMo',authDomain:'priority-note-467fa.firebaseapp.com',
+    projectId:'priority-note-467fa',storageBucket:'priority-note-467fa.firebasestorage.app',
+    messagingSenderId:'756207235034',appId:'1:756207235034:web:6299c497876c4dff371ae3'};
   var FBV='https://www.gstatic.com/firebasejs/10.12.5/',FBK='priority-note-fb',FBU='priority-note-fb-uid';
   var fb=null,fbOn=false,unsub=null,loggingIn=false,cloud={st:'off',email:'',at:0,msg:''};
   function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}

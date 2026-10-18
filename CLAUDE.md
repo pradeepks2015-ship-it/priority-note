@@ -17,7 +17,7 @@ staff member. Staff never use the app; they only receive the note.
   - `localStorage` key `priority-note-v2` — tasks, orders, staff, log, settings.
   - IndexedDB `priority-note-img`, store `img` — letter screenshots (blobs).
 
-- Online backup (Firebase project `priority-note-2d39b`, Spark/free plan): Google login, then the whole
+- Online backup (Firebase project `priority-note-467fa`, Spark/free plan): Google login, then the whole
   state `S` is stored as a JSON string in Firestore `users/{uid}` (`{s, t, v}`). The SDK (10.12.5 from
   gstatic) loads only after the first login (`localStorage` `priority-note-fb`). Newer `S._t` wins; first
   login on a phone with data on both sides asks which to keep. Letter screenshots are not uploaded.
