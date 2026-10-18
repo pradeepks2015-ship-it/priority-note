@@ -129,7 +129,6 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .note .sumb .sumt{font-size:18px}
 .note .none{opacity:.7;font-size:18px}
 .note .sg{margin-top:14px;text-align:right;font-weight:700;font-size:18px}
-.note .ft{margin-top:14px;font-size:14px;opacity:.75;border-top:1px dashed rgba(38,34,15,.4);padding-top:6px}
 .actions{display:flex;flex-direction:column;gap:8px}
 .actions .row .btn{flex:1 1 150px}
 .sw-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -387,7 +386,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   }
   function listOf(mode,who){return who!=null?S.tasks.filter(function(x){return x.w===who}):listFor(mode)}
   function model(mode,now,who){
-    var B=[],list=listOf(mode,who),title=who!=null?'⚡ '+who+' जी के आज के काम':mode==='tasks'?'⚡ आज का मिशन':mode==='orders'?'📋 वरिष्ठ कार्यालय के निर्देश':'📊 शाम की रिपोर्ट';
+    var B=[],list=listOf(mode,who),title=who!=null?'⚡ '+who+' जी के आज के काम':mode==='tasks'?'⚡ आज के प्राथमिकता वाले कार्य':mode==='orders'?'📋 वरिष्ठ कार्यालय के निर्देश':'📊 शाम की रिपोर्ट';
     B.push({t:'h',x:title+' | '+dateStr(now)});
     B.push({t:'tm',x:'🕒 '+stamp(now)});
     if(mode==='report'){var s=summ(list);B.push({t:'sum',s:s,x:sumText(s)})}
@@ -407,7 +406,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       });
     }
     if(S.sign.trim())B.push({t:'sg',x:'— '+S.sign.trim()});
-    B.push({t:'ft',x:'बनाया गया: '+stamp(now)});
     return B;
   }
 
@@ -431,7 +429,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       }
       else if(b.t==='none')n.appendChild(mk('p','none',b.x));
       else if(b.t==='sg')n.appendChild(mk('div','sg',b.x));
-      else if(b.t==='ft')n.appendChild(mk('div','ft',b.x));
     });
     $('noteTitle').textContent=mode==='report'?'ग्रुप में जाने वाली रिपोर्ट':mode==='orders'?'ग्रुप में जाने वाले निर्देश':'ग्रुप में जाने वाला नोट';
     var has=listFor(mode).length>0,wa=$('wa');
@@ -456,7 +453,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   var REPLY='_शाम को हर काम की स्थिति भेजें: ✅ पूरा | 🕒 आधा | ⛔ रुका (कारण सहित)_';
   function buildText(mode,now){
     var list=listFor(mode),L=[];
-    if(mode==='tasks')L.push('⚡ *आज का मिशन | '+dateStr(now)+'*');
+    if(mode==='tasks')L.push('⚡ *आज के प्राथमिकता वाले कार्य | '+dateStr(now)+'*');
     else if(mode==='orders')L.push('📋 *वरिष्ठ कार्यालय के निर्देश | '+dateStr(now)+'*');
     else L.push('📊 *शाम की रिपोर्ट | '+dateStr(now)+'*');
     L.push('🕒 '+tm(now));
@@ -810,11 +807,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       }
       else if(b.t==='none'){F(400,38);ctx.fillStyle='rgba(38,34,15,.7)';wrapT(ctx,b.x,max).forEach(function(l){if(draw)ctx.fillText(l,pad,y);y+=54})}
       else if(b.t==='sg'){y+=14;F(700,38);if(draw){ctx.fillStyle=INK;ctx.textAlign='right';ctx.fillText(b.x,W-pad,y);ctx.textAlign='left'}y+=52}
-      else if(b.t==='ft'){
-        y+=22;if(draw){ctx.fillStyle='rgba(38,34,15,.35)';ctx.fillRect(pad,y-18,max,2)}
-        y+=24;F(700,30);ctx.fillStyle='rgba(38,34,15,.85)';
-        wrapT(ctx,b.x,max).forEach(function(l){if(draw)ctx.fillText(l,pad,y);y+=42});
-      }
     });
     return y+50;
   }
