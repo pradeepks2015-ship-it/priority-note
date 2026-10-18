@@ -8,6 +8,11 @@ staff member. Staff never use the app; they only receive the note.
 
 ## Structure
 - `index.html` — the whole app: markup, CSS and JS in one file, no build step.
+- `manifest.webmanifest`, `icons/`, `sw.js` — installable PWA (home screen, opens offline).
+  Bump `CACHE` in `sw.js` when the cached file list changes.
+- `netlify.toml` — publish the repo root as-is; no build command.
+- Live on GitHub Pages: https://pradeepks2015-ship-it.github.io/priority-note/ (deploys from `main`, root).
+  `.nojekyll` keeps files untouched. Netlify project `priority-note1` is also linked but paused (team credits).
 - No backend yet. Data lives in the browser:
   - `localStorage` key `priority-note-v2` — tasks, orders, staff, log, settings.
   - IndexedDB `priority-note-img`, store `img` — letter screenshots (blobs).
@@ -35,4 +40,3 @@ Open `index.html` in a browser, or `npx serve .` and open the printed URL.
 
 ## Planned next steps
 - Firebase (Auth, Firestore, Storage, Cloud Messaging) for sync and hourly reminders when the app is closed.
-- Deploy on Netlify as an installable PWA.
