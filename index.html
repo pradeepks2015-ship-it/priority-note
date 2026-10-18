@@ -65,6 +65,16 @@ input::placeholder{color:var(--muted)}
 .chip i{width:12px;height:12px;border-radius:50%;display:block}
 .chip[aria-pressed="true"]{border-color:var(--accent);background:var(--bg);box-shadow:inset 0 0 0 1px var(--accent)}
 .who{flex:1 1 150px;min-width:0}
+.txtrow{flex-wrap:nowrap}
+.txtrow input{flex:1 1 0;min-width:0}
+.mic{flex:0 0 auto;min-width:52px;padding:8px 12px;font-size:20px}
+.mic[aria-pressed="true"]{border-color:var(--p1);color:var(--p1)}
+.tpl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tpl .chip{font-weight:500}
+.tpl .lbl{margin-right:2px}
+.chip .x{font-weight:700;color:var(--muted);margin-left:2px}
+.mon{display:flex;flex-direction:column;gap:6px}
+.mon .srow span{white-space:nowrap}
 .btn{font:700 16px var(--f-ui);border:0;border-radius:10px;padding:11px 18px;min-height:46px;cursor:pointer;background:var(--accent);color:var(--accent-ink);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center}
 .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
 .btn.wa{background:var(--wa);color:var(--wa-ink)}
@@ -190,7 +200,11 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
       <section class="card" id="addCard" aria-label="नया जोड़ें">
         <form id="f" autocomplete="off">
-          <input type="text" id="txt" aria-label="काम या निर्देश">
+          <div class="row txtrow">
+            <input type="text" id="txt" aria-label="काम या निर्देश">
+            <button type="button" class="btn ghost mic" id="mic" aria-label="बोलकर लिखें" aria-pressed="false" hidden>🎤</button>
+          </div>
+          <div class="tpl" id="tplRow" role="group" aria-label="रोज़ के काम"></div>
           <div class="chips" id="pchips" role="group" aria-label="प्राथमिकता">
             <button type="button" class="chip" data-p="1" aria-pressed="true"><i style="background:var(--p1)"></i>तुरंत</button>
             <button type="button" class="chip" data-p="2" aria-pressed="false"><i style="background:var(--p2)"></i>आज दिन में</button>
@@ -204,7 +218,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
           <details class="more">
             <summary>और विवरण: स्थान, समय-सीमा, संदर्भ, फोटो</summary>
             <div class="fields">
-              <input type="text" id="loc" placeholder="स्थान: फीडर / DT / गाँव" aria-label="स्थान">
+              <input type="text" id="loc" list="placeList" placeholder="स्थान: फीडर / DT / गाँव" aria-label="स्थान">
+              <datalist id="placeList"></datalist>
               <label class="lbl" for="due">समय-सीमा (इस समय तक)</label>
               <input type="time" id="due">
               <input type="text" id="ref" placeholder="संदर्भ: पत्र क्र. / दिनांक / बिंदु" aria-label="संदर्भ">
@@ -229,6 +244,11 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         <div id="repList" style="margin-top:12px"></div>
       </section>
 
+      <section class="card" id="monCard" aria-label="महीने का सारांश">
+        <p class="sec-title">📅 महीने का सारांश</p>
+        <div class="mon" id="monBox"></div>
+      </section>
+
       <section class="card" id="staffCard" aria-label="स्टाफ़">
         <form id="sf" autocomplete="off">
           <input type="text" id="sn" placeholder="कर्मचारी का नाम" aria-label="कर्मचारी का नाम">
@@ -239,6 +259,15 @@ textarea.hold{position:fixed;left:-9999px;top:0}
           </div>
         </form>
         <div id="staffList" style="margin-top:10px"></div>
+      </section>
+
+      <section class="card" id="listsCard" aria-label="सेव की गई सूचियाँ">
+        <p class="sec-title">रोज़ के काम की सूची</p>
+        <p class="hint">"आज के काम" में किसी काम को लिखकर ⭐ दबाने पर वह यहाँ जुड़ जाता है।</p>
+        <div class="chips" id="tplList" style="margin-top:8px"></div>
+        <p class="sec-title" style="margin-top:16px">फीडर / DT / गाँव की सूची</p>
+        <p class="hint">स्थान एक बार लिखने पर अपने-आप सेव हो जाता है और अगली बार चुनने के लिए आता है।</p>
+        <div class="chips" id="placeChips" style="margin-top:8px"></div>
       </section>
 
       <section class="card" id="remCard" aria-label="हर घंटे याद दिलाना">
@@ -305,7 +334,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   var LS='priority-note-v2';
   var VIEWLBL={tasks:'काम',orders:'निर्देश',report:'रिपोर्ट'};
 
-  var S={tasks:[],orders:[],staff:[],log:[],color:'yellow',sign:'',remind:false,ordNo:0};
+  var S={tasks:[],orders:[],staff:[],log:[],color:'yellow',sign:'',remind:false,ordNo:0,
+    tpl:['बिलिंग का काम','बकाया वसूली','शिकायतों का निराकरण','मीटर रीडिंग','फीडर पेट्रोलिंग'],places:[],hist:{}};
   var view='tasks',lastList='tasks',curP=1,ref=null,saveTimer=null,chain=Promise.resolve();
   var downloads=null,assets=null,pendingImg='',editStaff='',confirmNew=false;
   var $=function(id){return document.getElementById(id)};
@@ -339,7 +369,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(!x||typeof x.t!=='string')return null;
     var st=x.st;if(!st&&x.done===true)st='done';
     if(['done','part','block'].indexOf(st)<0)st='';
-    return {id:str(x.id)||uid(),t:x.t,p:PRI[x.p]?x.p:2,w:str(x.w),st:st,r:str(x.r),loc:str(x.loc),due:str(x.due),ref:str(x.ref),q:str(x.q),img:str(x.img),carry:!!x.carry,no:x.no>0?Math.floor(x.no):0};
+    return {id:str(x.id)||uid(),t:x.t,p:PRI[x.p]?x.p:2,w:str(x.w),st:st,r:str(x.r),loc:str(x.loc),due:str(x.due),ref:str(x.ref),q:str(x.q),img:str(x.img),carry:!!x.carry,no:x.no>0?Math.floor(x.no):0,at:x.at>0?x.at:Date.now()};
   }
   function apply(d){
     if(!d||typeof d!=='object')return;
@@ -352,6 +382,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     // Instruction serial numbers only ever go up; give older instructions a number too.
     S.ordNo=Math.max(d.ordNo>0?Math.floor(d.ordNo):0,S.orders.reduce(function(m,x){return Math.max(m,x.no)},0));
     S.orders.forEach(function(x){if(!x.no)x.no=++S.ordNo});
+    var strs=function(a){return Array.isArray(a)?a.filter(function(v){return typeof v==='string'&&v.trim()}):null};
+    if(strs(d.tpl))S.tpl=strs(d.tpl);
+    if(strs(d.places))S.places=strs(d.places);
+    if(d.hist&&typeof d.hist==='object')Object.keys(d.hist).forEach(function(k){var h=d.hist[k];if(/^\d{4}-\d{2}$/.test(k)&&h)S.hist[k]={ta:+h.ta||0,td:+h.td||0,oa:+h.oa||0,od:+h.od||0}});
   }
   function loadLocal(){try{var r=localStorage.getItem(LS);if(r)apply(JSON.parse(r))}catch(e){}}
   function save(){
@@ -386,12 +420,24 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   }
   function sumText(s){return 'कुल '+s.tot+' में से '+s.done+' पूरे'+(s.part?' · '+s.part+' आधा':'')+(s.block?' · '+s.block+' रुके':'')+(s.pend?' · '+s.pend+' बाकी':'')}
 
+  /* ---------- pending days and monthly counts ---------- */
+  function dayStart(t){var d=new Date(t);d.setHours(0,0,0,0);return d.getTime()}
+  function ageOf(x){return Math.round((dayStart(Date.now())-dayStart(x.at||Date.now()))/864e5)}
+  // "⏳ 3 दिन से बाकी" for open items older than today; otherwise the old "कल का बचा" mark.
+  function ageTxt(x){var a=ageOf(x);return x.st!=='done'&&a>=1?'⏳ '+a+' दिन से बाकी':x.carry?'कल का बचा':''}
+  function monKey(d){d=d||new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)}
+  function bump(x,ev,n){
+    var k=monKey(),h=S.hist[k]||(S.hist[k]={ta:0,td:0,oa:0,od:0}),f=(x.no?'o':'t')+ev;h[f]=Math.max(0,h[f]+n);
+    var ks=Object.keys(S.hist).sort();while(ks.length>12)delete S.hist[ks.shift()];
+  }
+  function setSt(x,st){var was=x.st==='done';x.st=st;if(was!==(st==='done'))bump(x,'d',st==='done'?1:-1)}
+
   /* ---------- note model (used for the preview and the photo) ---------- */
   function subsOf(x,showReason){
     var a=[];
     if(x.loc)a.push('📍 '+x.loc);
     if(x.due)a.push('⏰ '+dueTxt(x.due));
-    if(x.carry)a.push('कल का बचा');
+    var ag=ageTxt(x);if(ag)a.push(ag);
     if(showReason&&x.st==='block'&&x.r)a.push('कारण: '+x.r);
     return a;
   }
@@ -459,7 +505,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var s=(statusMode?STI[x.st]:PRI[x.p].e)+' '+x.t;
     if(x.loc)s+=' ('+x.loc+')';
     if(x.due)s+=' ⏰ '+dueTxt(x.due);
-    if(x.carry)s+=' [कल का बचा]';
+    var ag=ageTxt(x);if(ag)s+=' ['+ag+']';
     if(x.st==='block'&&x.r)s+=' — कारण: '+x.r;
     var L=[s];
     if(x.ref)L.push('   _संदर्भ: '+x.ref+'_');
@@ -544,7 +590,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var li=mk('li','item'+(x.st==='done'?' done':''));li.style.setProperty('--pc','var('+PRI[x.p].v+')');
     var t=mk('button','tick');t.type='button';t.setAttribute('aria-label',(x.st==='done'?'वापस लें: ':'पूरा करें: ')+x.t);
     t.appendChild(mk('span','',x.st==='done'?'✓':''));
-    t.onclick=function(){x.st=x.st==='done'?'':'done';x.r='';save();renderAll()};
+    t.onclick=function(){setSt(x,x.st==='done'?'':'done');x.r='';save();renderAll()};
     var d=mk('div','itxt');
     d.appendChild(mk('b','',(x.no?'No. '+x.no+' · ':'')+x.t));
     var meta=[PRI[x.p].k];if(x.w)meta.push('👷 '+x.w);subsOf(x,false).forEach(function(s){meta.push(s)});
@@ -563,7 +609,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       var sb=mk('div','stbar');
       [['done','✅ पूरा'],['part','🕒 आधा'],['block','⛔ रुका']].forEach(function(a){
         var b=mk('button','st st-'+a[0],a[1]);b.type='button';b.setAttribute('aria-pressed',String(x.st===a[0]));
-        b.onclick=function(){x.st=x.st===a[0]?'':a[0];if(x.st!=='block')x.r='';save();renderAll()};
+        b.onclick=function(){setSt(x,x.st===a[0]?'':a[0]);if(x.st!=='block')x.r='';save();renderAll()};
         sb.appendChild(b);
       });
       if(x.st==='block'){
@@ -581,7 +627,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var ex=mode==='orders'
       ?[['सरकारी बकाये की सूची आज भेजें',1,'','','','पत्र क्र. 1234 / 15-10 / बिंदु 3'],['साप्ताहिक वसूली रिपोर्ट शुक्रवार तक',2,'','','','पत्र क्र. 1234 / 15-10 / बिंदु 5'],['लंबित शिकायतों का निराकरण',3,'','','','']]
       :[['11kV फीडर ट्रिपिंग की जाँच',1,'रामू','फीडर 11kV आदेगाँव','12:00',''],['खराब DT बदलना',2,'श्याम','DT गोपालपुर','16:00',''],['बकाया वसूली विज़िट',2,'रामू','वार्ड 3','17:00',''],['मीटर रीडिंग की फोटो जाँच',3,'','','','']];
-    ex.forEach(function(e){S[mode].push({id:uid(),t:e[0],p:e[1],w:e[2],st:'',r:'',loc:e[3],due:e[4],ref:e[5],q:'',img:'',carry:false,no:mode==='orders'?++S.ordNo:0})});
+    ex.forEach(function(e){S[mode].push({id:uid(),t:e[0],p:e[1],w:e[2],st:'',r:'',loc:e[3],due:e[4],ref:e[5],q:'',img:'',carry:false,no:mode==='orders'?++S.ordNo:0,at:Date.now()})});
     save();renderAll();
   }
   function renderList(){
@@ -633,14 +679,71 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var box=$('staffList');box.textContent='';
     if(!S.staff.length){box.appendChild(mk('p','hint','अभी कोई कर्मचारी नहीं जोड़ा। नाम और मोबाइल नंबर जोड़ने पर काम चुनते समय नाम से चुन पाएँगे और हर किसी को उसके काम अलग से WhatsApp पर भेज पाएँगे।'));return}
     S.staff.forEach(function(st){
-      var cnt=S.tasks.filter(function(x){return x.w===st.n}).length;
+      var open=S.tasks.concat(S.orders).filter(function(x){return x.w===st.n&&x.st!=='done'});
+      var old=open.reduce(function(m,x){return Math.max(m,ageOf(x))},0);
       var r=mk('div','srow'),nm=mk('div','nm');
-      nm.appendChild(mk('b','',st.n));nm.appendChild(mk('span','',(st.m?showNum(st.m):'नंबर नहीं जोड़ा')+' · '+cnt+' काम'));
+      nm.appendChild(mk('b','',st.n));
+      nm.appendChild(mk('span','',(st.m?showNum(st.m):'नंबर नहीं जोड़ा')+' · '+(open.length?open.length+' काम बाकी'+(old>=1?' (सबसे पुराना '+old+' दिन)':''):'कोई काम बाकी नहीं')));
       var bt=mk('div','bt');
       var e=mk('button','btn ghost sm','बदलें');e.type='button';e.onclick=function(){editStaff=st.id;$('sn').value=st.n;$('sm').value=st.m?st.m.slice(2):'';$('sbtn').textContent='सेव करें';$('scancel').hidden=false;$('sn').focus()};
       var d=mk('button','btn ghost sm','हटाएँ');d.type='button';d.setAttribute('aria-label','हटाएँ: '+st.n);d.onclick=function(){S.staff=S.staff.filter(function(s){return s!==st});save();renderAll()};
       bt.appendChild(e);bt.appendChild(d);r.appendChild(nm);r.appendChild(bt);box.appendChild(r);
     });
+  }
+  function renderTpl(){
+    var row=$('tplRow');row.textContent='';
+    if(view!=='tasks')return;
+    row.appendChild(mk('span','lbl','रोज़ के काम:'));
+    S.tpl.forEach(function(t){
+      var c=mk('button','chip',t);c.type='button';c.setAttribute('aria-label','लिखें: '+t);
+      c.onclick=function(){$('txt').value=t;$('txt').focus()};row.appendChild(c);
+    });
+    var sv=mk('button','chip','⭐ सेव');sv.type='button';sv.setAttribute('aria-label','लिखा हुआ काम रोज़ के काम में सेव करें');
+    sv.onclick=function(){
+      var t=$('txt').value.trim();if(!t){toast('पहले काम लिखें, फिर ⭐ दबाएँ');$('txt').focus();return}
+      if(S.tpl.indexOf(t)>=0){toast('यह पहले से सूची में है');return}
+      S.tpl.push(t);save();renderTpl();toast('रोज़ के काम में सेव हुआ');
+    };
+    row.appendChild(sv);
+  }
+  function renderPlaces(){
+    var dl=$('placeList');dl.textContent='';
+    S.places.forEach(function(v){var o=document.createElement('option');o.value=v;dl.appendChild(o)});
+  }
+  function removableChips(box,arr,empty,save_){
+    box.textContent='';
+    if(!arr.length){box.appendChild(mk('p','hint',empty));return}
+    arr.forEach(function(v,i){
+      var c=mk('button','chip',v);c.type='button';c.setAttribute('aria-label','हटाएँ: '+v);c.appendChild(mk('span','x','×'));
+      c.onclick=function(){arr.splice(i,1);save_()};box.appendChild(c);
+    });
+  }
+  function renderLists(){
+    removableChips($('tplList'),S.tpl,'सूची खाली है।',function(){save();renderAll()});
+    removableChips($('placeChips'),S.places,'अभी कोई स्थान सेव नहीं।',function(){save();renderAll()});
+  }
+  function monthText(k){var p=k.split('-');return MONTHS[+p[1]-1]+' '+p[0]}
+  function renderMonth(){
+    var box=$('monBox');box.textContent='';
+    var cur=monKey(),keys=Object.keys(S.hist).sort().reverse().slice(0,3);if(keys.indexOf(cur)<0)keys.unshift(cur);
+    keys.slice(0,3).forEach(function(k){
+      var h=S.hist[k]||{ta:0,td:0,oa:0,od:0},r=mk('div','srow'),nm=mk('div','nm');
+      nm.appendChild(mk('b','',monthText(k)+(k===cur?' (यह महीना)':'')));
+      nm.appendChild(mk('span','','निर्देश आए '+h.oa+' · पूरे '+h.od+'  |  काम जोड़े '+h.ta+' · पूरे '+h.td));
+      r.appendChild(nm);box.appendChild(r);
+    });
+    var oo=S.orders.filter(function(x){return x.st!=='done'}),to=S.tasks.filter(function(x){return x.st!=='done'});
+    var oldest=function(a){return a.reduce(function(m,x){return Math.max(m,ageOf(x))},0)};
+    box.appendChild(mk('p','hint','अभी बाकी: निर्देश '+oo.length+(oldest(oo)?' (सबसे पुराना '+oldest(oo)+' दिन)':'')+' · काम '+to.length+(oldest(to)?' (सबसे पुराना '+oldest(to)+' दिन)':'')));
+    var a=mk('a','btn wa sm','सारांश WhatsApp पर भेजें');a.target='_blank';a.rel='noopener';
+    a.href='https://wa.me/?text='+encodeURIComponent(monthMsg());box.appendChild(a);
+  }
+  function monthMsg(){
+    var k=monKey(),h=S.hist[k]||{ta:0,td:0,oa:0,od:0};
+    var oo=S.orders.filter(function(x){return x.st!=='done'}),to=S.tasks.filter(function(x){return x.st!=='done'});
+    return ['📅 *'+monthText(k)+' का सारांश*','',
+      '📋 वरिष्ठ कार्यालय के निर्देश: आए '+h.oa+', पूरे '+h.od,'⚡ काम: जोड़े '+h.ta+', पूरे '+h.td,'',
+      'अभी बाकी: निर्देश '+oo.length+', काम '+to.length].concat(S.sign.trim()?['','— '+S.sign.trim()]:[]).join('\n');
   }
   function resetStaffForm(){editStaff='';$('sn').value='';$('sm').value='';$('sbtn').textContent='स्टाफ़ जोड़ें';$('scancel').hidden=true}
   function renderWho(){
@@ -689,11 +792,12 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     ['tasks','orders','report','staff'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',String(view===k))});
     var isList=view==='tasks'||view==='orders';
     $('addCard').hidden=!isList;$('listCard').hidden=!isList;$('repCard').hidden=view!=='report';$('staffCard').hidden=view!=='staff';
+    $('monCard').hidden=view!=='report';$('listsCard').hidden=view!=='staff';
     $('txt').placeholder=view==='orders'?'निर्देश लिखें, जैसे: सरकारी बकाये की सूची आज भेजें':'काम लिखें, जैसे: 11kV फीडर ट्रिपिंग जाँच';
-    renderWho();
+    renderWho();renderTpl();renderPlaces();
     if(isList)renderList();
-    if(view==='report')renderReport();
-    if(view==='staff')renderStaff();
+    if(view==='report'){renderReport();renderMonth()}
+    if(view==='staff'){renderStaff();renderLists()}
     renderNote();renderSend();renderLog();renderRemind();
   }
 
@@ -742,7 +846,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   $('f').addEventListener('submit',function(e){
     e.preventDefault();
     var t=$('txt').value.trim();if(!t){$('txt').focus();return}
-    S[lastList].push({id:uid(),t:t,p:curP,w:$('who').value,st:'',r:'',loc:$('loc').value.trim(),due:$('due').value,ref:$('ref').value.trim(),q:$('q').value.trim(),img:pendingImg,carry:false,no:lastList==='orders'?++S.ordNo:0});
+    var it={id:uid(),t:t,p:curP,w:$('who').value,st:'',r:'',loc:$('loc').value.trim(),due:$('due').value,ref:$('ref').value.trim(),q:$('q').value.trim(),img:pendingImg,carry:false,no:lastList==='orders'?++S.ordNo:0,at:Date.now()};
+    S[lastList].push(it);bump(it,'a',1);
+    if(it.loc){S.places=[it.loc].concat(S.places.filter(function(v){return v!==it.loc})).slice(0,40)}
     $('txt').value='';$('loc').value='';$('due').value='';$('ref').value='';$('q').value='';pendingImg='';showPrev();
     $('txt').focus();save();renderAll();
   });
@@ -898,11 +1004,29 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   $('remSw').onclick=function(){S.remind=!S.remind;S.remind?startRemind():stopRemind();save();renderRemind()};
   $('bannerOk').onclick=function(){$('banner').hidden=true};
 
+  /* ---------- speak to write (Chrome on Android needs internet for this) ---------- */
+  (function(){
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition,mic=$('mic'),rec=null;if(!SR)return;
+    mic.hidden=false;
+    function stop(){mic.setAttribute('aria-pressed','false');mic.textContent='🎤';rec=null}
+    mic.onclick=function(){
+      if(rec){rec.stop();return}
+      rec=new SR();rec.lang='hi-IN';rec.interimResults=false;rec.maxAlternatives=1;
+      rec.onresult=function(e){var t=e.results[0][0].transcript.trim();var f=$('txt');f.value=(f.value.trim()?f.value.trim()+' ':'')+t;f.focus()};
+      rec.onerror=function(e){toast(e.error==='not-allowed'?'माइक की अनुमति दें':e.error==='network'?'बोलकर लिखने के लिए इंटरनेट चाहिए':'आवाज़ समझ नहीं आई, फिर से बोलें')};
+      rec.onend=stop;
+      try{rec.start();mic.setAttribute('aria-pressed','true');mic.textContent='⏺';toast('बोलिए…')}catch(e){stop()}
+    };
+  })();
+
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.5',APP_NOTES=[
-    'नया संस्करण अब तुरंत खुलेगा, पुराना पेज अटका नहीं रहेगा',
-    'निर्देशों पर No. और तारीख एक बार वाला सुधार अब सबको दिखेगा'
+  var APP_V='1.6',APP_NOTES=[
+    'रोज़ के काम एक टैप में: लिखने की जगह के नीचे बटन, ⭐ से नया जोड़ें',
+    '🎤 बोलकर काम लिखें',
+    'पुराने बाकी कामों पर "⏳ 3 दिन से बाकी"; स्टाफ़ में किसके कितने काम बाकी',
+    'फीडर / DT / गाँव एक बार लिखने पर अगली बार चुनने को मिलेगा',
+    'शाम की रिपोर्ट में महीने का सारांश'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

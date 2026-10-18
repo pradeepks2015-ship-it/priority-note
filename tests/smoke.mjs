@@ -17,10 +17,11 @@ page.on('pageerror', (e) => errors.push(e.message));
 await page.addInitScript(() => {
   const T = (id, t) => ({ id, t, p: 1, w: '', st: '', r: '', loc: '', due: '', ref: '', q: '', img: '', carry: false });
   localStorage.setItem('priority-note-v2', JSON.stringify({
-    tasks: [T('a', 'नमूना काम एक'), T('b', 'नमूना काम दो')],
+    // 'a' was added 3 days ago and is still open; 'b' is given to a sample staff member.
+    tasks: [{ ...T('a', 'नमूना काम एक'), at: Date.now() - 3 * 864e5 }, { ...T('b', 'नमूना काम दो'), w: 'नमूना कर्मचारी' }],
     // Instructions saved before serial numbers existed (no `no` field).
     orders: [T('o1', 'नमूना निर्देश एक'), { ...T('o2', 'नमूना निर्देश दो'), p: 2 }],
-    staff: [], log: [], color: 'yellow', sign: 'JE', remind: false,
+    staff: [{ id: 's1', n: 'नमूना कर्मचारी', m: '' }], log: [], color: 'yellow', sign: 'JE', remind: false,
   }));
   // Pretend the phone last ran an older version, so the "updated" banner should show.
   if (!sessionStorage.getItem('smoke')) { localStorage.setItem('priority-note-ver', '0.9'); sessionStorage.setItem('smoke', '1'); }
@@ -60,6 +61,23 @@ const ordNote = await page.$eval('#note', (n) => n.innerText);
 const ordCard = await page.$eval('#list', (n) => n.innerText);
 const ordNo = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).ordNo);
 
+// Daily-work button fills the text; a place typed once is offered next time.
+await page.click('#tab-tasks');
+await page.click('#tplRow >> text=बकाया वसूली');
+const tplFilled = await page.inputValue('#txt');
+await page.evaluate(() => { document.getElementById('loc').value = 'नमूना फीडर'; });
+await page.press('#txt', 'Enter');
+const placeOffered = await page.$$eval('#placeList option', (o) => o.map((x) => x.value));
+const micOk = await page.$eval('#mic', (b) => b.hidden || b.textContent.includes('🎤'));
+
+// Monthly summary counts what was added today; staff tab shows open work.
+await page.click('#tab-report');
+const mon = await page.$eval('#monBox', (n) => n.innerText);
+await page.click('#tab-staff');
+const staffTxt = await page.$eval('#staffList', (n) => n.innerText);
+const listsTxt = await page.$eval('#listsCard', (n) => n.innerText);
+const hScroll2 = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+
 const checks = {
   'कोई JS error नहीं': errors.length === 0,
   'शीर्षक: आज के प्राथमिकता वाले कार्य': note.includes('आज के प्राथमिकता वाले कार्य'),
@@ -78,6 +96,14 @@ const checks = {
   'निर्देश नोट पर No. 1, 2, 3': ['No. 1 · नमूना निर्देश एक', 'No. 2 · नमूना निर्देश दो', 'No. 3 · नमूना निर्देश तीन'].every((t) => ordNote.includes(t)),
   'निर्देशों के कार्ड में No. दिखे': ordCard.includes('No. 3 · नमूना निर्देश तीन'),
   'No. काउंटर सेव रहे': ordNo === 3,
+  'पुराने काम पर "3 दिन से बाकी"': note.includes('⏳ 3 दिन से बाकी'),
+  'रोज़ के काम का बटन लिखे': tplFilled === 'बकाया वसूली',
+  'स्थान अगली बार चुनने को मिले': placeOffered.includes('नमूना फीडर'),
+  'बोलकर लिखने का बटन ठीक': micOk,
+  'महीने के सारांश में गिनती': mon.includes('निर्देश आए 1') && mon.includes('काम जोड़े 1'),
+  'स्टाफ़ में बाकी काम दिखें': staffTxt.includes('1 काम बाकी'),
+  'स्टाफ़ टैब में सूचियाँ दिखें': listsTxt.includes('बकाया वसूली') && listsTxt.includes('नमूना फीडर'),
+  'स्टाफ़/रिपोर्ट टैब पर horizontal scroll नहीं': !hScroll2,
 };
 
 await browser.close();

@@ -20,9 +20,12 @@ staff member. Staff never use the app; they only receive the note.
 ## Data model (state `S`)
 - `tasks[]` / `orders[]` items: `{id, t, p (1 तुरंत | 2 आज दिन में | 3 समय मिले तो), w (staff name),
   st ('' | done | part | block), r (block reason), loc, due ("HH:MM"), ref, q (quoted line), img (image id), carry,
-  no (instruction serial number; 0 for tasks)}`
+  no (instruction serial number; 0 for tasks), at (created, ms — drives "⏳ N दिन से बाकी")}`
 - `ordNo`: last instruction serial number. It only goes up (new day, delete and "पूरे हुए हटाएँ" never
   reset it); shown as "No. 12 · …" on the card, the note, the PNG and the WhatsApp text.
+- `tpl[]`: daily-work buttons ("रोज़ के काम"); `places[]`: feeder/DT/village list, filled from the स्थान field.
+- `hist{'YYYY-MM': {ta, td, oa, od}}`: monthly counts (t=task, o=instruction; a=added, d=done), last 12 months.
+  Change status only through `setSt()` so the counts stay right.
 - `staff[]`: `{id, n, m}` — `m` is a normalised 12-digit number starting with 91.
 - `log[]`: last 25 sends/copies/photo saves with timestamp and message text.
 
@@ -51,7 +54,8 @@ Open `index.html` in a browser, or `npx serve .` and open the printed URL.
 ## Test
 `tests/smoke.mjs` (Playwright) opens the app at 400px with sample tasks and checks the note
 title, the date shown once, the signature, no "बनाया गया" line, PNG creation, no horizontal scroll, the update banner
-and instruction "No." numbering. CI runs it on
+and instruction "No." numbering, daily-work buttons, pending days, places list,
+monthly summary and staff open-work counts. CI runs it on
 every push (`.github/workflows/smoke.yml`). Locally: `python3 -m http.server 8080`, then
 `node tests/smoke.mjs` (set `CHROMIUM_PATH` to use an installed Chromium). Update its checks when
 the note text changes.
