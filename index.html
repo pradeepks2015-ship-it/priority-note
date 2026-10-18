@@ -21,7 +21,7 @@
   --accent:#2F5DA8; --accent-ink:#FFFFFF; --wa:#1B8F4C; --wa-ink:#FFFFFF;
   --p1:#D63B3B; --p2:#C28A00; --p3:#2E9E5B;
   --n-yellow:#FFD84D; --n-pink:#FF9DB5; --n-green:#8EDB9B; --n-blue:#8CC8FF; --n-orange:#FFB36B;
-  --note-ink:#26220F; --banner:#FFF1C2; --banner-ink:#3B2F00; --overlay:rgba(10,12,16,.88);
+  --note-ink:#26220F; --banner:#FFF1C2; --banner-ink:#3B2F00; --upd:#FFE3C4; --upd-ink:#5C2B00; --upd-line:#E07B1F; --upd-btn-ink:#341700; --overlay:rgba(10,12,16,.88);
   --f-ui:"Hind","Noto Sans Devanagari",system-ui,sans-serif;
   --f-head:"Baloo 2","Hind",system-ui,sans-serif;
   --f-note:"Kalam","Hind",cursive;
@@ -30,14 +30,14 @@
   :root:not([data-theme="light"]){
     --bg:#13171E; --surface:#1D232D; --ink:#E8ECF2; --muted:#99A4B4; --line:#313947;
     --accent:#7FA8F0; --accent-ink:#0D1626; --wa:#3CC373; --wa-ink:#06210F;
-    --p1:#F06A6A; --p2:#E3B232; --p3:#4CC47F; --banner:#3A3210; --banner-ink:#FFE9A3;
+    --p1:#F06A6A; --p2:#E3B232; --p3:#4CC47F; --banner:#3A3210; --banner-ink:#FFE9A3; --upd:#45260B; --upd-ink:#FFD3A8; --upd-line:#E8893A; --upd-btn-ink:#2A1405;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#13171E; --surface:#1D232D; --ink:#E8ECF2; --muted:#99A4B4; --line:#313947;
   --accent:#7FA8F0; --accent-ink:#0D1626; --wa:#3CC373; --wa-ink:#06210F;
-  --p1:#F06A6A; --p2:#E3B232; --p3:#4CC47F; --banner:#3A3210; --banner-ink:#FFE9A3;
+  --p1:#F06A6A; --p2:#E3B232; --p3:#4CC47F; --banner:#3A3210; --banner-ink:#FFE9A3; --upd:#45260B; --upd-ink:#FFD3A8; --upd-line:#E8893A; --upd-btn-ink:#2A1405;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -145,6 +145,9 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .banner p{margin:0;font-weight:600}
 .banner ul{margin:4px 0 0;padding-left:20px;font-weight:500}
 .banner .btn{min-height:40px;padding:8px 14px;background:var(--banner-ink);color:var(--banner)}
+.banner.upd{background:var(--upd);color:var(--upd-ink);border-color:var(--upd-line)}
+.banner.upd .btn{background:var(--upd-line);color:var(--upd-btn-ink);white-space:nowrap}
+.ver{color:var(--muted);font-size:13px;text-align:center;margin:8px 0 0}
 .logrow{border-bottom:1px solid var(--line);padding-block:8px;display:flex;flex-direction:column;gap:2px}
 .logrow:last-child{border-bottom:0}
 .logrow b{font-weight:600}
@@ -169,6 +172,11 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   <div id="banner" class="banner" role="status" hidden>
     <div><p>🔔 अभी की प्राथमिकता</p><ul id="bannerList"></ul></div>
     <button class="btn" id="bannerOk" type="button">ठीक है</button>
+  </div>
+
+  <div id="upd" class="banner upd" role="status" hidden>
+    <div><p id="updT"></p><ul id="updList"></ul></div>
+    <button class="btn" id="updBtn" type="button"></button>
   </div>
 
   <div class="grid">
@@ -272,6 +280,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       </details>
     </div>
   </div>
+  <p class="ver" id="ver"></p>
 </div>
 <textarea class="hold" id="hold" aria-hidden="true" tabindex="-1"></textarea>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -887,6 +896,35 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   document.addEventListener('visibilitychange',function(){if(S.remind&&document.visibilityState==='visible'){getWake();tick()}});
   $('remSw').onclick=function(){S.remind=!S.remind;S.remind?startRemind():stopRemind();save();renderRemind()};
   $('bannerOk').onclick=function(){$('banner').hidden=true};
+
+  /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
+  // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
+  var APP_V='1.2',APP_NOTES=[
+    'ऐप अपडेट होने पर यह नारंगी सूचना दिखेगी',
+    'नोट का शीर्षक अब "आज के प्राथमिकता वाले कार्य"',
+    'नोट के नीचे की "बनाया गया" लाइन हटाई'
+  ],VK='priority-note-ver';
+  function showUpd(title,items,btn,act){
+    $('updT').textContent=title;var ul=$('updList');ul.textContent='';
+    items.forEach(function(t){ul.appendChild(mk('li','',t))});
+    $('updBtn').textContent=btn;$('updBtn').onclick=act;$('upd').hidden=false;
+  }
+  function seenV(){try{return localStorage.getItem(VK)}catch(e){return null}}
+  function markSeen(){try{localStorage.setItem(VK,APP_V)}catch(e){}}
+  function checkNew(){
+    if(location.protocol==='file:')return;
+    fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(d){
+      if(d&&d.v&&d.v!==APP_V)showUpd('🆕 नया संस्करण '+d.v+' आ गया है',[],'अपडेट करें',function(){location.reload()});
+    }).catch(function(){});
+  }
+  $('ver').textContent='संस्करण '+APP_V;
+  (function(){
+    var seen=seenV(),old=false;try{old=!!localStorage.getItem(LS)}catch(e){}
+    if(seen!==APP_V&&(seen||old))showUpd('✅ ऐप अपडेट हुआ · संस्करण '+APP_V,APP_NOTES,'ठीक है',function(){$('upd').hidden=true;markSeen()});
+    else markSeen();
+  })();
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')checkNew()});
+  setInterval(checkNew,30*60*1000);
 
   /* ---------- start ---------- */
   loadLocal();renderAll();if(S.remind)startRemind();

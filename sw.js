@@ -21,6 +21,8 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
   if (url.origin !== self.location.origin && !isFont) return;
+  // Always ask the network for the version number, so the app can spot an update.
+  if (url.pathname.endsWith('/version.json')) return;
 
   if (req.mode === 'navigate') {
     e.respondWith(

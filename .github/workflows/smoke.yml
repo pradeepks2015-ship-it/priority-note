@@ -10,6 +10,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Version bumped?
+        run: sh tests/version-bump.sh "${{ github.event.pull_request.base.sha || github.event.before }}"
       - uses: actions/setup-node@v4
         with:
           node-version: 22

@@ -38,6 +38,13 @@ staff member. Staff never use the app; they only receive the note.
 ## Run
 Open `index.html` in a browser, or `npx serve .` and open the printed URL.
 
+## Version (after every fix)
+- Raise `APP_V` in `index.html`, list the change in `APP_NOTES` (short Hindi), and put the same
+  `v` in `version.json`. CI fails if `index.html`/`sw.js` change without a new `version.json`.
+- On first open after an update the app shows an orange "✅ ऐप अपडेट हुआ" banner with `APP_NOTES`.
+  While the app is open it checks `version.json` (on return to the app and every 30 min) and
+  shows "🆕 नया संस्करण … आ गया है" with an "अपडेट करें" button. `sw.js` never caches `version.json`.
+
 ## Test
 `tests/smoke.mjs` (Playwright) opens the app at 400px with sample tasks and checks the note
 title, the signature, no "बनाया गया" line, PNG creation and no horizontal scroll. CI runs it on
