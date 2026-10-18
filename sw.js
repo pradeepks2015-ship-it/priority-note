@@ -42,3 +42,22 @@ self.addEventListener('fetch', (e) => {
     }))
   );
 });
+
+// Hourly reminder sent by .github/workflows/remind.yml (data-only message: {title, body}).
+self.addEventListener('push', (e) => {
+  let m = {};
+  try { m = e.data ? e.data.json() : {}; } catch (_) {}
+  const n = m.data || m.notification || {};
+  e.waitUntil(self.registration.showNotification(n.title || 'प्राथमिकता नोट', {
+    body: n.body || '', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png',
+    tag: 'pn-hourly', renotify: true, data: { url: './' },
+  }));
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+    const open = list.find((c) => c.url.startsWith(self.registration.scope));
+    return open ? open.focus() : self.clients.openWindow('./');
+  }));
+});

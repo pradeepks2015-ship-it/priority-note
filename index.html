@@ -279,8 +279,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         <div class="sw-row">
           <div>
             <b>हर घंटे याद दिलाएँ</b>
-            <p class="hint">सुबह 9 से शाम 6 तक। यह पेज खुला और फ़ोन चालू रहने पर ही चलता है।</p>
+            <p class="hint">सुबह 9 से शाम 6 तक, हर घंटे बाकी कामों की याद।</p>
             <p class="hint" id="nextRem"></p>
+            <div id="pushBox"></div>
           </div>
           <button class="switch" id="remSw" role="switch" aria-checked="false" aria-label="हर घंटे याद दिलाएँ" type="button"></button>
         </div>
@@ -989,6 +990,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     $('remSw').setAttribute('aria-checked',String(S.remind));
     var h=S.remind?nextHour():null;
     $('nextRem').textContent=S.remind?(h?'अगला रिमाइंडर: '+per(h)+' '+(h%12||12)+':00 बजे':'आज के रिमाइंडर पूरे, कल सुबह 9 बजे से'):'';
+    renderPush();
   }
   function pendingTop(){
     return S.tasks.concat(S.orders).filter(function(x){return x.st!=='done'}).sort(function(a,b){return a.p-b.p||(a.due||'99').localeCompare(b.due||'99')}).slice(0,3);
@@ -1009,7 +1011,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   function startRemind(){stopRemind();remTimer=setInterval(tick,20000);getWake()}
   function stopRemind(){clearInterval(remTimer);remTimer=null;try{wake&&wake.release()}catch(e){}wake=null}
   document.addEventListener('visibilitychange',function(){if(S.remind&&document.visibilityState==='visible'){getWake();tick()}});
-  $('remSw').onclick=function(){S.remind=!S.remind;S.remind?startRemind():stopRemind();save();renderRemind()};
+  $('remSw').onclick=function(){S.remind=!S.remind;S.remind?startRemind():stopRemind();save();renderRemind();if(S.remind&&curDoc&&!lsGet(PSK))enablePush(false)};
   $('bannerOk').onclick=function(){$('banner').hidden=true};
 
   /* ---------- speak to write (Chrome on Android needs internet for this) ---------- */
@@ -1029,9 +1031,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.8',APP_NOTES=[
-    '☁️ ऑनलाइन बैकअप अब नए Firebase प्रोजेक्ट से जुड़ा है',
-    'स्टाफ़ टैब में Google से लॉगिन करें, सारा डेटा ऑनलाइन सेव रहेगा'
+  var APP_V='1.9',APP_NOTES=[
+    '📲 ऐप बंद होने पर भी हर घंटे सूचना: लॉगिन करके "हर घंटे याद दिलाएँ" चालू करें',
+    'सूचना पर दबाने से ऐप खुल जाएगा'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1062,14 +1064,14 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     projectId:'priority-note-467fa',storageBucket:'priority-note-467fa.firebasestorage.app',
     messagingSenderId:'756207235034',appId:'1:756207235034:web:6299c497876c4dff371ae3'};
   var FBV='https://www.gstatic.com/firebasejs/10.12.5/',FBK='priority-note-fb',FBU='priority-note-fb-uid';
-  var fb=null,fbOn=false,unsub=null,loggingIn=false,cloud={st:'off',email:'',at:0,msg:''};
+  var fb=null,fbOn=false,unsub=null,loggingIn=false,curDoc=null,cloud={st:'off',email:'',at:0,msg:''};
   function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
   function lsSet(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
   function fbLoad(){
     if(!fb){
       fb=Promise.all([import(FBV+'firebase-app.js'),import(FBV+'firebase-auth.js'),import(FBV+'firebase-firestore.js')]).then(function(m){
         var app=m[0].initializeApp(FB_CFG);
-        return {A:m[1],F:m[2],auth:m[1].getAuth(app),db:m[2].getFirestore(app)};
+        return {app:app,A:m[1],F:m[2],auth:m[1].getAuth(app),db:m[2].getFirestore(app)};
       });
       fb.catch(function(){fb=null});
     }
@@ -1100,17 +1102,18 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       f.A.getRedirectResult(f.auth).catch(cloudErr);
       f.A.onAuthStateChanged(f.auth,function(user){
         if(unsub){unsub();unsub=null}
-        if(!user){ref=null;if(loggingIn)return;lsSet(FBK,null);cloud.st='off';cloud.email='';renderCloud();return}
+        if(!user){ref=null;curDoc=null;if(loggingIn)return;lsSet(FBK,null);cloud.st='off';cloud.email='';renderCloud();return}
         loggingIn=false;
         cloud.st='wait';cloud.email=user.email||'';renderCloud();
-        var d=f.F.doc(f.db,'users',user.uid),first=true;
+        var d=f.F.doc(f.db,'users',user.uid),first=true;curDoc=d;
         unsub=f.F.onSnapshot(d,function(snap){
           if(snap.metadata&&snap.metadata.hasPendingWrites)return;
           var data=snap.exists()?snap.data():null,rs=null;
           try{rs=data&&data.s?JSON.parse(data.s):null}catch(e){}
           if(first){
             first=false;
-            ref={set:function(body){return f.F.setDoc(d,{s:JSON.stringify(body),t:body._t||Date.now(),v:APP_V})}};
+            ref={set:function(body){return f.F.setDoc(d,{s:JSON.stringify(body),t:body._t||Date.now(),v:APP_V,rem:!!body.remind},{merge:true})}};
+            if(S.remind&&lsGet(PSK))enablePush(true);
             var known=lsGet(FBU)===user.uid,hasLocal=S.tasks.length+S.orders.length+S.staff.length>0;
             lsSet(FBU,user.uid);
             if(!rs){push();return}
@@ -1138,13 +1141,47 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     }).catch(function(e){loggingIn=false;lsSet(FBK,null);cloudErr(e)});
   }
   function fbLogout(){
-    lsSet(FBK,null);lsSet(FBU,null);ref=null;
-    fbLoad().then(function(f){return f.A.signOut(f.auth)}).catch(function(){});
+    var tok=lsGet(PSK),d=curDoc;
+    lsSet(FBK,null);lsSet(FBU,null);lsSet(PSK,null);ref=null;curDoc=null;
+    fbLoad().then(function(f){
+      return (tok&&d?f.F.setDoc(d,{fcm:f.F.arrayRemove(tok)},{merge:true}).catch(function(){}):Promise.resolve()).then(function(){return f.A.signOut(f.auth)});
+    }).catch(function(){});
     cloud.st='off';cloud.email='';renderCloud();toast('लॉग आउट हो गया, डेटा इस फ़ोन में बना रहेगा');
+  }
+  /* ---------- hourly reminder when the app is closed: this phone's push token in users/{uid}.fcm;
+     .github/workflows/remind.yml sends the message, sw.js shows it ---------- */
+  var VAPID='BC1gw1N6xCP7vQNRfr8-KXfoEAqYzKP_trQnc8X2sg8w5QQ4ZQETwIn_P4F_JxC6xiRvrL6C3t5hA1ISFSOmmC4',PSK='priority-note-push';
+  function enablePush(quiet){
+    if(!('Notification' in window)||!('serviceWorker' in navigator)){if(!quiet)toast('इस फ़ोन/ब्राउज़र में सूचना नहीं चलती');return}
+    if(!curDoc){if(!quiet)toast('पहले स्टाफ़ टैब में Google से लॉगिन करें');return}
+    var d=curDoc;
+    Notification.requestPermission().then(function(p){
+      if(p!=='granted'){if(!quiet)toast('सूचना की अनुमति नहीं मिली, फ़ोन की सेटिंग में अनुमति दें');return}
+      return Promise.all([fbLoad(),import(FBV+'firebase-messaging.js'),navigator.serviceWorker.register('sw.js')]).then(function(m){
+        var f=m[0],M=m[1];
+        return M.getToken(M.getMessaging(f.app),{vapidKey:VAPID,serviceWorkerRegistration:m[2]}).then(function(tok){
+          if(!tok)throw new Error('no token');
+          var old=lsGet(PSK);
+          if(old===tok&&quiet)return;
+          return f.F.setDoc(d,{fcm:f.F.arrayUnion(tok),rem:!!S.remind},{merge:true}).then(function(){
+            if(old&&old!==tok)f.F.setDoc(d,{fcm:f.F.arrayRemove(old)},{merge:true}).catch(function(){});
+            lsSet(PSK,tok);renderRemind();if(!quiet)toast('ऐप बंद होने पर भी सूचना आएगी');
+          });
+        });
+      });
+    }).catch(function(){if(!quiet)toast('सूचना चालू नहीं हो सकी, थोड़ी देर बाद फिर कोशिश करें')});
+  }
+  function renderPush(){
+    var box=$('pushBox');if(!box)return;box.textContent='';
+    if(!S.remind)return;
+    if(lsGet(PSK)&&ref){box.appendChild(mk('p','hint','📲 ऐप बंद होने पर भी इस फ़ोन पर सूचना आएगी'));return}
+    if(!lsGet(FBK)){box.appendChild(mk('p','hint','ऐप बंद होने पर भी सूचना चाहिए तो स्टाफ़ टैब में Google से लॉगिन करें।'));return}
+    var b=mk('button','btn ghost sm','📲 ऐप बंद होने पर भी सूचना चालू करें');b.type='button';b.id='pushOn';b.style.marginTop='8px';
+    b.onclick=function(){enablePush(false)};box.appendChild(b);
   }
   function renderCloud(){
     var box=$('cloudBox');if(!box)return;box.textContent='';
-    var v='संस्करण '+APP_V;if(cloud.st==='on')v+=' · ☁️ ऑनलाइन सेव चालू';$('ver').textContent=v;
+    var v='संस्करण '+APP_V;if(cloud.st==='on')v+=' · ☁️ ऑनलाइन सेव चालू';$('ver').textContent=v;renderPush();
     if(cloud.st==='off'){
       box.appendChild(mk('p','hint','Google खाते से लॉगिन करें। फिर आपका सारा डेटा (काम, निर्देश, No., स्टाफ़, सूचियाँ) अपने-आप ऑनलाइन सेव होगा, और दूसरे फ़ोन में उसी खाते से लॉगिन करने पर वहाँ भी आ जाएगा।'));
       var b=mk('button','btn','Google से लॉगिन करें');b.type='button';b.id='cloudIn';b.style.marginTop='10px';b.onclick=fbLogin;box.appendChild(b);return;

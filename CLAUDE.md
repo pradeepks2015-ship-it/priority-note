@@ -22,6 +22,11 @@ staff member. Staff never use the app; they only receive the note.
   gstatic) loads only after the first login (`localStorage` `priority-note-fb`). Newer `S._t` wins; first
   login on a phone with data on both sides asks which to keep. Letter screenshots are not uploaded.
   Security rules: `firestore.rules` (paste into Firestore → Rules). The web config in `index.html` is public by design.
+- Hourly reminder when the app is closed (project is on the Blaze plan): with "हर घंटे याद दिलाएँ" on and logged in,
+  the app saves this phone's push token in `users/{uid}.fcm` (`rem: true`; all writes use `{merge:true}` so tokens
+  stay). `.github/workflows/remind.yml` runs hourly 9–6 IST, `notify/send.mjs` (firebase-admin, key in the GitHub
+  secret `FIREBASE_SA`) sends `notify/build.mjs`'s top-3 pending as a data-only message; `sw.js` shows it.
+  GitHub may start scheduled runs late, and pauses them after 60 days without repo activity.
 
 ## Data model (state `S`)
 - `tasks[]` / `orders[]` items: `{id, t, p (1 तुरंत | 2 आज दिन में | 3 समय मिले तो), w (staff name),
@@ -64,9 +69,9 @@ and instruction "No." numbering, daily-work buttons, pending days, places list,
 monthly summary and staff open-work counts. CI runs it on
 every push (`.github/workflows/smoke.yml`). Locally: `python3 -m http.server 8080`, then
 `node tests/smoke.mjs` (set `CHROMIUM_PATH` to use an installed Chromium). `tests/cloud.mjs` checks the
-online backup across several "phones" with a stand-in Firebase (no real login needed). Update its checks when
+online backup and push tokens across several "phones" with a stand-in Firebase (no real login needed);
+`tests/notify.mjs` checks the reminder text and the 9–6 window. Update its checks when
 the note text changes.
 
 ## Planned next steps
-- Hourly reminders when the app is closed: Cloud Messaging + a scheduled function (needs the Blaze plan).
 - Upload letter screenshots to Storage (needs the Blaze plan).
