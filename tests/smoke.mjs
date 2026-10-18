@@ -17,7 +17,9 @@ await page.addInitScript(() => {
   const T = (id, t) => ({ id, t, p: 1, w: '', st: '', r: '', loc: '', due: '', ref: '', q: '', img: '', carry: false });
   localStorage.setItem('priority-note-v2', JSON.stringify({
     tasks: [T('a', 'नमूना काम एक'), T('b', 'नमूना काम दो')],
-    orders: [], staff: [], log: [], color: 'yellow', sign: 'JE', remind: false,
+    // Instructions saved before serial numbers existed (no `no` field).
+    orders: [T('o1', 'नमूना निर्देश एक'), { ...T('o2', 'नमूना निर्देश दो'), p: 2 }],
+    staff: [], log: [], color: 'yellow', sign: 'JE', remind: false,
   }));
   // Pretend the phone last ran an older version, so the "updated" banner should show.
   if (!sessionStorage.getItem('smoke')) { localStorage.setItem('priority-note-ver', '0.9'); sessionStorage.setItem('smoke', '1'); }
@@ -49,6 +51,14 @@ await page.unroute('**/version.json*');
 await page.click('#img');
 await page.waitForFunction(() => window.__pngSize > 0, null, { timeout: 15000 });
 
+// Instructions: old ones get No. 1 and 2, a new one gets No. 3.
+await page.click('#tab-orders');
+await page.fill('#txt', 'नमूना निर्देश तीन');
+await page.press('#txt', 'Enter');
+const ordNote = await page.$eval('#note', (n) => n.innerText);
+const ordCard = await page.$eval('#list', (n) => n.innerText);
+const ordNo = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).ordNo);
+
 const checks = {
   'कोई JS error नहीं': errors.length === 0,
   'शीर्षक: आज के प्राथमिकता वाले कार्य': note.includes('आज के प्राथमिकता वाले कार्य'),
@@ -63,6 +73,9 @@ const checks = {
   'अपडेट के बाद नारंगी बैनर दिखे': updTitle.includes('ऐप अपडेट हुआ') && updTitle.includes(appV),
   '"ठीक है" से बैनर बंद हो और याद रहे': updClosed && updSaved === appV,
   'नया संस्करण आने पर बैनर दिखे': newTitle.includes('नया संस्करण 99.0'),
+  'निर्देश नोट पर No. 1, 2, 3': ['No. 1 · नमूना निर्देश एक', 'No. 2 · नमूना निर्देश दो', 'No. 3 · नमूना निर्देश तीन'].every((t) => ordNote.includes(t)),
+  'निर्देशों के कार्ड में No. दिखे': ordCard.includes('No. 3 · नमूना निर्देश तीन'),
+  'No. काउंटर सेव रहे': ordNo === 3,
 };
 
 await browser.close();

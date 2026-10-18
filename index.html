@@ -305,7 +305,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   var LS='priority-note-v2';
   var VIEWLBL={tasks:'काम',orders:'निर्देश',report:'रिपोर्ट'};
 
-  var S={tasks:[],orders:[],staff:[],log:[],color:'yellow',sign:'',remind:false};
+  var S={tasks:[],orders:[],staff:[],log:[],color:'yellow',sign:'',remind:false,ordNo:0};
   var view='tasks',lastList='tasks',curP=1,ref=null,saveTimer=null,chain=Promise.resolve();
   var downloads=null,assets=null,pendingImg='',editStaff='',confirmNew=false;
   var $=function(id){return document.getElementById(id)};
@@ -339,7 +339,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(!x||typeof x.t!=='string')return null;
     var st=x.st;if(!st&&x.done===true)st='done';
     if(['done','part','block'].indexOf(st)<0)st='';
-    return {id:str(x.id)||uid(),t:x.t,p:PRI[x.p]?x.p:2,w:str(x.w),st:st,r:str(x.r),loc:str(x.loc),due:str(x.due),ref:str(x.ref),q:str(x.q),img:str(x.img),carry:!!x.carry};
+    return {id:str(x.id)||uid(),t:x.t,p:PRI[x.p]?x.p:2,w:str(x.w),st:st,r:str(x.r),loc:str(x.loc),due:str(x.due),ref:str(x.ref),q:str(x.q),img:str(x.img),carry:!!x.carry,no:x.no>0?Math.floor(x.no):0};
   }
   function apply(d){
     if(!d||typeof d!=='object')return;
@@ -349,6 +349,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(NOTE[d.color])S.color=d.color;
     if(typeof d.sign==='string')S.sign=d.sign;
     S.remind=!!d.remind;
+    // Instruction serial numbers only ever go up; give older instructions a number too.
+    S.ordNo=Math.max(d.ordNo>0?Math.floor(d.ordNo):0,S.orders.reduce(function(m,x){return Math.max(m,x.no)},0));
+    S.orders.forEach(function(x){if(!x.no)x.no=++S.ordNo});
   }
   function loadLocal(){try{var r=localStorage.getItem(LS);if(r)apply(JSON.parse(r))}catch(e){}}
   function save(){
@@ -406,11 +409,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(mode==='report'){var s=summ(list);B.push({t:'sum',s:s,x:sumText(s)})}
     if(!list.length){B.push({t:'none',x:mode==='report'?'रिपोर्ट के लिए पहले "आज के काम" में काम जोड़ें।':'जोड़ी गई चीज़ें यहाँ नोट पर दिखेंगी।'})}
     else if(mode==='orders'){
-      var n=0;
       [1,2,3].forEach(function(p){
         var g=list.filter(function(x){return x.p===p});if(!g.length)return;
         B.push({t:'g',x:PRI[p].k,c:PRI[p].c});
-        g.forEach(function(x){n++;B.push(itemBlock(x,mode,n))});
+        g.forEach(function(x){B.push(itemBlock(x,mode,x.no))});
       });
     }else{
       byStaff(list).forEach(function(g){
@@ -436,7 +438,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         var it=mk('div','ni'+(b.st==='done'?' d':''));
         if(b.glyph)it.appendChild(mk('span','ic',STI[b.st]));
         else if(b.dot){var dd=mk('i','dt');dd.style.background=b.c;it.appendChild(dd)}
-        it.appendChild(mk('span','mt',(b.num?b.num+'. ':'')+b.x));
+        it.appendChild(mk('span','mt',(b.num?'No. '+b.num+' · ':'')+b.x));
         b.subs.forEach(function(s){it.appendChild(mk('span','sub',s))});
         if(b.q)it.appendChild(mk('span','sub q','“'+b.q+'”'));
         n.appendChild(it);
@@ -473,11 +475,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     L.push('🕒 '+tm(now));
     if(mode==='report'){L.push('');L.push('*'+sumText(summ(list))+'*')}
     if(mode==='orders'){
-      var n=0;
       [1,2,3].forEach(function(p){
         var g=list.filter(function(x){return x.p===p});if(!g.length)return;
         L.push('');L.push(PRI[p].e+' *'+PRI[p].k+'*');
-        g.forEach(function(x){n++;L.push(n+'. '+itemLine(x,false).replace(/^\S+\s/,''))});
+        g.forEach(function(x){L.push('No. '+x.no+' · '+itemLine(x,false).replace(/^\S+\s/,''))});
       });
     }else{
       byStaff(list).forEach(function(g){
@@ -545,7 +546,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     t.appendChild(mk('span','',x.st==='done'?'✓':''));
     t.onclick=function(){x.st=x.st==='done'?'':'done';x.r='';save();renderAll()};
     var d=mk('div','itxt');
-    d.appendChild(mk('b','',x.t));
+    d.appendChild(mk('b','',(x.no?'No. '+x.no+' · ':'')+x.t));
     var meta=[PRI[x.p].k];if(x.w)meta.push('👷 '+x.w);subsOf(x,false).forEach(function(s){meta.push(s)});
     d.appendChild(mk('small','',meta.join(' · ')));
     if(x.ref)d.appendChild(mk('small','','संदर्भ: '+x.ref));
@@ -580,7 +581,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var ex=mode==='orders'
       ?[['सरकारी बकाये की सूची आज भेजें',1,'','','','पत्र क्र. 1234 / 15-10 / बिंदु 3'],['साप्ताहिक वसूली रिपोर्ट शुक्रवार तक',2,'','','','पत्र क्र. 1234 / 15-10 / बिंदु 5'],['लंबित शिकायतों का निराकरण',3,'','','','']]
       :[['11kV फीडर ट्रिपिंग की जाँच',1,'रामू','फीडर 11kV आदेगाँव','12:00',''],['खराब DT बदलना',2,'श्याम','DT गोपालपुर','16:00',''],['बकाया वसूली विज़िट',2,'रामू','वार्ड 3','17:00',''],['मीटर रीडिंग की फोटो जाँच',3,'','','','']];
-    ex.forEach(function(e){S[mode].push({id:uid(),t:e[0],p:e[1],w:e[2],st:'',r:'',loc:e[3],due:e[4],ref:e[5],q:'',img:'',carry:false})});
+    ex.forEach(function(e){S[mode].push({id:uid(),t:e[0],p:e[1],w:e[2],st:'',r:'',loc:e[3],due:e[4],ref:e[5],q:'',img:'',carry:false,no:mode==='orders'?++S.ordNo:0})});
     save();renderAll();
   }
   function renderList(){
@@ -741,7 +742,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   $('f').addEventListener('submit',function(e){
     e.preventDefault();
     var t=$('txt').value.trim();if(!t){$('txt').focus();return}
-    S[lastList].push({id:uid(),t:t,p:curP,w:$('who').value,st:'',r:'',loc:$('loc').value.trim(),due:$('due').value,ref:$('ref').value.trim(),q:$('q').value.trim(),img:pendingImg,carry:false});
+    S[lastList].push({id:uid(),t:t,p:curP,w:$('who').value,st:'',r:'',loc:$('loc').value.trim(),due:$('due').value,ref:$('ref').value.trim(),q:$('q').value.trim(),img:pendingImg,carry:false,no:lastList==='orders'?++S.ordNo:0});
     $('txt').value='';$('loc').value='';$('due').value='';$('ref').value='';$('q').value='';pendingImg='';showPrev();
     $('txt').focus();save();renderAll();
   });
@@ -802,7 +803,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       }
       else if(b.t==='i'){
         var tx=pad+56;F(400,40);
-        var lines=wrapT(ctx,(b.num?b.num+'. ':'')+b.x,max-56);
+        var lines=wrapT(ctx,(b.num?'No. '+b.num+' · ':'')+b.x,max-56);
         lines.forEach(function(l,i){
           if(draw){
             if(i===0){
@@ -899,10 +900,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.2',APP_NOTES=[
-    'ऐप अपडेट होने पर यह नारंगी सूचना दिखेगी',
-    'नोट का शीर्षक अब "आज के प्राथमिकता वाले कार्य"',
-    'नोट के नीचे की "बनाया गया" लाइन हटाई'
+  var APP_V='1.3',APP_NOTES=[
+    'हर निर्देश पर अब No. लिखा आएगा, जो हर नए निर्देश के साथ आगे बढ़ता रहेगा',
+    'नया दिन शुरू करने पर भी No. फिर से 1 से शुरू नहीं होगा'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

@@ -19,7 +19,10 @@ staff member. Staff never use the app; they only receive the note.
 
 ## Data model (state `S`)
 - `tasks[]` / `orders[]` items: `{id, t, p (1 तुरंत | 2 आज दिन में | 3 समय मिले तो), w (staff name),
-  st ('' | done | part | block), r (block reason), loc, due ("HH:MM"), ref, q (quoted line), img (image id), carry}`
+  st ('' | done | part | block), r (block reason), loc, due ("HH:MM"), ref, q (quoted line), img (image id), carry,
+  no (instruction serial number; 0 for tasks)}`
+- `ordNo`: last instruction serial number. It only goes up (new day, delete and "पूरे हुए हटाएँ" never
+  reset it); shown as "No. 12 · …" on the card, the note, the PNG and the WhatsApp text.
 - `staff[]`: `{id, n, m}` — `m` is a normalised 12-digit number starting with 91.
 - `log[]`: last 25 sends/copies/photo saves with timestamp and message text.
 
@@ -47,7 +50,8 @@ Open `index.html` in a browser, or `npx serve .` and open the printed URL.
 
 ## Test
 `tests/smoke.mjs` (Playwright) opens the app at 400px with sample tasks and checks the note
-title, the signature, no "बनाया गया" line, PNG creation and no horizontal scroll. CI runs it on
+title, the signature, no "बनाया गया" line, PNG creation, no horizontal scroll, the update banner
+and instruction "No." numbering. CI runs it on
 every push (`.github/workflows/smoke.yml`). Locally: `python3 -m http.server 8080`, then
 `node tests/smoke.mjs` (set `CHROMIUM_PATH` to use an installed Chromium). Update its checks when
 the note text changes.
