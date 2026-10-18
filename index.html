@@ -261,6 +261,11 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         <div id="staffList" style="margin-top:10px"></div>
       </section>
 
+      <section class="card" id="cloudCard" aria-label="ऑनलाइन बैकअप">
+        <p class="sec-title">☁️ ऑनलाइन बैकअप</p>
+        <div id="cloudBox"></div>
+      </section>
+
       <section class="card" id="listsCard" aria-label="सेव की गई सूचियाँ">
         <p class="sec-title">रोज़ के काम की सूची</p>
         <p class="hint">"आज के काम" में किसी काम को लिखकर ⭐ दबाने पर वह यहाँ जुड़ जाता है।</p>
@@ -379,6 +384,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(NOTE[d.color])S.color=d.color;
     if(typeof d.sign==='string')S.sign=d.sign;
     S.remind=!!d.remind;
+    S._t=d._t>0?d._t:0;
     // Instruction serial numbers only ever go up; give older instructions a number too.
     S.ordNo=Math.max(d.ordNo>0?Math.floor(d.ordNo):0,S.orders.reduce(function(m,x){return Math.max(m,x.no)},0));
     S.orders.forEach(function(x){if(!x.no)x.no=++S.ordNo});
@@ -389,13 +395,15 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   }
   function loadLocal(){try{var r=localStorage.getItem(LS);if(r)apply(JSON.parse(r))}catch(e){}}
   function save(){
+    S._t=Date.now();
     try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}
     clearTimeout(saveTimer);
-    saveTimer=setTimeout(function(){
-      if(!ref)return;
-      var body=JSON.parse(JSON.stringify(S));
-      chain=chain.then(function(){return ref.set(body)}).catch(function(){});
-    },600);
+    saveTimer=setTimeout(push,600);
+  }
+  function push(){
+    if(!ref)return;
+    var body=JSON.parse(JSON.stringify(S));
+    chain=chain.then(function(){return ref.set(body)}).then(function(){cloud.at=Date.now();cloud.st='on';renderCloud()},function(e){cloudErr(e)});
   }
 
   /* ---------- helpers on lists ---------- */
@@ -792,13 +800,13 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     ['tasks','orders','report','staff'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',String(view===k))});
     var isList=view==='tasks'||view==='orders';
     $('addCard').hidden=!isList;$('listCard').hidden=!isList;$('repCard').hidden=view!=='report';$('staffCard').hidden=view!=='staff';
-    $('monCard').hidden=view!=='report';$('listsCard').hidden=view!=='staff';
+    $('monCard').hidden=view!=='report';$('listsCard').hidden=view!=='staff';$('cloudCard').hidden=view!=='staff';
     $('txt').placeholder=view==='orders'?'निर्देश लिखें, जैसे: सरकारी बकाये की सूची आज भेजें':'काम लिखें, जैसे: 11kV फीडर ट्रिपिंग जाँच';
     renderWho();renderTpl();renderPlaces();
     if(isList)renderList();
     if(view==='report'){renderReport();renderMonth()}
     if(view==='staff'){renderStaff();renderLists()}
-    renderNote();renderSend();renderLog();renderRemind();
+    renderNote();renderSend();renderLog();renderRemind();renderCloud();
   }
 
   /* ---------- events ---------- */
@@ -1021,12 +1029,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.6',APP_NOTES=[
-    'रोज़ के काम एक टैप में: लिखने की जगह के नीचे बटन, ⭐ से नया जोड़ें',
-    '🎤 बोलकर काम लिखें',
-    'पुराने बाकी कामों पर "⏳ 3 दिन से बाकी"; स्टाफ़ में किसके कितने काम बाकी',
-    'फीडर / DT / गाँव एक बार लिखने पर अगली बार चुनने को मिलेगा',
-    'शाम की रिपोर्ट में महीने का सारांश'
+  var APP_V='1.7',APP_NOTES=[
+    '☁️ ऑनलाइन बैकअप: स्टाफ़ टैब में Google से लॉगिन करें, सारा डेटा ऑनलाइन सेव रहेगा',
+    'दूसरे फ़ोन में उसी खाते से लॉगिन करने पर वहाँ भी वही डेटा'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1050,8 +1055,118 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')checkNew()});
   setInterval(checkNew,30*60*1000);
 
+  /* ---------- online backup: Google login, the whole state in Firestore users/{uid} ---------- */
+  // The SDK is loaded only after the first login, so the app stays light and works offline.
+  // Newer save (S._t) wins. Letter screenshots stay on the phone.
+  var FB_CFG={apiKey:'AIzaSyDBArWe5O4ZVmPDPA63SJyJcLCQ5lQKAvs',authDomain:'priority-note-2d39b.firebaseapp.com',
+    projectId:'priority-note-2d39b',storageBucket:'priority-note-2d39b.firebasestorage.app',
+    messagingSenderId:'150873582114',appId:'1:150873582114:web:eeb53cd118403be087f87b'};
+  var FBV='https://www.gstatic.com/firebasejs/10.12.5/',FBK='priority-note-fb',FBU='priority-note-fb-uid';
+  var fb=null,fbOn=false,unsub=null,loggingIn=false,cloud={st:'off',email:'',at:0,msg:''};
+  function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function lsSet(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
+  function fbLoad(){
+    if(!fb){
+      fb=Promise.all([import(FBV+'firebase-app.js'),import(FBV+'firebase-auth.js'),import(FBV+'firebase-firestore.js')]).then(function(m){
+        var app=m[0].initializeApp(FB_CFG);
+        return {A:m[1],F:m[2],auth:m[1].getAuth(app),db:m[2].getFirestore(app)};
+      });
+      fb.catch(function(){fb=null});
+    }
+    return fb;
+  }
+  var ERRS={
+    'auth/unauthorized-domain':'Firebase में Authentication → Settings → Authorized domains में pradeepks2015-ship-it.github.io जोड़ें',
+    'auth/configuration-not-found':'Firebase में Authentication चालू करें (Get started → Google)',
+    'auth/internal-error':'लॉगिन नहीं हो सका। जाँचें कि Firebase में Authentication → Google चालू है (auth/internal-error)',
+    'auth/operation-not-allowed':'Firebase में Authentication → Sign-in method में Google चालू करें',
+    'auth/network-request-failed':'इंटरनेट नहीं है, जुड़ने पर अपने-आप फिर कोशिश होगी',
+    'permission-denied':'Firestore के सुरक्षा नियम लगाने बाकी हैं',
+    'unavailable':'इंटरनेट नहीं है, जुड़ने पर अपने-आप सेव होगा'
+  };
+  function cloudErr(e){
+    var c=e&&e.code||'';cloud.st='err';
+    cloud.msg=ERRS[c]||(/Firestore API|not.found|NOT_FOUND/i.test(e&&e.message||'')?'Firebase में Firestore Database बनाना बाकी है':'ऑनलाइन सेव नहीं हो सका'+(c?' ('+c+')':''));
+    renderCloud();
+  }
+  function applyRemote(rs){
+    var keep=S.ordNo;apply(rs);S.ordNo=Math.max(S.ordNo,keep);
+    try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}
+    renderAll();
+  }
+  function fbStart(){
+    if(fbOn)return;fbOn=true;cloud.st='wait';renderCloud();
+    fbLoad().then(function(f){
+      f.A.getRedirectResult(f.auth).catch(cloudErr);
+      f.A.onAuthStateChanged(f.auth,function(user){
+        if(unsub){unsub();unsub=null}
+        if(!user){ref=null;if(loggingIn)return;lsSet(FBK,null);cloud.st='off';cloud.email='';renderCloud();return}
+        loggingIn=false;
+        cloud.st='wait';cloud.email=user.email||'';renderCloud();
+        var d=f.F.doc(f.db,'users',user.uid),first=true;
+        unsub=f.F.onSnapshot(d,function(snap){
+          if(snap.metadata&&snap.metadata.hasPendingWrites)return;
+          var data=snap.exists()?snap.data():null,rs=null;
+          try{rs=data&&data.s?JSON.parse(data.s):null}catch(e){}
+          if(first){
+            first=false;
+            ref={set:function(body){return f.F.setDoc(d,{s:JSON.stringify(body),t:body._t||Date.now(),v:APP_V})}};
+            var known=lsGet(FBU)===user.uid,hasLocal=S.tasks.length+S.orders.length+S.staff.length>0;
+            lsSet(FBU,user.uid);
+            if(!rs){push();return}
+            // First login on this phone with data on both sides: ask which to keep.
+            if(!known&&hasLocal){
+              if(confirm('ऑनलाइन बैकअप में पहले से डेटा है ('+(rs.tasks||[]).length+' काम, '+(rs.orders||[]).length+' निर्देश).\n\n"OK" = ऑनलाइन वाला डेटा रखें\n"Cancel" = इस फ़ोन वाला डेटा ऑनलाइन सेव करें')){applyRemote(rs)}
+              else{S.ordNo=Math.max(S.ordNo,rs.ordNo||0);save();return}
+            }else if(!known||(rs._t||0)>(S._t||0))applyRemote(rs);
+            else if((S._t||0)>(rs._t||0)){push();return}
+          }else if(rs&&(rs._t||0)>(S._t||0)){applyRemote(rs);toast('दूसरे फ़ोन का बदलाव आ गया')}
+          cloud.st='on';cloud.at=Date.now();renderCloud();
+        },cloudErr);
+      });
+    },function(){fbOn=false;cloud.st='err';cloud.msg='इंटरनेट नहीं है, जुड़ने पर अपने-आप फिर कोशिश होगी';renderCloud()});
+  }
+  function fbLogin(){
+    loggingIn=true;lsSet(FBK,'1');fbStart();
+    fbLoad().then(function(f){
+      var p=new f.A.GoogleAuthProvider();
+      return f.A.signInWithPopup(f.auth,p).catch(function(e){
+        if(e&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'))return f.A.signInWithRedirect(f.auth,p);
+        if(e&&(e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request')){loggingIn=false;lsSet(FBK,null);cloud.st='off';renderCloud();return}
+        throw e;
+      });
+    }).catch(function(e){loggingIn=false;lsSet(FBK,null);cloudErr(e)});
+  }
+  function fbLogout(){
+    lsSet(FBK,null);lsSet(FBU,null);ref=null;
+    fbLoad().then(function(f){return f.A.signOut(f.auth)}).catch(function(){});
+    cloud.st='off';cloud.email='';renderCloud();toast('लॉग आउट हो गया, डेटा इस फ़ोन में बना रहेगा');
+  }
+  function renderCloud(){
+    var box=$('cloudBox');if(!box)return;box.textContent='';
+    var v='संस्करण '+APP_V;if(cloud.st==='on')v+=' · ☁️ ऑनलाइन सेव चालू';$('ver').textContent=v;
+    if(cloud.st==='off'){
+      box.appendChild(mk('p','hint','Google खाते से लॉगिन करें। फिर आपका सारा डेटा (काम, निर्देश, No., स्टाफ़, सूचियाँ) अपने-आप ऑनलाइन सेव होगा, और दूसरे फ़ोन में उसी खाते से लॉगिन करने पर वहाँ भी आ जाएगा।'));
+      var b=mk('button','btn','Google से लॉगिन करें');b.type='button';b.id='cloudIn';b.style.marginTop='10px';b.onclick=fbLogin;box.appendChild(b);return;
+    }
+    if(cloud.st==='wait'){box.appendChild(mk('p','hint','जुड़ रहा है…'));return}
+    if(cloud.st==='err'){
+      box.appendChild(mk('p','','⚠️ '+cloud.msg));
+      var t=mk('button','btn ghost sm','फिर कोशिश करें');t.type='button';t.style.marginTop='8px';
+      t.onclick=function(){fbOn=false;if(unsub){unsub();unsub=null}fbStart()};box.appendChild(t);
+      if(lsGet(FBK)){var o=mk('button','btn ghost sm','लॉग आउट');o.type='button';o.style.marginTop='8px';o.onclick=fbLogout;box.appendChild(o)}
+      return;
+    }
+    box.appendChild(mk('p','','✅ ऑनलाइन सेव चालू'+(cloud.email?' · '+cloud.email:'')));
+    if(cloud.at)box.appendChild(mk('p','hint','आख़िरी सेव: '+tm(new Date(cloud.at))));
+    box.appendChild(mk('p','hint','पत्र के स्क्रीनशॉट सिर्फ़ इसी फ़ोन में रहते हैं।'));
+    var lo=mk('button','btn ghost sm','लॉग आउट');lo.type='button';lo.style.marginTop='8px';lo.onclick=fbLogout;box.appendChild(lo);
+  }
+  window.addEventListener('online',function(){if(lsGet(FBK)&&cloud.st==='err'){fbOn=false;fbStart()}});
+
   /* ---------- start ---------- */
   loadLocal();renderAll();if(S.remind)startRemind();
+  if(lsGet(FBK)&&location.protocol!=='file:')fbStart();
   setInterval(function(){if(document.visibilityState==='visible')renderNote()},60000);
   /* ---------- standalone: photos in IndexedDB, sharing through the phone ---------- */
   var DBN='priority-note-img',urlCache={};

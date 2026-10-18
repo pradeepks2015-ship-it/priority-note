@@ -29,3 +29,7 @@ jobs:
         run: node tests/smoke.mjs
         env:
           APP_URL: http://127.0.0.1:8080/
+      - name: Run online-backup test (stand-in Firebase)
+        run: node tests/cloud.mjs
+        env:
+          APP_URL: http://127.0.0.1:8080/

@@ -13,9 +13,15 @@ staff member. Staff never use the app; they only receive the note.
 - `netlify.toml` — publish the repo root as-is; no build command.
 - Live on GitHub Pages: https://pradeepks2015-ship-it.github.io/priority-note/ (deploys from `main`, root).
   `.nojekyll` keeps files untouched. Netlify project `priority-note1` is also linked but paused (team credits).
-- No backend yet. Data lives in the browser:
+- Data lives in the browser, with an optional online copy (below):
   - `localStorage` key `priority-note-v2` — tasks, orders, staff, log, settings.
   - IndexedDB `priority-note-img`, store `img` — letter screenshots (blobs).
+
+- Online backup (Firebase project `priority-note-2d39b`, Spark/free plan): Google login, then the whole
+  state `S` is stored as a JSON string in Firestore `users/{uid}` (`{s, t, v}`). The SDK (10.12.5 from
+  gstatic) loads only after the first login (`localStorage` `priority-note-fb`). Newer `S._t` wins; first
+  login on a phone with data on both sides asks which to keep. Letter screenshots are not uploaded.
+  Security rules: `firestore.rules` (paste into Firestore → Rules). The web config in `index.html` is public by design.
 
 ## Data model (state `S`)
 - `tasks[]` / `orders[]` items: `{id, t, p (1 तुरंत | 2 आज दिन में | 3 समय मिले तो), w (staff name),
@@ -57,8 +63,10 @@ title, the date shown once, the signature, no "बनाया गया" line, 
 and instruction "No." numbering, daily-work buttons, pending days, places list,
 monthly summary and staff open-work counts. CI runs it on
 every push (`.github/workflows/smoke.yml`). Locally: `python3 -m http.server 8080`, then
-`node tests/smoke.mjs` (set `CHROMIUM_PATH` to use an installed Chromium). Update its checks when
+`node tests/smoke.mjs` (set `CHROMIUM_PATH` to use an installed Chromium). `tests/cloud.mjs` checks the
+online backup across several "phones" with a stand-in Firebase (no real login needed). Update its checks when
 the note text changes.
 
 ## Planned next steps
-- Firebase (Auth, Firestore, Storage, Cloud Messaging) for sync and hourly reminders when the app is closed.
+- Hourly reminders when the app is closed: Cloud Messaging + a scheduled function (needs the Blaze plan).
+- Upload letter screenshots to Storage (needs the Blaze plan).
