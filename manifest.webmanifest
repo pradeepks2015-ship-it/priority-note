@@ -1,0 +1,16 @@
+{
+  "name": "प्राथमिकता नोट",
+  "short_name": "प्राथमिकता",
+  "description": "दिन के काम और वरिष्ठ कार्यालय के निर्देशों का स्टिकी नोट बनाकर स्टाफ़ को भेजने का ऐप",
+  "lang": "hi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E4E7EC",
+  "theme_color": "#2F5DA8",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
