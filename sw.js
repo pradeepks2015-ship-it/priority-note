@@ -25,8 +25,10 @@ self.addEventListener('fetch', (e) => {
   if (url.pathname.endsWith('/version.json')) return;
 
   if (req.mode === 'navigate') {
+    // 'no-cache' makes the browser check with the server every time, so a new version shows at once
+    // (GitHub Pages otherwise lets the browser reuse the old page for up to 10 minutes).
     e.respondWith(
-      fetch(req)
+      fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })
         .then((res) => { const copy = res.clone(); caches.open(CACHE).then((c) => c.put('./index.html', copy)); return res; })
         .catch(() => caches.match('./index.html'))
     );
