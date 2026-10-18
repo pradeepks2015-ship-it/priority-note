@@ -38,5 +38,12 @@ staff member. Staff never use the app; they only receive the note.
 ## Run
 Open `index.html` in a browser, or `npx serve .` and open the printed URL.
 
+## Test
+`tests/smoke.mjs` (Playwright) opens the app at 400px with sample tasks and checks the note
+title, the signature, no "बनाया गया" line, PNG creation and no horizontal scroll. CI runs it on
+every push (`.github/workflows/smoke.yml`). Locally: `python3 -m http.server 8080`, then
+`node tests/smoke.mjs` (set `CHROMIUM_PATH` to use an installed Chromium). Update its checks when
+the note text changes.
+
 ## Planned next steps
 - Firebase (Auth, Firestore, Storage, Cloud Messaging) for sync and hourly reminders when the app is closed.
