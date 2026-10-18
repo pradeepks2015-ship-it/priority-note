@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 
 const url = process.env.APP_URL || 'http://127.0.0.1:8080/';
 const fileV = JSON.parse(readFileSync(new URL('../version.json', import.meta.url), 'utf8')).v;
+const MONTHS = JSON.parse(readFileSync(new URL('../index.html', import.meta.url), 'utf8').match(/var MONTHS=(\[[^\]]+\])/)[1].replace(/'/g, '"'));
 const appV = (readFileSync(new URL('../index.html', import.meta.url), 'utf8').match(/APP_V='([^']+)'/) || [])[1];
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const page = await browser.newPage({ viewport: { width: 400, height: 900 } });
@@ -64,6 +65,7 @@ const checks = {
   'शीर्षक: आज के प्राथमिकता वाले कार्य': note.includes('आज के प्राथमिकता वाले कार्य'),
   'पुराना शीर्षक नहीं': !note.includes('आज का मिशन'),
   '"बनाया गया" लाइन नहीं': !note.includes('बनाया गया'),
+  'तारीख नोट पर एक ही बार': note.split(new Date().getDate() + ' ' + MONTHS[new Date().getMonth()]).length === 2,
   'काम नोट पर दिखे': note.includes('नमूना काम एक') && note.includes('नमूना काम दो'),
   'हस्ताक्षर दिखे': note.includes('— JE'),
   'PNG बनी': true,

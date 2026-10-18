@@ -50,7 +50,7 @@ Open `index.html` in a browser, or `npx serve .` and open the printed URL.
 
 ## Test
 `tests/smoke.mjs` (Playwright) opens the app at 400px with sample tasks and checks the note
-title, the signature, no "बनाया गया" line, PNG creation, no horizontal scroll, the update banner
+title, the date shown once, the signature, no "बनाया गया" line, PNG creation, no horizontal scroll, the update banner
 and instruction "No." numbering. CI runs it on
 every push (`.github/workflows/smoke.yml`). Locally: `python3 -m http.server 8080`, then
 `node tests/smoke.mjs` (set `CHROMIUM_PATH` to use an installed Chromium). Update its checks when
