@@ -50,6 +50,10 @@ h1{font-family:var(--f-head);font-weight:700;font-size:30px;line-height:1.2;marg
 .hdr-r{display:flex;align-items:center;gap:10px}
 .bell{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-size:20px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
 .bell[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.me{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:700 18px var(--f-ui);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;overflow:hidden}
+.me img{width:100%;height:100%;object-fit:cover;display:block}
+.me.on{border-color:var(--wa);box-shadow:inset 0 0 0 1px var(--wa)}
+.me.on.txt{background:var(--accent);color:var(--accent-ink)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start}
 .col{display:flex;flex-direction:column;gap:16px;min-width:0}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
@@ -183,8 +187,14 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     <div class="hdr-r">
       <span class="date" id="today"></span>
       <button class="bell" id="bell" type="button" aria-pressed="false" aria-label="हर घंटे याद दिलाना">🔕</button>
+      <button class="me" id="me" type="button" aria-expanded="false" aria-controls="mePanel" aria-label="प्रोफ़ाइल और ऑनलाइन बैकअप">👤</button>
     </div>
   </header>
+
+  <section class="card" id="mePanel" aria-label="प्रोफ़ाइल और ऑनलाइन बैकअप" hidden>
+    <p class="sec-title">☁️ ऑनलाइन बैकअप</p>
+    <div id="cloudBox"></div>
+  </section>
 
   <div id="banner" class="banner" role="status" hidden>
     <div><p>🔔 अभी की प्राथमिकता</p><ul id="bannerList"></ul></div>
@@ -266,11 +276,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
           </div>
         </form>
         <div id="staffList" style="margin-top:10px"></div>
-      </section>
-
-      <section class="card" id="cloudCard" aria-label="ऑनलाइन बैकअप">
-        <p class="sec-title">☁️ ऑनलाइन बैकअप</p>
-        <div id="cloudBox"></div>
       </section>
 
       <section class="card" id="listsCard" aria-label="सेव की गई सूचियाँ">
@@ -846,7 +851,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     ['tasks','orders','report','staff'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',String(view===k))});
     var isList=view==='tasks'||view==='orders';
     $('addCard').hidden=!isList;$('listCard').hidden=!isList;$('repCard').hidden=view!=='report';$('staffCard').hidden=view!=='staff';
-    $('monCard').hidden=view!=='report';$('listsCard').hidden=view!=='staff';$('cloudCard').hidden=view!=='staff';$('remCard').hidden=view!=='staff';
+    $('monCard').hidden=view!=='report';$('listsCard').hidden=view!=='staff';$('remCard').hidden=view!=='staff';
     $('txt').placeholder=view==='orders'?'निर्देश लिखें, जैसे: सरकारी बकाये की सूची आज भेजें':'काम लिखें, जैसे: 11kV फीडर ट्रिपिंग जाँच';
     renderWho();renderTpl();renderPlaces();
     if(isList)renderList();
@@ -1080,10 +1085,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.12',APP_NOTES=[
-    'भेजने वाला हिस्सा छोटा किया: "संदेश कॉपी करें" और लंबी जानकारी हटाई',
-    '"हर कर्मचारी को अलग भेजें" तभी दिखेगा जब किसी को काम सौंपा हो',
-    '"हर घंटे याद दिलाएँ" अब ऊपर 🔔 बटन से; पूरी जानकारी स्टाफ़ टैब में'
+  var APP_V='1.13',APP_NOTES=[
+    'ऊपर 👤 प्रोफ़ाइल बटन: लॉगिन, ऑनलाइन बैकअप और लॉग आउट वहीं से',
+    'लॉगिन होने पर बटन पर आपकी Google फ़ोटो दिखेगी'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1114,7 +1118,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     projectId:'priority-note-467fa',storageBucket:'priority-note-467fa.firebasestorage.app',
     messagingSenderId:'756207235034',appId:'1:756207235034:web:6299c497876c4dff371ae3'};
   var FBV='https://www.gstatic.com/firebasejs/10.12.5/',FBK='priority-note-fb',FBU='priority-note-fb-uid';
-  var fb=null,fbOn=false,unsub=null,loggingIn=false,curDoc=null,cloud={st:'off',email:'',at:0,msg:''};
+  var fb=null,fbOn=false,unsub=null,loggingIn=false,curDoc=null,cloud={st:'off',email:'',name:'',photo:'',at:0,msg:''};
   function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
   function lsSet(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
   function fbLoad(){
@@ -1154,7 +1158,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         if(unsub){unsub();unsub=null}
         if(!user){ref=null;curDoc=null;if(loggingIn)return;lsSet(FBK,null);cloud.st='off';cloud.email='';renderCloud();return}
         loggingIn=false;
-        cloud.st='wait';cloud.email=user.email||'';renderCloud();
+        cloud.st='wait';cloud.email=user.email||'';cloud.name=user.displayName||'';cloud.photo=user.photoURL||'';renderCloud();
         var d=f.F.doc(f.db,'users',user.uid),first=true;curDoc=d;
         unsub=f.F.onSnapshot(d,function(snap){
           if(snap.metadata&&snap.metadata.hasPendingWrites)return;
@@ -1196,14 +1200,14 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     fbLoad().then(function(f){
       return (tok&&d?f.F.setDoc(d,{fcm:f.F.arrayRemove(tok)},{merge:true}).catch(function(){}):Promise.resolve()).then(function(){return f.A.signOut(f.auth)});
     }).catch(function(){});
-    cloud.st='off';cloud.email='';renderCloud();toast('लॉग आउट हो गया, डेटा इस फ़ोन में बना रहेगा');
+    cloud.st='off';cloud.email='';cloud.name='';cloud.photo='';renderCloud();toast('लॉग आउट हो गया, डेटा इस फ़ोन में बना रहेगा');
   }
   /* ---------- hourly reminder when the app is closed: this phone's push token in users/{uid}.fcm;
      .github/workflows/remind.yml sends the message, sw.js shows it ---------- */
   var VAPID='BC1gw1N6xCP7vQNRfr8-KXfoEAqYzKP_trQnc8X2sg8w5QQ4ZQETwIn_P4F_JxC6xiRvrL6C3t5hA1ISFSOmmC4',PSK='priority-note-push';
   function enablePush(quiet){
     if(!('Notification' in window)||!('serviceWorker' in navigator)){if(!quiet)toast('इस फ़ोन/ब्राउज़र में सूचना नहीं चलती');return}
-    if(!curDoc){if(!quiet)toast('पहले स्टाफ़ टैब में Google से लॉगिन करें');return}
+    if(!curDoc){if(!quiet)toast('पहले ऊपर 👤 दबाकर Google से लॉगिन करें');return}
     var d=curDoc;
     Notification.requestPermission().then(function(p){
       if(p!=='granted'){if(!quiet)toast('सूचना की अनुमति नहीं मिली, फ़ोन की सेटिंग में अनुमति दें');return}
@@ -1225,13 +1229,13 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var box=$('pushBox');if(!box)return;box.textContent='';
     if(!S.remind)return;
     if(lsGet(PSK)&&ref){box.appendChild(mk('p','hint','📲 ऐप बंद होने पर भी इस फ़ोन पर सूचना आएगी'));return}
-    if(!lsGet(FBK)){box.appendChild(mk('p','hint','ऐप बंद होने पर भी सूचना चाहिए तो स्टाफ़ टैब में Google से लॉगिन करें।'));return}
+    if(!lsGet(FBK)){box.appendChild(mk('p','hint','ऐप बंद होने पर भी सूचना चाहिए तो ऊपर 👤 दबाकर Google से लॉगिन करें।'));return}
     var b=mk('button','btn ghost sm','📲 ऐप बंद होने पर भी सूचना चालू करें');b.type='button';b.id='pushOn';b.style.marginTop='8px';
     b.onclick=function(){enablePush(false)};box.appendChild(b);
   }
   function renderCloud(){
     var box=$('cloudBox');if(!box)return;box.textContent='';
-    var v='संस्करण '+APP_V;if(cloud.st==='on')v+=' · ☁️ ऑनलाइन सेव चालू';$('ver').textContent=v;renderPush();
+    var v='संस्करण '+APP_V;if(cloud.st==='on')v+=' · ☁️ ऑनलाइन सेव चालू';$('ver').textContent=v;renderPush();renderMe();
     if(cloud.st==='off'){
       box.appendChild(mk('p','hint','Google खाते से लॉगिन करें। फिर आपका सारा डेटा (काम, निर्देश, No., स्टाफ़, सूचियाँ) अपने-आप ऑनलाइन सेव होगा, और दूसरे फ़ोन में उसी खाते से लॉगिन करने पर वहाँ भी आ जाएगा।'));
       var b=mk('button','btn','Google से लॉगिन करें');b.type='button';b.id='cloudIn';b.style.marginTop='10px';b.onclick=fbLogin;box.appendChild(b);return;
@@ -1244,11 +1248,26 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       if(lsGet(FBK)){var o=mk('button','btn ghost sm','लॉग आउट');o.type='button';o.style.marginTop='8px';o.onclick=fbLogout;box.appendChild(o)}
       return;
     }
+    if(cloud.name)box.appendChild(mk('p','',cloud.name));
     box.appendChild(mk('p','','✅ ऑनलाइन सेव चालू'+(cloud.email?' · '+cloud.email:'')));
     if(cloud.at)box.appendChild(mk('p','hint','आख़िरी सेव: '+tm(new Date(cloud.at))));
     box.appendChild(mk('p','hint','पत्र के स्क्रीनशॉट सिर्फ़ इसी फ़ोन में रहते हैं।'));
     var lo=mk('button','btn ghost sm','लॉग आउट');lo.type='button';lo.style.marginTop='8px';lo.onclick=fbLogout;box.appendChild(lo);
   }
+  // Round profile button in the header: 👤 when logged out, the Google photo (or first letter) when logged in.
+  function renderMe(){
+    var b=$('me');if(!b)return;b.textContent='';var on=cloud.st==='on'||(cloud.st==='wait'&&!!cloud.email);
+    b.className='me'+(on?' on':'');
+    if(on&&cloud.photo){var im=document.createElement('img');im.src=cloud.photo;im.alt='';im.referrerPolicy='no-referrer';
+      im.onerror=function(){cloud.photo='';renderMe()};b.appendChild(im)}
+    else if(on){b.className+=' txt';b.textContent=(cloud.name||cloud.email||'?').trim().charAt(0).toUpperCase()}
+    else b.textContent=cloud.st==='err'?'⚠️':'👤';
+    b.title=on?(cloud.email||'लॉगिन है'):'लॉगिन / ऑनलाइन बैकअप';
+  }
+  function showMe(open){$('mePanel').hidden=!open;$('me').setAttribute('aria-expanded',String(open))}
+  $('me').onclick=function(e){e.stopPropagation();showMe($('mePanel').hidden)};
+  $('mePanel').addEventListener('click',function(e){e.stopPropagation()});
+  document.addEventListener('click',function(){if(!$('mePanel').hidden)showMe(false)});
   window.addEventListener('online',function(){if(lsGet(FBK)&&cloud.st==='err'){fbOn=false;fbStart()}});
 
   /* ---------- start ---------- */

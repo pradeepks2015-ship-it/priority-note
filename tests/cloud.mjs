@@ -16,7 +16,7 @@ const FAKE = {
     export class GoogleAuthProvider{}
     export function getRedirectResult(){return Promise.resolve(null)}
     export function onAuthStateChanged(a,f){cb=f;setTimeout(()=>f(user),0)}
-    export function signInWithPopup(){user={uid:'u1',email:'jeadegaon@example.com'};localStorage.setItem('fake-user',JSON.stringify(user));setTimeout(()=>cb&&cb(user),0);return Promise.resolve({user})}
+    export function signInWithPopup(){user={uid:'u1',email:'jeadegaon@example.com',displayName:'जेई आदेगाँव'};localStorage.setItem('fake-user',JSON.stringify(user));setTimeout(()=>cb&&cb(user),0);return Promise.resolve({user})}
     export function signInWithRedirect(){return signInWithPopup()}
     export function signOut(){user=null;localStorage.removeItem('fake-user');cb&&cb(null);return Promise.resolve()}`,
   'firebase-firestore.js': `
@@ -65,7 +65,7 @@ async function phone(seed) {
   p.on('pageerror', (e) => errors.push(e.message));
   p.errors = errors;
   await p.goto(url);
-  await p.click('#tab-staff');
+  await p.click('#me');
   return p;
 }
 const T = (id, t) => ({ id, t, p: 1, w: '', st: '', r: '', loc: '', due: '', ref: '', q: '', img: '', carry: false, at: Date.now() });
@@ -81,6 +81,7 @@ const aOn = await until(A, () => document.getElementById('cloudBox').innerText.i
 await A.waitForTimeout(500);
 const uploaded = !!doc && JSON.parse(JSON.parse(doc).s).tasks.some((x) => x.t === 'फ़ोन A का काम');
 const footer = await A.$eval('#ver', (n) => n.innerText);
+const meBtn = await A.$eval('#me', (b) => b.textContent + '|' + b.className);
 
 // Phone B is empty and logs in: it gets A's data, and the No. counter.
 const B = await phone(null);
@@ -114,13 +115,15 @@ const cTasks = await tasksOf(C);
 
 // Reopening A keeps it logged in and in sync.
 await A.reload();
-await A.click('#tab-staff');
+await A.click('#me');
 const aBack = await until(A, () => document.getElementById('cloudBox').innerText.includes('ऑनलाइन सेव चालू'));
 
 // Logging out keeps the data on the phone and stops reminders to it.
+if (await A.$eval('#mePanel', (n) => n.hidden)) await A.click('#me');
 await A.click('#cloudBox >> text=लॉग आउट');
 const aOff = await until(A, () => !!document.getElementById('cloudIn'));
 const aStill = (await tasksOf(A)).includes('फ़ोन B का काम');
+const meOff = await A.$eval('#me', (b) => b.textContent);
 await A.waitForTimeout(400);
 const afterLogout = JSON.parse(doc);
 
@@ -130,6 +133,7 @@ const checks = {
   'लॉगिन के बाद "ऑनलाइन सेव चालू"': aOn,
   'फ़ोन A का डेटा ऑनलाइन गया': uploaded,
   'नीचे "☁️ ऑनलाइन सेव चालू"': footer.includes('☁️ ऑनलाइन सेव चालू'),
+  'ऊपर प्रोफ़ाइल बटन पर नाम का पहला अक्षर': meBtn.startsWith('ज|') && meBtn.includes('on'),
   'खाली फ़ोन B में A का डेटा आया': bGot,
   'फ़ोन B में No. काउंटर आया': bOrdNo === 7,
   'B का नया काम A में अपने-आप आया': aGot,
@@ -137,6 +141,7 @@ const checks = {
   '"OK" से ऑनलाइन वाला डेटा रहा': cKept && !cTasks.includes('फ़ोन C का पुराना काम'),
   'दोबारा खोलने पर लॉगिन बना रहे': aBack,
   'लॉग आउट के बाद भी डेटा फ़ोन में रहे': aOff && aStill,
+  'लॉग आउट पर प्रोफ़ाइल बटन 👤': meOff === '👤',
   'सूचना चालू: फ़ोन A का token सेव, rem चालू': aPush && (afterA.fcm || []).includes('tok-A') && afterA.rem === true,
   'token सेव करते समय बाकी डेटा बना रहे': !!afterA.s && JSON.parse(afterA.s).tasks.length > 0,
   'दोनों फ़ोन के token सेव': ['tok-A', 'tok-B'].every((t) => (afterB.fcm || []).includes(t)),
