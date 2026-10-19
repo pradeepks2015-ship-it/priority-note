@@ -45,7 +45,9 @@ at the user's request (v1.15); their code and saved data remain but are unreacha
 - `tpl[]`: daily-work buttons ("रोज़ के काम"); `places[]`: feeder/DT/village list, filled from the स्थान field.
 - `hist{'YYYY-MM': {ta, td, oa, od}}`: monthly counts (t=task, o=instruction; a=added, d=done), last 12 months.
   Change status only through `setSt()` so the counts stay right.
-- `staff[]`: `{id, n, m, d}` — `m` is a normalised 12-digit number starting with 91; `d` = पद / स्थान.
+- `staff[]`: `{id, n, m, r, h}` — `m` is a normalised 12-digit number starting with 91; `r` = पद, `h` = मुख्यालय
+  (older saves had `d` = "पद, स्थान", split by `splitRole()` on load). The staff tab is a contact list grouped by
+  मुख्यालय with 💬 WhatsApp (pending work as text), 📞 `tel:` and 🖼️ sticker (share sheet); add/edit are folded away.
   "📋 कई स्टाफ़ एक साथ जोड़ें" (`parseStaffLines`) takes one person per line; same number updates that person.
   Excel (.xlsx) / CSV import for staff and places: `readSheet()` reads the first sheet itself (an .xlsx is a zip of XML;
   `DecompressionStream` + `DOMParser`, no library). Old binary .xls is not supported. Test files come from `tests/xlsx-fixture.mjs`.

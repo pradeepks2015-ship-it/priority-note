@@ -97,6 +97,7 @@ await page.click('#tab-staff');
 const monFolded = await page.$eval('#monCard', (d) => !d.open);
 const mon = await page.$eval('#monBox', (n) => n.textContent);
 // Bulk add: made-up names and numbers only. The existing sample person's number updates that person.
+await page.click('#addStaffBox summary');
 await page.click('#bulkBox summary');
 await page.fill('#bulkTxt', 'नमूना एक — 9000000001 — मीटर रीडर, नमूना गाँव\nनमूना दो 90000 00002 आउटसोर्स हेल्पर\nबिना नंबर वाली लाइन\nनमूना कर्मचारी पूरा नाम, +91 9000000003, LA');
 await page.click('#bulkAdd');
@@ -125,6 +126,20 @@ await page.setInputFiles('#placeFile', { name: 'gaon.csv', mimeType: 'text/csv',
 await page.waitForFunction(() => JSON.parse(localStorage.getItem('priority-note-v2')).places.includes('नमूना गाँव ग, टोला'), null, { timeout: 5000 }).catch(() => {});
 const placesNow = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).places);
 const staffTxt = await page.$eval('#staffList', (n) => n.innerText);
+// Contact list: grouped by मुख्यालय, call and WhatsApp for each number, WhatsApp carries pending work.
+const groups = await page.$$eval('#staffList .hq > summary', (s) => s.map((x) => x.innerText.replace(/\s+/g, ' ').trim()));
+const links = await page.$$eval('#staffList .pr', (rows) => rows.map((r) => ({
+  n: r.querySelector('.who b').textContent, tel: (r.querySelector('a.call') || {}).href || '', wa: (r.querySelector('a.wa') || {}).href || '', edit: !!r.querySelector('.edit'),
+})));
+// The sample staff member has a pending task and gets a number through the form ("बदलें").
+await page.click('#staffEditBtn');
+const editShown = await page.$$eval('#staffList .edit', (e) => e.length);
+await page.click('#staffList [aria-label="बदलें: नमूना कर्मचारी"]');
+await page.fill('#sm', '9000000004');
+await page.fill('#sh', 'नमूना गाँव');
+await page.click('#sbtn');
+await page.click('#staffEditBtn');
+const sampleRow = await page.$$eval('#staffList .pr', (rows) => { const r = rows.find((x) => x.querySelector('.who b').textContent === 'नमूना कर्मचारी'); return r ? { wa: r.querySelector('a.wa').href, txt: r.innerText, sticker: !!r.querySelector('button.ic') } : null; });
 const listsTxt = await page.$eval('#listsCard', (n) => n.innerText);
 const hScroll2 = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 await page.click('#tplList >> [aria-label="हटाएँ: बकाया वसूली"]');
@@ -158,14 +173,18 @@ const checks = {
   'वहीं "हटाएँ" से रोज़ का काम हटे': !tplNow.includes('फीडर पेट्रोलिंग'),
   'स्टाफ़ टैब में महीने के सारांश की गिनती': mon.includes('काम जोड़े 1') && !mon.includes('निर्देश'),
   'महीने का सारांश शुरू में बंद': monFolded,
-  'स्टाफ़ में बाकी काम दिखें': staffTxt.includes('1 काम बाकी'),
-  'कई स्टाफ़ एक साथ जुड़ें (नाम, नंबर, पद)': bulk.some((x) => x.n === 'नमूना एक' && x.m === '919000000001' && x.d === 'मीटर रीडर, नमूना गाँव') && bulk.some((x) => x.n === 'नमूना दो' && x.m === '919000000002' && x.d === 'आउटसोर्स हेल्पर'),
+  'स्टाफ़ में बाकी काम दिखें, "कोई काम बाकी नहीं" नहीं': staffTxt.includes('1 काम बाकी') && !staffTxt.includes('कोई काम बाकी नहीं'),
+  'स्टाफ़ मुख्यालय-वार समूहों में': groups.some((g) => g.startsWith('📍 नमूना गाँव')) && groups.some((g) => g.startsWith('📍 मुख्यालय नहीं लिखा')),
+  'हर नंबर पर 📞 कॉल और 💬 WhatsApp': links.filter((l) => l.tel).every((l) => /^tel:\+919\d{9}$/.test(l.tel) && l.wa.startsWith('https://wa.me/919')) && links.some((l) => l.n === 'नमूना दो' && l.tel === 'tel:+919000000002'),
+  'बदलें/हटाएँ सिर्फ़ "✏️ बदलें / हटाएँ" दबाने पर': !links.some((l) => l.edit) && editShown > 0,
+  'बाकी काम वाले के WhatsApp में काम लिखा, 🖼️ स्टीकर बटन': !!sampleRow && sampleRow.wa.startsWith('https://wa.me/919000000004?text=') && decodeURIComponent(sampleRow.wa).includes('नमूना काम दो') && sampleRow.sticker,
+  'कई स्टाफ़ एक साथ जुड़ें (नाम, नंबर, पद)': bulk.some((x) => x.n === 'नमूना एक' && x.m === '919000000001' && x.r === 'मीटर रीडर' && x.h === 'नमूना गाँव') && bulk.some((x) => x.n === 'नमूना दो' && x.m === '919000000002' && x.r === 'आउटसोर्स हेल्पर' && !x.h),
   'बिना नंबर वाली लाइन छोड़ी': !bulk.some((x) => x.n.includes('बिना नंबर')),
   'Excel फ़ाइल से स्टाफ़ (शीर्षक/क्र. छोड़े)': fromXlsx.includes('एक्सेल नमूना एक — 9000000011 — मीटर रीडर — नमूना गाँव') && !fromXlsx.includes('मोबाइल')
-    && afterXlsx.some((x) => x.n === 'EXCEL SAMPLE TWO' && x.m === '919000000012' && x.d === 'OUTSOURCE HELPER'),
+    && afterXlsx.some((x) => x.n === 'EXCEL SAMPLE TWO' && x.m === '919000000012' && x.r === 'OUTSOURCE HELPER'),
   'Excel और CSV से गाँव (शीर्षक/अंक/दोहराव छोड़े)': ['नमूना गाँव क', 'नमूना गाँव ख', 'नमूना गाँव ग, टोला'].every((v) => placesNow.includes(v))
     && placesNow.filter((v) => v === 'नमूना गाँव क').length === 1 && !placesNow.some((v) => /गाँव का नाम|^123$|^गाँव$/.test(v)),
-  'वही नंबर दोबारा: नाम बदला, दोहराया नहीं (पद बना रहा)': bulk2.length === bulk.length && bulk2.some((x) => x.n === 'नमूना एक बदला नाम' && x.d === 'मीटर रीडर, नमूना गाँव'),
+  'वही नंबर दोबारा: नाम बदला, दोहराया नहीं (पद बना रहा)': bulk2.length === bulk.length && bulk2.some((x) => x.n === 'नमूना एक बदला नाम' && x.r === 'मीटर रीडर' && x.h === 'नमूना गाँव'),
   'स्टाफ़ टैब में सूचियाँ दिखें': listsTxt.includes('बकाया वसूली') && listsTxt.includes('नमूना फीडर'),
   'स्टाफ़/रिपोर्ट टैब पर horizontal scroll नहीं': !hScroll2,
   '"हटाएँ" से रोज़ का काम सूची से हटे': tplGone,
