@@ -22,7 +22,9 @@ await page.addInitScript(() => {
     tasks: [{ ...T('a', 'नमूना काम एक'), at: Date.now() - 3 * 864e5 }, { ...T('b', 'नमूना काम दो'), w: 'नमूना कर्मचारी' }],
     // Instructions saved before serial numbers existed (no `no` field).
     orders: [T('o1', 'नमूना निर्देश एक'), { ...T('o2', 'नमूना निर्देश दो'), p: 2 }],
-    staff: [{ id: 's1', n: 'नमूना कर्मचारी', m: '' }], log: [], color: 'yellow', sign: 'JE', remind: false,
+    staff: [{ id: 's1', n: 'नमूना कर्मचारी', m: '' }],
+    // An older record from last month with only the message text (no small photo).
+    log: [{ id: 'old', ts: Date.now() - 35 * 864e5, lbl: 'ग्रुप में भेजा · काम', tot: 1, done: 0, txt: '⚡ *आज के प्राथमिकता वाले कार्य*\n🕒 सुबह 9:00 बजे\n\n🔴 नमूना पुराना काम' }], color: 'yellow', sign: 'JE', remind: false,
   }));
   // Pretend the phone last ran an older version, so the "updated" banner should show.
   if (!sessionStorage.getItem('smoke')) { localStorage.setItem('priority-note-ver', '0.9'); sessionStorage.setItem('smoke', '1'); }
@@ -61,6 +63,15 @@ await page.click('#img');
 await page.waitForFunction(() => window.__pngSize > 0, null, { timeout: 15000 });
 // The record keeps a small JPEG of the card instead of a "copy message" button.
 await page.waitForFunction(() => !!document.querySelector('#logBody img.card-th'), null, { timeout: 8000 }).catch(() => {});
+// Record: month list, newest month first; older month shows the card drawn from its message.
+const logMonths = await page.$$eval('#logMonth option', (o) => o.length);
+const oldKey = await page.$$eval('#logMonth option', (o) => o[o.length - 1].value);
+await page.click('#logSum');
+await page.selectOption('#logMonth', oldKey);
+await page.click('#logBody >> text=🖼️ कार्ड देखें');
+const oldCard = await page.$eval('#lb', (l) => !l.hidden && document.getElementById('lbImg').src.startsWith('data:image/jpeg'));
+await page.click('#lbClose');
+await page.selectOption('#logMonth', await page.$$eval('#logMonth option', (o) => o[0].value));
 const logThumb = await page.evaluate(async () => {
   const i = document.querySelector('#logBody img.card-th'); if (!i) return null;
   const blob = await (await fetch(i.src)).blob(), bmp = await createImageBitmap(blob);
@@ -155,6 +166,8 @@ const checks = {
   'काम नोट पर दिखे': note.includes('नमूना काम एक') && note.includes('नमूना काम दो'),
   'हस्ताक्षर दिखे': note.includes('— JE'),
   'PNG बनी': true,
+  'रिकॉर्ड में महीना चुनें (2 महीने)': logMonths === 2,
+  'पुराने रिकॉर्ड पर "🖼️ कार्ड देखें" से कार्ड खुले': oldCard,
   'रिकॉर्ड में नोट की छोटी फोटो (420px JPEG, 60 KB से कम)': !!logThumb && logThumb.type === 'image/jpeg' && logThumb.w === 420 && logThumb.kb < 60,
   '400px पर horizontal scroll नहीं': !hScroll,
   'index.html और version.json का संस्करण एक': !!appV && appV === fileV,

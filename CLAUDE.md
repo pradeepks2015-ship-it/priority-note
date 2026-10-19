@@ -51,8 +51,9 @@ at the user's request (v1.15); their code and saved data remain but are unreacha
   "📋 कई स्टाफ़ एक साथ जोड़ें" (`parseStaffLines`) takes one person per line; same number updates that person.
   Excel (.xlsx) / CSV import for staff and places: `readSheet()` reads the first sheet itself (an .xlsx is a zip of XML;
   `DecompressionStream` + `DOMParser`, no library). Old binary .xls is not supported. Test files come from `tests/xlsx-fixture.mjs`.
-- `log[]`: last 25 sends/photo saves with timestamp and message text; `th` = id of a ~10 KB JPEG of the card
-  (420px, made by `noteThumb()` at send time) in IndexedDB on this phone only; old entries without it show a copy button.
+- `log[]`: last 150 (`LOGMAX`) sends/photo saves with timestamp and message text (≤1500 chars); `th` = id of a ~10 KB
+  JPEG of the card (420px, `noteThumb()` at send time) in IndexedDB on this phone only. The record view has a month
+  picker and one folded group per date; entries without `th` get "🖼️ कार्ड देखें", drawn from the text by `textCard()`.
 
 ## Key functions
 - `model(mode, now, who)` builds the note as blocks; `renderNote()` draws it as HTML and

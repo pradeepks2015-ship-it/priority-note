@@ -190,6 +190,9 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .logrow:last-child{border-bottom:0}
 .logrow b{font-weight:600}
 .logrow small{color:var(--muted)}
+.logday{border:1px solid var(--line);border-radius:10px;margin-top:8px;padding:0 10px}
+.logday>summary{cursor:pointer;font-weight:700;padding:10px 0;min-height:44px}
+.logday>summary small{color:var(--muted);font-weight:500}
 .logrow .thumb.card-th{width:150px;height:auto;max-height:200px;object-fit:cover;object-position:top}
 details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 #logBody{margin-top:8px}
@@ -423,7 +426,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(!d||typeof d!=='object')return;
     ['tasks','orders'].forEach(function(k){if(Array.isArray(d[k]))S[k]=d[k].map(cleanItem).filter(Boolean)});
     if(Array.isArray(d.staff))S.staff=d.staff.filter(function(s){return s&&typeof s.n==='string'&&s.n}).map(function(s){var o={id:str(s.id)||uid(),n:s.n,m:str(s.m),r:str(s.r),h:str(s.h)};if(!o.r&&!o.h&&s.d){var q=splitRole(str(s.d));o.r=q.r;o.h=q.h}return o});
-    if(Array.isArray(d.log))S.log=d.log.filter(function(l){return l&&typeof l.ts==='number'}).slice(0,25);
+    if(Array.isArray(d.log))S.log=d.log.filter(function(l){return l&&typeof l.ts==='number'}).slice(0,LOGMAX);
     if(NOTE[d.color])S.color=d.color;
     if(typeof d.sign==='string')S.sign=d.sign;
     S.remind=!!d.remind;
@@ -610,11 +613,12 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   }
 
   /* ---------- record of what was sent ---------- */
+  var LOGMAX=150,logMon='';
   function logIt(lbl,text,list,mode,who){
-    var s=summ(list||[]),e={id:uid(),ts:Date.now(),lbl:lbl,tot:s.tot,done:s.done,txt:String(text||'').slice(0,3000)};
+    var s=summ(list||[]),e={id:uid(),ts:Date.now(),lbl:lbl,tot:s.tot,done:s.done,txt:String(text||'').slice(0,1500)};
     S.log.unshift(e);
-    S.log.slice(25).forEach(function(o){if(o.th&&assets)assets.delete(o.th).catch(function(){})});
-    S.log=S.log.slice(0,25);save();renderLog();
+    S.log.slice(LOGMAX).forEach(function(o){if(o.th&&assets)assets.delete(o.th).catch(function(){})});
+    S.log=S.log.slice(0,LOGMAX);logMon='';save();renderLog();
     // A small JPEG of the card for the record. Kept only on this phone (IndexedDB), never uploaded.
     if(mode&&assets){
       try{noteThumb(mode,new Date(e.ts),who).then(function(b){return b&&assets.upload(b)}).then(function(r){if(r){e.th=r.id;save();renderLog()}}).catch(function(){})}catch(err){}
@@ -629,18 +633,49 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var tc=t.getContext('2d');tc.imageSmoothingQuality='high';tc.drawImage(c,0,0,tw,th);
     return new Promise(function(res){t.toBlob(res,'image/jpeg',0.6)});
   }
+  // Record: pick a month, then one folded group per date; each entry shows its card (small photo, or drawn from the saved message).
   function renderLog(){
     var b=$('logBody');b.textContent='';
     $('logSum').textContent='भेजे गए नोटों का रिकॉर्ड ('+S.log.length+')';
     if(!S.log.length){b.appendChild(mk('p','hint','जब आप नोट भेजेंगे या फोटो सेव करेंगे, उसकी छोटी फोटो तारीख और समय के साथ यहाँ दर्ज होगी।'));return}
-    S.log.forEach(function(l){
-      var r=mk('div','logrow');
-      r.appendChild(mk('b','',stamp(new Date(l.ts))));
-      r.appendChild(mk('small','',l.lbl+(l.tot?' · '+l.done+'/'+l.tot+' पूरे':'')));
-      if(l.th&&blobURL(l.th)){var t=thumbBtn(l.th,'भेजा गया नोट');t.style.alignSelf='flex-start';t.firstChild.className+=' card-th';r.appendChild(t)}
-      else if(l.txt){var c=mk('button','btn ghost sm','संदेश फिर से कॉपी करें');c.type='button';c.style.alignSelf='flex-start';c.onclick=function(){copyText(l.txt)};r.appendChild(c)}
-      b.appendChild(r);
+    var months=[];S.log.forEach(function(l){var k=monKey(new Date(l.ts));if(months.indexOf(k)<0)months.push(k)});
+    months.sort().reverse();if(months.indexOf(logMon)<0)logMon=months[0];
+    var sel=document.createElement('select');sel.id='logMonth';sel.setAttribute('aria-label','महीना चुनें');sel.style.marginTop='8px';
+    months.forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=monthText(k)+' ('+S.log.filter(function(l){return monKey(new Date(l.ts))===k}).length+')';sel.appendChild(o)});
+    sel.value=logMon;sel.onchange=function(){logMon=sel.value;renderLog()};b.appendChild(sel);
+    var days=[],byDay={};
+    S.log.filter(function(l){return monKey(new Date(l.ts))===logMon}).forEach(function(l){
+      var k=new Date(l.ts).toDateString();if(!byDay[k]){byDay[k]=[];days.push(k)}byDay[k].push(l);
     });
+    days.forEach(function(k,di){
+      var g=mk('details','logday');g.open=di===0;
+      var sm=mk('summary');sm.appendChild(document.createTextNode(dateStr(new Date(byDay[k][0].ts))+' '));sm.appendChild(mk('small','','· '+byDay[k].length));g.appendChild(sm);
+      byDay[k].forEach(function(l){
+        var r=mk('div','logrow');
+        r.appendChild(mk('b','',tm(new Date(l.ts))));
+        r.appendChild(mk('small','',l.lbl+(l.tot?' · '+l.done+'/'+l.tot+' पूरे':'')));
+        if(l.th&&blobURL(l.th)){var t=thumbBtn(l.th,'भेजा गया नोट');t.style.alignSelf='flex-start';t.firstChild.className+=' card-th';r.appendChild(t)}
+        else if(l.txt){var c=mk('button','btn ghost sm','🖼️ कार्ड देखें');c.type='button';c.style.alignSelf='flex-start';c.onclick=function(){openUrl(textCard(l.txt),'भेजा गया नोट')};r.appendChild(c)}
+        g.appendChild(r);
+      });
+      b.appendChild(g);
+    });
+  }
+  // A sticky-note picture drawn from a saved WhatsApp message (for older records that have no small photo).
+  function textCard(txt){
+    var W=1080,pad=64,max=W-pad*2,c=document.createElement('canvas'),ctx=c.getContext('2d');
+    var lines=String(txt).replace(/[*_]/g,'').split('\n'),first=true,rows=[];
+    lines.forEach(function(L){
+      L=L.trim();if(!L){rows.push({gap:24});return}
+      var big=first;first=false;ctx.font=(big?'700 50px':'400 38px')+' Kalam, Hind, sans-serif';
+      wrapT(ctx,L,max).forEach(function(w){rows.push({t:w,big:big})});
+    });
+    var H=96+rows.reduce(function(h,x){return h+(x.gap||(x.big?68:52))},0)+40;
+    c.width=W;c.height=Math.max(H,400);
+    ctx.fillStyle=NOTE[S.color]||NOTE.yellow;ctx.fillRect(0,0,W,c.height);ctx.fillStyle='rgba(0,0,0,.08)';ctx.fillRect(0,0,W,40);
+    var y=96;ctx.fillStyle=INK;ctx.textBaseline='alphabetic';
+    rows.forEach(function(x){if(x.gap){y+=x.gap;return}ctx.font=(x.big?'700 50px':'400 38px')+' Kalam, Hind, sans-serif';ctx.fillText(x.t,pad,y);y+=x.big?68:52});
+    return c.toDataURL('image/jpeg',0.8);
   }
   function copyText(text){
     function fb(){var h=$('hold');h.value=text;h.select();try{document.execCommand('copy');toast('संदेश कॉपी हो गया')}catch(e){toast('कॉपी नहीं हो सका')}}
@@ -649,6 +684,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- rendering the left column ---------- */
   function openImg(id){$('lbImg').src=blobURL(id);$('lb').hidden=false}
+  function openUrl(u,alt){$('lbImg').src=u;$('lbImg').alt=alt||'';$('lb').hidden=false}
   function thumbBtn(id,what){
     var b=mk('button','thumbbtn');b.type='button';b.setAttribute('aria-label',(what||'स्क्रीनशॉट')+' बड़ा देखें');
     var im=mk('img','thumb');im.src=blobURL(id);im.alt=what||'पत्र का स्क्रीनशॉट';im.loading='lazy';b.appendChild(im);
@@ -1278,8 +1314,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.21',APP_NOTES=[
-    'स्टाफ़ की सूची में नाम के आगे का गोल अक्षर वाला निशान हटाया'
+  var APP_V='1.22',APP_NOTES=[
+    'भेजे गए नोटों का रिकॉर्ड: महीना चुनें, तारीख-वार देखें',
+    'पुराने रिकॉर्ड में "🖼️ कार्ड देखें" से उस दिन का कार्ड खुलेगा',
+    'रिकॉर्ड अब 150 तक रखे जाते हैं'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
