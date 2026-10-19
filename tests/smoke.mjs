@@ -53,6 +53,13 @@ await page.context().unroute('**/version.json*');
 
 await page.click('#img');
 await page.waitForFunction(() => window.__pngSize > 0, null, { timeout: 15000 });
+// The record keeps a small JPEG of the card instead of a "copy message" button.
+await page.waitForFunction(() => !!document.querySelector('#logBody img.card-th'), null, { timeout: 8000 }).catch(() => {});
+const logThumb = await page.evaluate(async () => {
+  const i = document.querySelector('#logBody img.card-th'); if (!i) return null;
+  const blob = await (await fetch(i.src)).blob(), bmp = await createImageBitmap(blob);
+  return { type: blob.type, kb: blob.size / 1024, w: bmp.width };
+});
 
 // Instructions: old ones get No. 1 and 2, a new one gets No. 3.
 await page.click('#tab-orders');
@@ -104,6 +111,7 @@ const checks = {
   'काम नोट पर दिखे': note.includes('नमूना काम एक') && note.includes('नमूना काम दो'),
   'हस्ताक्षर दिखे': note.includes('— JE'),
   'PNG बनी': true,
+  'रिकॉर्ड में नोट की छोटी फोटो (420px JPEG, 60 KB से कम)': !!logThumb && logThumb.type === 'image/jpeg' && logThumb.w === 420 && logThumb.kb < 60,
   '400px पर horizontal scroll नहीं': !hScroll,
   'index.html और version.json का संस्करण एक': !!appV && appV === fileV,
   'संस्करण नीचे दिखे': verLabel === 'संस्करण ' + appV,

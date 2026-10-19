@@ -41,7 +41,8 @@ staff member. Staff never use the app; they only receive the note.
 - `hist{'YYYY-MM': {ta, td, oa, od}}`: monthly counts (t=task, o=instruction; a=added, d=done), last 12 months.
   Change status only through `setSt()` so the counts stay right.
 - `staff[]`: `{id, n, m}` — `m` is a normalised 12-digit number starting with 91.
-- `log[]`: last 25 sends/copies/photo saves with timestamp and message text.
+- `log[]`: last 25 sends/photo saves with timestamp and message text; `th` = id of a ~10 KB JPEG of the card
+  (420px, made by `noteThumb()` at send time) in IndexedDB on this phone only; old entries without it show a copy button.
 
 ## Key functions
 - `model(mode, now, who)` builds the note as blocks; `renderNote()` draws it as HTML and
