@@ -617,11 +617,11 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   function logIt(lbl,text,list,mode,who){
     var s=summ(list||[]),e={id:uid(),ts:Date.now(),lbl:lbl,tot:s.tot,done:s.done,txt:String(text||'').slice(0,1500)};
     S.log.unshift(e);
-    S.log.slice(LOGMAX).forEach(function(o){if(o.th&&assets)assets.delete(o.th).catch(function(){})});
+    S.log.slice(LOGMAX).forEach(function(o){if(assets){assets.delete(thId(o)).catch(function(){});if(o.th)assets.delete(o.th).catch(function(){})}});
     S.log=S.log.slice(0,LOGMAX);logMon='';save();renderLog();
     // A small JPEG of the card for the record. Kept only on this phone (IndexedDB), never uploaded.
     if(mode&&assets){
-      try{noteThumb(mode,new Date(e.ts),who).then(function(b){return b&&assets.upload(b)}).then(function(r){if(r){e.th=r.id;save();renderLog()}}).catch(function(){})}catch(err){}
+      try{noteThumb(mode,new Date(e.ts),who).then(function(b){return b&&assets.upload(b,{id:thId(e)})}).then(function(){renderLog()}).catch(function(){})}catch(err){}
     }
   }
   // Drawn right away from the current list (paint() is synchronous), so "नया दिन" changing the list afterwards does not matter.
@@ -629,9 +629,25 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var W=1080,B=model(mode,now,who),m=document.createElement('canvas').getContext('2d'),H=Math.max(paint(m,W,B,false),600);
     var c=document.createElement('canvas');c.width=W;c.height=H;var ctx=c.getContext('2d');
     ctx.fillStyle=NOTE[S.color];ctx.fillRect(0,0,W,H);ctx.fillStyle='rgba(0,0,0,.08)';ctx.fillRect(0,0,W,40);paint(ctx,W,B,true);
-    var tw=420,th=Math.round(H*tw/W),t=document.createElement('canvas');t.width=tw;t.height=th;
+    return smallJpeg(c);
+  }
+  // Every card in the record is kept as a small JPEG (420px wide, quality 0.6 — about 10 KB) on this phone only.
+  function smallJpeg(c){
+    var tw=420,th=Math.round(c.height*tw/c.width),t=document.createElement('canvas');t.width=tw;t.height=th;
     var tc=t.getContext('2d');tc.imageSmoothingQuality='high';tc.drawImage(c,0,0,tw,th);
     return new Promise(function(res){t.toBlob(res,'image/jpeg',0.6)});
+  }
+  // The photo's id comes from the record's id, so each phone finds its own copy (records sync, photos do not).
+  function thId(l){return 'L'+l.id}
+  function thURL(l){return blobURL(thId(l))||(l.th?blobURL(l.th):'')}
+  // Older records (sent before photos were kept) get their card drawn once from the saved message.
+  var thBusy=false;
+  function fillThumbs(){
+    if(thBusy||!assets)return;
+    var todo=S.log.filter(function(l){return l.txt&&!thURL(l)});if(!todo.length)return;
+    thBusy=true;
+    todo.reduce(function(p,l){return p.then(function(){return smallJpeg(textCard(l.txt)).then(function(b){return b&&assets.upload(b,{id:thId(l)})}).catch(function(){})})},Promise.resolve())
+      .then(function(){thBusy=false;renderLog()});
   }
   // Record: pick a month, then one folded group per date; each entry shows its card (small photo, or drawn from the saved message).
   function renderLog(){
@@ -643,6 +659,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var sel=document.createElement('select');sel.id='logMonth';sel.setAttribute('aria-label','महीना चुनें');sel.style.marginTop='8px';
     months.forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=monthText(k)+' ('+S.log.filter(function(l){return monKey(new Date(l.ts))===k}).length+')';sel.appendChild(o)});
     sel.value=logMon;sel.onchange=function(){logMon=sel.value;renderLog()};b.appendChild(sel);
+    fillThumbs();
     var days=[],byDay={};
     S.log.filter(function(l){return monKey(new Date(l.ts))===logMon}).forEach(function(l){
       var k=new Date(l.ts).toDateString();if(!byDay[k]){byDay[k]=[];days.push(k)}byDay[k].push(l);
@@ -654,8 +671,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         var r=mk('div','logrow');
         r.appendChild(mk('b','',tm(new Date(l.ts))));
         r.appendChild(mk('small','',l.lbl+(l.tot?' · '+l.done+'/'+l.tot+' पूरे':'')));
-        if(l.th&&blobURL(l.th)){var t=thumbBtn(l.th,'भेजा गया नोट');t.style.alignSelf='flex-start';t.firstChild.className+=' card-th';r.appendChild(t)}
-        else if(l.txt){var c=mk('button','btn ghost sm','🖼️ कार्ड देखें');c.type='button';c.style.alignSelf='flex-start';c.onclick=function(){openUrl(textCard(l.txt),'भेजा गया नोट')};r.appendChild(c)}
+        var id=blobURL(thId(l))?thId(l):(l.th&&blobURL(l.th)?l.th:'');
+        if(id){var t=thumbBtn(id,'भेजा गया नोट');t.style.alignSelf='flex-start';t.firstChild.className+=' card-th';r.appendChild(t)}
+        else if(l.txt)r.appendChild(mk('small','','कार्ड बन रहा है…'));
         g.appendChild(r);
       });
       b.appendChild(g);
@@ -675,7 +693,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     ctx.fillStyle=NOTE[S.color]||NOTE.yellow;ctx.fillRect(0,0,W,c.height);ctx.fillStyle='rgba(0,0,0,.08)';ctx.fillRect(0,0,W,40);
     var y=96;ctx.fillStyle=INK;ctx.textBaseline='alphabetic';
     rows.forEach(function(x){if(x.gap){y+=x.gap;return}ctx.font=(x.big?'700 50px':'400 38px')+' Kalam, Hind, sans-serif';ctx.fillText(x.t,pad,y);y+=x.big?68:52});
-    return c.toDataURL('image/jpeg',0.8);
+    return c;
   }
   function copyText(text){
     function fb(){var h=$('hold');h.value=text;h.select();try{document.execCommand('copy');toast('संदेश कॉपी हो गया')}catch(e){toast('कॉपी नहीं हो सका')}}
@@ -684,7 +702,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- rendering the left column ---------- */
   function openImg(id){$('lbImg').src=blobURL(id);$('lb').hidden=false}
-  function openUrl(u,alt){$('lbImg').src=u;$('lbImg').alt=alt||'';$('lb').hidden=false}
   function thumbBtn(id,what){
     var b=mk('button','thumbbtn');b.type='button';b.setAttribute('aria-label',(what||'स्क्रीनशॉट')+' बड़ा देखें');
     var im=mk('img','thumb');im.src=blobURL(id);im.alt=what||'पत्र का स्क्रीनशॉट';im.loading='lazy';b.appendChild(im);
@@ -1314,10 +1331,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.22',APP_NOTES=[
-    'भेजे गए नोटों का रिकॉर्ड: महीना चुनें, तारीख-वार देखें',
-    'पुराने रिकॉर्ड में "🖼️ कार्ड देखें" से उस दिन का कार्ड खुलेगा',
-    'रिकॉर्ड अब 150 तक रखे जाते हैं'
+  var APP_V='1.23',APP_NOTES=[
+    'भेजे गए नोटों का रिकॉर्ड: महीना चुनें, तारीख-वार देखें; रिकॉर्ड अब 150 तक',
+    'हर रिकॉर्ड का कार्ड छोटी (compressed) फोटो के रूप में, पुराने रिकॉर्ड का भी — दबाने पर बड़ा'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1506,10 +1522,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   setInterval(function(){if(document.visibilityState==='visible')renderNote()},60000);
   /* ---------- standalone: photos in IndexedDB, sharing through the phone ---------- */
   var DBN='priority-note-img',urlCache={};
-  function blobURL(id){return urlCache[id]||''}
+  function blobURL(id){return (urlCache&&urlCache[id])||''}  // also called before the photo store below is set up
   function idb(){return new Promise(function(res,rej){var r=indexedDB.open(DBN,1);r.onupgradeneeded=function(){r.result.createObjectStore('img')};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}})}
-  function idbPut(blob){
-    var id='i'+uid();
+  function idbPut(blob,fixedId){
+    var id=fixedId||'i'+uid();
     return idb().then(function(db){return new Promise(function(res,rej){
       var t=db.transaction('img','readwrite');t.objectStore('img').put(blob,id);
       t.oncomplete=function(){urlCache[id]=URL.createObjectURL(blob);res({id:id})};t.onerror=function(){rej({code:'upstream_error'})};
@@ -1537,7 +1553,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     setTimeout(function(){URL.revokeObjectURL(u)},4000);
     return Promise.resolve({status:'saved'});
   }
-  assets={upload:function(b){return idbPut(b)},delete:function(id){return idbDel(id)}};
+  assets={upload:function(b,o){return idbPut(b,o&&o.id)},delete:function(id){return idbDel(id)}};
   downloads={save:function(o){return shareOrSave(o.filename,o.data)}};
   $('img').hidden=false;$('photoBtn').hidden=false;
   idbLoadAll().then(function(){renderAll()});

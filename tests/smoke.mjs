@@ -68,8 +68,14 @@ const logMonths = await page.$$eval('#logMonth option', (o) => o.length);
 const oldKey = await page.$$eval('#logMonth option', (o) => o[o.length - 1].value);
 await page.click('#logSum');
 await page.selectOption('#logMonth', oldKey);
-await page.click('#logBody >> text=🖼️ कार्ड देखें');
-const oldCard = await page.$eval('#lb', (l) => !l.hidden && document.getElementById('lbImg').src.startsWith('data:image/jpeg'));
+await page.waitForFunction(() => !!document.querySelector('#logBody img.card-th'), null, { timeout: 8000 }).catch(() => {});
+const oldCard = await page.evaluate(async () => {
+  const i = document.querySelector('#logBody img.card-th'); if (!i) return null;
+  const blob = await (await fetch(i.src)).blob(), bmp = await createImageBitmap(blob);
+  return { type: blob.type, kb: blob.size / 1024, w: bmp.width };
+});
+await page.click('#logBody img.card-th');
+const oldOpens = await page.$eval('#lb', (l) => !l.hidden);
 await page.click('#lbClose');
 await page.selectOption('#logMonth', await page.$$eval('#logMonth option', (o) => o[0].value));
 const logThumb = await page.evaluate(async () => {
@@ -167,7 +173,7 @@ const checks = {
   'हस्ताक्षर दिखे': note.includes('— JE'),
   'PNG बनी': true,
   'रिकॉर्ड में महीना चुनें (2 महीने)': logMonths === 2,
-  'पुराने रिकॉर्ड पर "🖼️ कार्ड देखें" से कार्ड खुले': oldCard,
+  'पुराने रिकॉर्ड का कार्ड भी छोटी JPEG (420px, 60 KB से कम), दबाने पर बड़ा': !!oldCard && oldCard.type === 'image/jpeg' && oldCard.w === 420 && oldCard.kb < 60 && oldOpens,
   'रिकॉर्ड में नोट की छोटी फोटो (420px JPEG, 60 KB से कम)': !!logThumb && logThumb.type === 'image/jpeg' && logThumb.w === 420 && logThumb.kb < 60,
   '400px पर horizontal scroll नहीं': !hScroll,
   'index.html और version.json का संस्करण एक': !!appV && appV === fileV,

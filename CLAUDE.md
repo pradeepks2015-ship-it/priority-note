@@ -51,9 +51,10 @@ at the user's request (v1.15); their code and saved data remain but are unreacha
   "📋 कई स्टाफ़ एक साथ जोड़ें" (`parseStaffLines`) takes one person per line; same number updates that person.
   Excel (.xlsx) / CSV import for staff and places: `readSheet()` reads the first sheet itself (an .xlsx is a zip of XML;
   `DecompressionStream` + `DOMParser`, no library). Old binary .xls is not supported. Test files come from `tests/xlsx-fixture.mjs`.
-- `log[]`: last 150 (`LOGMAX`) sends/photo saves with timestamp and message text (≤1500 chars); `th` = id of a ~10 KB
-  JPEG of the card (420px, `noteThumb()` at send time) in IndexedDB on this phone only. The record view has a month
-  picker and one folded group per date; entries without `th` get "🖼️ कार्ड देखें", drawn from the text by `textCard()`.
+- `log[]`: last 150 (`LOGMAX`) sends/photo saves with timestamp and message text (≤1500 chars). Each record's card is
+  a ~10 KB JPEG (420px, `smallJpeg()`) in IndexedDB under `thId(l)` = 'L'+id, on this phone only (photos never sync).
+  Made by `noteThumb()` at send time; records without one get it drawn once from the text (`textCard()`, `fillThumbs()`).
+  The record view has a month picker and one folded group per date.
 
 ## Key functions
 - `model(mode, now, who)` builds the note as blocks; `renderNote()` draws it as HTML and
