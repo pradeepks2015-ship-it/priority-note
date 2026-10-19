@@ -182,7 +182,22 @@ await page.click('#tplList >> [aria-label="हटाएँ: बकाया व�
 const tplGone = !(await page.$eval('#tplList', (n) => n.innerText)).includes('बकाया वसूली')
   && !(await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).tpl)).includes('बकाया वसूली');
 
+// A phone with touch: tapping a box that already has the cursor (keyboard closed) must leave it focused,
+// after a quick blur so the phone opens the keyboard again.
+const tctx = await browser.newContext({ viewport: { width: 400, height: 900 }, hasTouch: true, isMobile: true });
+const tp = await tctx.newPage();
+await tp.goto(url);
+await tp.click('#tab-tasks').catch(() => {});
+await tp.fill('#txt', 'रवि सर्वे');
+await tp.focus('#txt');
+await tp.evaluate(() => { window.__blurs = 0; document.getElementById('txt').addEventListener('blur', () => window.__blurs++); });
+await tp.tap('#txt');
+await tp.waitForTimeout(200);
+const reTap = await tp.evaluate(() => ({ blurs: window.__blurs, focused: document.activeElement.id, v: document.getElementById('txt').value }));
+await tctx.close();
+
 const checks = {
+  'लिखे खाने पर दोबारा दबाने से कीबोर्ड के लिए फिर से फ़ोकस': reTap.blurs === 1 && reTap.focused === 'txt' && reTap.v === 'रवि सर्वे',
   'कोई JS error नहीं': errors.length === 0,
   'शीर्षक: आज के प्राथमिकता वाले कार्य': note.includes('आज के प्राथमिकता वाले कार्य'),
   'पुराना शीर्षक नहीं': !note.includes('आज का मिशन'),

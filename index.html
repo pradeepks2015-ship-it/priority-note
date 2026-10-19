@@ -1350,6 +1350,17 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   $('bell').onclick=function(){toggleRemind();toast(S.remind?'🔔 हर घंटे याद दिलाना चालू (सुबह 9 से शाम 6)':'🔕 हर घंटे याद दिलाना बंद')};
   $('bannerOk').onclick=function(){$('banner').hidden=true};
 
+  /* ---------- tap on a box that has the cursor but no keyboard (after 🎤 or the phone's back key): open it ---------- */
+  (function(){
+    var vv=window.visualViewport,full={};if(!vv)return;
+    function kbOpen(){var w=innerWidth,h=vv.height;full[w]=Math.max(full[w]||0,h);return h<full[w]*0.8}
+    vv.addEventListener('resize',kbOpen);kbOpen();
+    document.addEventListener('touchstart',function(e){
+      var t=e.target,ok=t.tagName==='TEXTAREA'||t.tagName==='INPUT'&&/^(text|search|tel|number)$/.test(t.type);if(!ok||t!==document.activeElement)return;
+      if(!kbOpen())t.blur(); // the tap then focuses it again, puts the cursor where tapped and opens the keyboard
+    },{capture:true,passive:true});
+  })();
+
   /* ---------- speak to write (Chrome on Android needs internet for this) ---------- */
   (function(){
     var SR=window.SpeechRecognition||window.webkitSpeechRecognition,mic=$('mic'),rec=null;if(!SR)return;
@@ -1358,7 +1369,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     mic.onclick=function(){
       if(rec){rec.stop();return}
       rec=new SR();rec.lang='hi-IN';rec.interimResults=false;rec.maxAlternatives=1;
-      rec.onresult=function(e){var t=e.results[0][0].transcript.trim();var f=$('txt');f.value=(f.value.trim()?f.value.trim()+' ':'')+t;f.focus()};
+      rec.onresult=function(e){var t=e.results[0][0].transcript.trim();var f=$('txt');f.value=(f.value.trim()?f.value.trim()+' ':'')+t;f.blur()};
       rec.onerror=function(e){toast(e.error==='not-allowed'?'माइक की अनुमति दें':e.error==='network'?'बोलकर लिखने के लिए इंटरनेट चाहिए':'आवाज़ समझ नहीं आई, फिर से बोलें')};
       rec.onend=stop;
       try{rec.start();mic.setAttribute('aria-pressed','true');mic.textContent='⏺';toast('बोलिए…')}catch(e){stop()}
@@ -1367,8 +1378,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.25',APP_NOTES=[
-    'भेजे गए नोटों के रिकॉर्ड में हर कार्ड पर "🗑️ हटाएँ" (पूछकर हटाता है)'
+  var APP_V='1.26',APP_NOTES=[
+    'लिखे हुए काम में सुधार के लिए दबाने पर कीबोर्ड खुलेगा (🎤 से बोलकर लिखने के बाद भी)'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
