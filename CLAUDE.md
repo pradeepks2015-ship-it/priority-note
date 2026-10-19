@@ -26,7 +26,8 @@ at the user's request (v1.15); their code and saved data remain but are unreacha
   gstatic) loads only after the first login (`localStorage` `priority-note-fb`). Newer `S._t` wins; first
   login on a phone with data on both sides asks which to keep. Letter screenshots are not uploaded.
   Security rules: `firestore.rules` (paste into Firestore → Rules). The web config in `index.html` is public by design.
-- "हर घंटे याद दिलाएँ": the 🔔 button in the header toggles it; the full card (`remCard`) lives in the staff tab.
+- "हर घंटे याद दिलाएँ": only the 🔔 button in the header toggles it; next-reminder time and the phone-notification
+  status/button are in the 👤 panel. The monthly summary is a folded `<details>` at the bottom of the staff tab.
 - Login/backup: the round 👤 profile button in the header (`#me`, Google photo or first letter when logged in)
   opens `#mePanel` with the cloud status, login and logout.
 - Hourly reminder when the app is closed (project is on the Blaze plan): with "हर घंटे याद दिलाएँ" on and logged in,

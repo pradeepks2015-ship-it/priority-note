@@ -195,6 +195,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   <section class="card" id="mePanel" aria-label="प्रोफ़ाइल और ऑनलाइन बैकअप" hidden>
     <p class="sec-title">☁️ ऑनलाइन बैकअप</p>
     <div id="cloudBox"></div>
+    <p class="sec-title" style="margin-top:14px">🔔 हर घंटे याद दिलाना</p>
+    <p class="hint">ऊपर 🔔 दबाकर चालू/बंद करें। सुबह 9 से शाम 6 तक, हर घंटे बाकी कामों की याद।</p>
+    <p class="hint" id="nextRem"></p>
+    <div id="pushBox"></div>
   </section>
 
   <div id="banner" class="banner" role="status" hidden>
@@ -279,18 +283,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         <p class="sec-title" style="margin-top:16px">फीडर / DT / गाँव की सूची</p>
         <p class="hint">स्थान एक बार लिखने पर अपने-आप सेव हो जाता है और अगली बार चुनने के लिए आता है।</p>
         <div id="placeChips" style="margin-top:4px"></div>
-      </section>
-
-      <section class="card" id="remCard" aria-label="हर घंटे याद दिलाना">
-        <div class="sw-row">
-          <div>
-            <b>हर घंटे याद दिलाएँ</b>
-            <p class="hint">सुबह 9 से शाम 6 तक, हर घंटे बाकी कामों की याद।</p>
-            <p class="hint" id="nextRem"></p>
-            <div id="pushBox"></div>
-          </div>
-          <button class="switch" id="remSw" role="switch" aria-checked="false" aria-label="हर घंटे याद दिलाएँ" type="button"></button>
-        </div>
       </section>
 
       <details class="card" id="monCard">
@@ -865,7 +857,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     ['tasks','staff'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',String(view===k))});
     var isList=view==='tasks'||view==='orders';
     $('addCard').hidden=!isList;$('listCard').hidden=!isList;$('repCard').hidden=view!=='report';$('staffCard').hidden=view!=='staff';
-    $('monCard').hidden=view!=='staff';$('listsCard').hidden=view!=='staff';$('remCard').hidden=view!=='staff';
+    $('monCard').hidden=view!=='staff';$('listsCard').hidden=view!=='staff';
     $('txt').placeholder=view==='orders'?'निर्देश लिखें, जैसे: सरकारी बकाये की सूची आज भेजें':'काम लिखें, जैसे: 11kV फीडर ट्रिपिंग जाँच';
     renderWho();renderTpl();renderPlaces();
     if(isList)renderList();
@@ -1050,7 +1042,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   var remTimer=null,lastKey='',wake=null;
   function nextHour(){var h=new Date().getHours()+1;if(h<9)h=9;if(h>18)return null;return h}
   function renderRemind(){
-    $('remSw').setAttribute('aria-checked',String(S.remind));
     $('bell').setAttribute('aria-pressed',String(S.remind));$('bell').textContent=S.remind?'🔔':'🔕';
     $('bell').title=S.remind?'हर घंटे याद दिलाना चालू है':'हर घंटे याद दिलाना बंद है';
     var h=S.remind?nextHour():null;
@@ -1077,8 +1068,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   function stopRemind(){clearInterval(remTimer);remTimer=null;try{wake&&wake.release()}catch(e){}wake=null}
   document.addEventListener('visibilitychange',function(){if(S.remind&&document.visibilityState==='visible'){getWake();tick()}});
   function toggleRemind(){S.remind=!S.remind;S.remind?startRemind():stopRemind();save();renderRemind();if(S.remind&&curDoc&&!lsGet(PSK))enablePush(false)}
-  $('remSw').onclick=toggleRemind;
-  // The bell at the top does the same as the switch in the staff tab.
+  // The bell at the top switches the hourly reminder on and off.
   $('bell').onclick=function(){toggleRemind();toast(S.remind?'🔔 हर घंटे याद दिलाना चालू (सुबह 9 से शाम 6)':'🔕 हर घंटे याद दिलाना बंद')};
   $('bannerOk').onclick=function(){$('banner').hidden=true};
 
@@ -1099,8 +1089,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.16',APP_NOTES=[
-    'महीने का सारांश अब स्टाफ़ टैब में नीचे, बंद रहता है; दबाने पर खुलेगा'
+  var APP_V='1.17',APP_NOTES=[
+    'महीने का सारांश अब स्टाफ़ टैब में नीचे, बंद रहता है; दबाने पर खुलेगा',
+    '"हर घंटे याद दिलाएँ" का अलग डिब्बा हटाया — ऊपर 🔔 से चालू/बंद, जानकारी 👤 में'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1240,7 +1231,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   }
   function renderPush(){
     var box=$('pushBox');if(!box)return;box.textContent='';
-    if(!S.remind)return;
+    if(!S.remind){box.appendChild(mk('p','hint','अभी बंद है।'));return}
     if(lsGet(PSK)&&ref){box.appendChild(mk('p','hint','📲 ऐप बंद होने पर भी इस फ़ोन पर सूचना आएगी'));return}
     if(!lsGet(FBK)){box.appendChild(mk('p','hint','ऐप बंद होने पर भी सूचना चाहिए तो ऊपर 👤 दबाकर Google से लॉगिन करें।'));return}
     var b=mk('button','btn ghost sm','📲 ऐप बंद होने पर भी सूचना चालू करें');b.type='button';b.id='pushOn';b.style.marginTop='8px';
@@ -1250,7 +1241,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var box=$('cloudBox');if(!box)return;box.textContent='';
     var v='संस्करण '+APP_V;if(cloud.st==='on')v+=' · ☁️ ऑनलाइन सेव चालू';$('ver').textContent=v;renderPush();renderMe();
     if(cloud.st==='off'){
-      box.appendChild(mk('p','hint','Google खाते से लॉगिन करें। फिर आपका सारा डेटा (काम, निर्देश, No., स्टाफ़, सूचियाँ) अपने-आप ऑनलाइन सेव होगा, और दूसरे फ़ोन में उसी खाते से लॉगिन करने पर वहाँ भी आ जाएगा।'));
+      box.appendChild(mk('p','hint','Google से लॉगिन करें: सारा डेटा अपने-आप ऑनलाइन सेव होगा और दूसरे फ़ोन में भी आ जाएगा।'));
       var b=mk('button','btn','Google से लॉगिन करें');b.type='button';b.id='cloudIn';b.style.marginTop='10px';b.onclick=fbLogin;box.appendChild(b);return;
     }
     if(cloud.st==='wait'){box.appendChild(mk('p','hint','जुड़ रहा है…'));return}

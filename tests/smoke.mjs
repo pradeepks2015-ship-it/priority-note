@@ -72,7 +72,7 @@ await page.evaluate(() => { document.getElementById('loc').value = 'नमून
 await page.press('#txt', 'Enter');
 const placeOffered = await page.$$eval('#placeList option', (o) => o.map((x) => x.value));
 const micOk = await page.$eval('#mic', (b) => b.hidden || b.textContent.includes('🎤'));
-const remOnHome = await page.$eval('#remCard', (n) => !n.hidden);
+const remCardGone = !(await page.$('#remCard')) && !(await page.$('#remSw'));
 await page.click('#bell');
 const bellOn = await page.$eval('#bell', (b) => b.getAttribute('aria-pressed') === 'true' && b.textContent === '🔔')
   && await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).remind === true);
@@ -118,7 +118,7 @@ const checks = {
   'रोज़ के काम का बटन लिखे': tplFilled === 'बकाया वसूली',
   'स्थान अगली बार चुनने को मिले': placeOffered.includes('नमूना फीडर'),
   'बोलकर लिखने का बटन ठीक': micOk,
-  'मुख्य पेज पर याद दिलाने का बड़ा डिब्बा नहीं': !remOnHome,
+  'याद दिलाने का अलग डिब्बा/switch नहीं (सिर्फ़ 🔔)': remCardGone,
   'ऊपर 🔔 से हर घंटे याद दिलाना चालू हो': bellOn,
   '"✏️ बदलें" से रोज़ का काम बदले': tplNow.includes('मीटर रीडिंग की जाँच') && !tplNow.includes('मीटर रीडिंग') && tplChips.includes('मीटर रीडिंग की जाँच'),
   'वहीं "हटाएँ" से रोज़ का काम हटे': !tplNow.includes('फीडर पेट्रोलिंग'),
