@@ -139,7 +139,6 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .hq>summary::after{content:'▾';margin-left:auto;color:var(--muted)}
 .hq:not([open])>summary::after{content:'▸'}
 .pr{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
-.pr .av{flex:0 0 40px;height:40px;border-radius:50%;background:var(--bg);color:var(--accent);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
 .pr .who{flex:1 1 auto;min-width:0}
 .pr .who b{display:block;overflow-wrap:anywhere;line-height:1.3}
 .pr .who small{color:var(--muted);font-size:13px}
@@ -747,7 +746,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   // Staff grouped by मुख्यालय, like a contact list: 📞 call, WhatsApp chat (with their pending work typed in),
   // and 🖼️ their work as a sticker through the phone's share sheet (WhatsApp does not let a page put a photo into one chat).
   var staffEdit=false,hqOpen={};
-  function initials(n){var w=String(n).replace(/^(श्री|श्रीमती|shri|smt)\.?\s+/i,'').trim().split(/\s+/);return (w[0]||'').charAt(0)+(w[1]?w[1].charAt(0):'')}
   function renderStaff(){
     var box=$('staffList'),tools=$('staffTools');box.textContent='';tools.textContent='';
     var dl=$('hqList');dl.textContent='';
@@ -766,7 +764,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       groups[k].forEach(function(st){
         var open=S.tasks.filter(function(x){return x.w===st.n&&x.st!=='done'});
         var old=open.reduce(function(m,x){return Math.max(m,ageOf(x))},0);
-        var row=mk('div','pr');row.appendChild(mk('div','av',initials(st.n)));
+        var row=mk('div','pr');
         var who=mk('div','who');who.appendChild(mk('b','',st.n));
         var line=mk('small');if(st.r)line.appendChild(mk('span','role',st.r));line.appendChild(mk('span','num',st.m?showNum(st.m):'नंबर नहीं'));who.appendChild(line);
         if(open.length)who.appendChild(mk('small','due',open.length+' काम बाकी'+(old>=1?' ('+old+' दिन से)':'')));
@@ -1280,10 +1278,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.20',APP_NOTES=[
-    'स्टाफ़ अब मुख्यालय-वार समूहों में, हर कर्मचारी का पद भी',
-    'हर कर्मचारी के आगे 💬 WhatsApp (बाकी काम लिखे हुए), 📞 कॉल और 🖼️ काम का स्टीकर',
-    '"कोई काम बाकी नहीं" हटाया; बदलें/हटाएँ अब "✏️ बदलें / हटाएँ" बटन से'
+  var APP_V='1.21',APP_NOTES=[
+    'स्टाफ़ की सूची में नाम के आगे का गोल अक्षर वाला निशान हटाया'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
