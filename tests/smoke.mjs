@@ -77,6 +77,18 @@ const oldCard = await page.evaluate(async () => {
 await page.click('#logBody img.card-th');
 const oldOpens = await page.$eval('#lb', (l) => !l.hidden);
 await page.click('#lbClose');
+// "🔔 रिमाइंडर भेजें": the card is made again with a strip at the bottom and handed to the phone's share/save.
+const oldLabel = await page.$eval('#logBody .logrow small', (n) => n.textContent);
+const dl = page.waitForEvent('download', { timeout: 8000 }).catch(() => null);
+await page.click('#logBody >> text=🔔 रिमाइंडर भेजें');
+const rem = await dl;
+const remInfo = rem ? { name: rem.suggestedFilename(), b64: readFileSync(await rem.path()).toString('base64') } : null;
+// The reminder strip at the bottom must be light (it once came out black: JPEG turns an empty area black).
+const stripLight = remInfo ? await page.evaluate(async (b64) => {
+  const bmp = await createImageBitmap(await (await fetch('data:image/jpeg;base64,' + b64)).blob());
+  const c = new OffscreenCanvas(bmp.width, bmp.height), x = c.getContext('2d'); x.drawImage(bmp, 0, 0);
+  const [r, g, b] = x.getImageData(20, bmp.height - 20, 1, 1).data; return (r + g + b) / 3 > 120;
+}, remInfo.b64) : false;
 await page.selectOption('#logMonth', await page.$$eval('#logMonth option', (o) => o[0].value));
 const logThumb = await page.evaluate(async () => {
   const i = document.querySelector('#logBody img.card-th'); if (!i) return null;
@@ -173,6 +185,9 @@ const checks = {
   'हस्ताक्षर दिखे': note.includes('— JE'),
   'PNG बनी': true,
   'रिकॉर्ड में महीना चुनें (2 महीने)': logMonths === 2,
+  'रिकॉर्ड में "⚡ प्राथमिकता वाले कार्य" लिखा': oldLabel.startsWith('⚡ प्राथमिकता वाले कार्य'),
+  '"🔔 रिमाइंडर भेजें" से रिमाइंडर फोटो बने': !!remInfo && /^reminder-.*\.jpg$/.test(remInfo.name),
+  'रिमाइंडर की नीचे वाली पट्टी हल्के रंग की (काली नहीं)': stripLight,
   'पुराने रिकॉर्ड का कार्ड भी छोटी JPEG (420px, 60 KB से कम), दबाने पर बड़ा': !!oldCard && oldCard.type === 'image/jpeg' && oldCard.w === 420 && oldCard.kb < 60 && oldOpens,
   'रिकॉर्ड में नोट की छोटी फोटो (420px JPEG, 60 KB से कम)': !!logThumb && logThumb.type === 'image/jpeg' && logThumb.w === 420 && logThumb.kb < 60,
   '400px पर horizontal scroll नहीं': !hScroll,

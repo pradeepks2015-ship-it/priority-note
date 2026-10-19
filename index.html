@@ -670,14 +670,40 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       byDay[k].forEach(function(l){
         var r=mk('div','logrow');
         r.appendChild(mk('b','',tm(new Date(l.ts))));
-        r.appendChild(mk('small','',l.lbl+(l.tot?' · '+l.done+'/'+l.tot+' पूरे':'')));
+        r.appendChild(mk('small','',logLabel(l)+(l.tot?' · '+l.done+'/'+l.tot+' पूरे':'')));
         var id=blobURL(thId(l))?thId(l):(l.th&&blobURL(l.th)?l.th:'');
         if(id){var t=thumbBtn(id,'भेजा गया नोट');t.style.alignSelf='flex-start';t.firstChild.className+=' card-th';r.appendChild(t)}
         else if(l.txt)r.appendChild(mk('small','','कार्ड बन रहा है…'));
+        if(l.txt&&downloads){
+          var sh=mk('button','btn ghost sm','🔔 रिमाइंडर भेजें');sh.type='button';sh.style.alignSelf='flex-start';
+          sh.setAttribute('aria-label',dateStr(new Date(l.ts))+' के प्राथमिकता वाले कार्य रिमाइंडर के रूप में भेजें');
+          sh.onclick=function(){sendReminder(l)};r.appendChild(sh);
+        }
         g.appendChild(r);
       });
       b.appendChild(g);
     });
+  }
+  // "फोटो सेव की · काम" → "⚡ प्राथमिकता वाले कार्य" (who it went to, if it was for one person).
+  function logLabel(l){
+    var m=String(l.lbl).match(/^(?:अलग भेजा|याद दिलाया|फोटो सेव की): (.+)$/);
+    if(m&&!/^(काम|निर्देश|रिपोर्ट)$/.test(m[1]))return '⚡ प्राथमिकता वाले कार्य → '+m[1];
+    return /रिपोर्ट/.test(l.lbl)?'📊 दिन का रिकॉर्ड':'⚡ प्राथमिकता वाले कार्य';
+  }
+  // The day's card again, with a small "🔔 रिमाइंडर" strip at the bottom, shared through the phone (WhatsApp etc.).
+  function reminderCard(l){
+    var c=textCard(l.txt),W=c.width,band=96,o=document.createElement('canvas');o.width=W;o.height=c.height+band;
+    // Fill first: an unpainted area turns black in a JPEG.
+    var x=o.getContext('2d');x.fillStyle=NOTE[S.color]||NOTE.yellow;x.fillRect(0,0,W,o.height);x.drawImage(c,0,0);
+    x.fillStyle='rgba(0,0,0,.10)';x.fillRect(0,c.height,W,band);
+    x.fillStyle=INK;x.font='700 34px Kalam, Hind, sans-serif';x.textBaseline='middle';
+    x.fillText('🔔 रिमाइंडर · '+dateStr(new Date(l.ts))+' के प्राथमिकता वाले कार्य',64,c.height+band/2,W-128);
+    return new Promise(function(res){o.toBlob(res,'image/jpeg',0.85)});
+  }
+  function sendReminder(l){
+    toast('रिमाइंडर बन रहा है…');
+    reminderCard(l).then(function(b){return downloads.save({filename:'reminder-'+fileStamp(new Date(l.ts))+'.jpg',data:b})})
+      .then(function(){toast('WhatsApp चुनकर भेजें')},function(e){if(!(e&&e.code==='declined'))toast('रिमाइंडर नहीं बन सका')});
   }
   // A sticky-note picture drawn from a saved WhatsApp message (for older records that have no small photo).
   function textCard(txt){
@@ -1331,9 +1357,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.23',APP_NOTES=[
-    'भेजे गए नोटों का रिकॉर्ड: महीना चुनें, तारीख-वार देखें; रिकॉर्ड अब 150 तक',
-    'हर रिकॉर्ड का कार्ड छोटी (compressed) फोटो के रूप में, पुराने रिकॉर्ड का भी — दबाने पर बड़ा'
+  var APP_V='1.24',APP_NOTES=[
+    'रिकॉर्ड में अब "⚡ प्राथमिकता वाले कार्य" लिखा आता है',
+    'हर रिकॉर्ड पर "🔔 रिमाइंडर भेजें": उस दिन का कार्ड नीचे छोटी रिमाइंडर पट्टी के साथ WhatsApp में भेजें'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
