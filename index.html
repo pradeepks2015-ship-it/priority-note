@@ -67,6 +67,7 @@ h1{font-family:var(--f-head);font-weight:700;font-size:30px;line-height:1.2;marg
 button,select,input,textarea{font-family:var(--f-ui)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 form{display:flex;flex-direction:column;gap:10px}
+form.row{flex-direction:row}
 input[type=text],input[type=tel],input[type=time],input[type=number],select{width:100%;font:500 16px var(--f-ui);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:46px}
 input::placeholder{color:var(--muted)}
 textarea.bulk{width:100%;min-height:160px;font:500 15px/1.5 var(--f-ui);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);resize:vertical}
@@ -1473,8 +1474,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.29',APP_NOTES=[
-    '"🗺️ फीडर" अब स्टाफ़ के बगल में अलग बटन है'
+  var APP_V='1.30',APP_NOTES=[
+    '"🗺️ फीडर" अब स्टाफ़ के बगल में अलग बटन है',
+    'फीडर का नाम लिखने का खाना सामान्य आकार का'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

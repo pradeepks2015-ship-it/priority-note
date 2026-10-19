@@ -19,6 +19,7 @@ await page.goto(url);
 
 await page.click('#tab-feeder');
 const noteHidden = await page.$eval('#noteCol', (n) => n.hidden);
+const nameBoxH = await page.$eval('#fdName', (n) => n.getBoundingClientRect().height);
 await page.fill('#fdName', 'नमूना फीडर');
 await page.click('#fdNew button[type=submit]');
 const mapReady = await page.waitForSelector('#fdMap.leaflet-container', { timeout: 8000 }).then(() => true, () => false);
@@ -75,6 +76,7 @@ const gone = await page.evaluate(() => JSON.parse(localStorage.getItem('priority
 await browser.close();
 const checks = {
   'फीडर टैब में नोट वाला हिस्सा छिपा': noteHidden,
+  'फीडर के नाम का खाना सामान्य ऊँचाई का': nameBoxH < 70,
   'नक्शा खुला': mapReady,
   'चलते समय "नाप रहे हैं"': recStat.includes('नाप रहे हैं'),
   'लंबाई ~150 मी. (कमज़ोर GPS और 1 km की छलाँग छोड़ी)': len.m > 140 && len.m < 160 && len.pts === 6,
