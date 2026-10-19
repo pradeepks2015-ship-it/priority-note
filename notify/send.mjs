@@ -12,12 +12,13 @@ if (!inWorkHours() && process.env.FORCE !== '1') { console.log('काम के
 initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SA)) });
 const db = getFirestore();
 const snap = await db.collection('users').where('rem', '==', true).get();
-let sent = 0, failed = 0;
+let sent = 0, failed = 0, noPhone = 0, nothingPending = 0;
 for (const d of snap.docs) {
   const { s, fcm = [] } = d.data();
   let state; try { state = JSON.parse(s); } catch { continue; }
   const msg = buildReminder(state);
-  if (!msg || !fcm.length) continue;
+  if (!fcm.length) { noPhone++; continue; }
+  if (!msg) { nothingPending++; continue; }
   for (const token of fcm) {
     try {
       // Data-only message: sw.js shows it, so it looks the same on every phone.
@@ -32,4 +33,6 @@ for (const d of snap.docs) {
     }
   }
 }
+// Counts only, no names or task text in the public log.
+console.log(`'हर घंटे याद दिलाएँ' चालू खाते: ${snap.size} · जिनमें किसी फ़ोन की सूचना-key नहीं: ${noPhone} · जिनमें कोई काम बाकी नहीं: ${nothingPending}`);
 console.log(`सूचनाएँ भेजीं: ${sent}, नहीं गईं: ${failed}`);
