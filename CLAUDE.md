@@ -22,6 +22,7 @@ staff member. Staff never use the app; they only receive the note.
   gstatic) loads only after the first login (`localStorage` `priority-note-fb`). Newer `S._t` wins; first
   login on a phone with data on both sides asks which to keep. Letter screenshots are not uploaded.
   Security rules: `firestore.rules` (paste into Firestore → Rules). The web config in `index.html` is public by design.
+- "हर घंटे याद दिलाएँ": the 🔔 button in the header toggles it; the full card (`remCard`) lives in the staff tab.
 - Hourly reminder when the app is closed (project is on the Blaze plan): with "हर घंटे याद दिलाएँ" on and logged in,
   the app saves this phone's push token in `users/{uid}.fcm` (`rem: true`; all writes use `{merge:true}` so tokens
   stay). `.github/workflows/remind.yml` runs hourly 9–6 IST, `notify/send.mjs` (firebase-admin, key in the GitHub

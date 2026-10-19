@@ -44,11 +44,12 @@ const updClosed = await page.$eval('#upd', (n) => n.hidden);
 const updSaved = await page.evaluate(() => localStorage.getItem('priority-note-ver'));
 
 // A newer version.json on the server should bring up the "new version" banner.
-await page.route('**/version.json*', (r) => r.fulfill({ contentType: 'application/json', body: '{"v":"99.0"}' }));
+// Routed on the context, so it also catches the request when the service worker already controls the page.
+await page.context().route('**/version.json*', (r) => r.fulfill({ contentType: 'application/json', body: '{"v":"99.0"}' }));
 await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
 await page.waitForFunction(() => !document.getElementById('upd').hidden, null, { timeout: 5000 }).catch(() => {});
 const newTitle = await page.$eval('#upd', (n) => (n.hidden ? '' : n.innerText));
-await page.unroute('**/version.json*');
+await page.context().unroute('**/version.json*');
 
 await page.click('#img');
 await page.waitForFunction(() => window.__pngSize > 0, null, { timeout: 15000 });
@@ -69,6 +70,11 @@ await page.evaluate(() => { document.getElementById('loc').value = 'नमून
 await page.press('#txt', 'Enter');
 const placeOffered = await page.$$eval('#placeList option', (o) => o.map((x) => x.value));
 const micOk = await page.$eval('#mic', (b) => b.hidden || b.textContent.includes('🎤'));
+const remOnHome = await page.$eval('#remCard', (n) => !n.hidden);
+await page.click('#bell');
+const bellOn = await page.$eval('#bell', (b) => b.getAttribute('aria-pressed') === 'true' && b.textContent === '🔔')
+  && await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).remind === true);
+await page.click('#bell');
 // Edit and delete daily-work buttons right where they are used.
 await page.click('#tplEdit');
 page.once('dialog', (d) => d.accept('मीटर रीडिंग की जाँच'));
@@ -111,6 +117,8 @@ const checks = {
   'रोज़ के काम का बटन लिखे': tplFilled === 'बकाया वसूली',
   'स्थान अगली बार चुनने को मिले': placeOffered.includes('नमूना फीडर'),
   'बोलकर लिखने का बटन ठीक': micOk,
+  'मुख्य पेज पर याद दिलाने का बड़ा डिब्बा नहीं': !remOnHome,
+  'ऊपर 🔔 से हर घंटे याद दिलाना चालू हो': bellOn,
   '"✏️ बदलें" से रोज़ का काम बदले': tplNow.includes('मीटर रीडिंग की जाँच') && !tplNow.includes('मीटर रीडिंग') && tplChips.includes('मीटर रीडिंग की जाँच'),
   'वहीं "हटाएँ" से रोज़ का काम हटे': !tplNow.includes('फीडर पेट्रोलिंग'),
   'महीने के सारांश में गिनती': mon.includes('निर्देश आए 1') && mon.includes('काम जोड़े 1'),

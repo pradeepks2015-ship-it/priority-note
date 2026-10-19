@@ -47,6 +47,9 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16p
 header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
 h1{font-family:var(--f-head);font-weight:700;font-size:30px;line-height:1.2;margin:0;text-wrap:balance}
 .date{color:var(--muted);font-size:15px}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.bell{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-size:20px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.bell[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start}
 .col{display:flex;flex-direction:column;gap:16px;min-width:0}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
@@ -177,7 +180,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 <div class="wrap">
   <header>
     <h1>प्राथमिकता नोट</h1>
-    <span class="date" id="today"></span>
+    <div class="hdr-r">
+      <span class="date" id="today"></span>
+      <button class="bell" id="bell" type="button" aria-pressed="false" aria-label="हर घंटे याद दिलाना">🔕</button>
+    </div>
   </header>
 
   <div id="banner" class="banner" role="status" hidden>
@@ -302,10 +308,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       <section class="card actions" aria-label="ग्रुप में भेजें">
         <a class="btn wa" id="wa" href="#" target="_blank" rel="noopener">ग्रुप के लिए WhatsApp खोलें</a>
         <div class="row">
-          <button class="btn ghost" id="copy" type="button">संदेश कॉपी करें</button>
           <button class="btn ghost" id="img" type="button" hidden>फोटो शेयर / सेव करें</button>
         </div>
-        <p class="hint">फोटो में तारीख और समय छपता है, और जिन कामों के साथ पत्र का स्क्रीनशॉट लगा है, वह नोट के नीचे जुड़ जाता है। फ़ोन पर बटन दबाते ही शेयर का विकल्प खुलता है, वहाँ से सीधे WhatsApp चुनें।</p>
       </section>
 
       <section class="card" id="sendCard" aria-label="हर कर्मचारी को अलग भेजें"></section>
@@ -506,7 +510,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var has=listFor(mode).length>0,wa=$('wa');
     wa.href=has?'https://wa.me/?text='+encodeURIComponent(buildText(mode,now)):'#';
     wa.setAttribute('aria-disabled',String(!has));
-    $('copy').disabled=!has;$('img').disabled=!has;
+    $('img').disabled=!has;
     $('swatches').querySelectorAll('.sw').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.c===S.color))});
   }
 
@@ -831,7 +835,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       }
       c.appendChild(r);
     });
-    if(!any)c.appendChild(mk('p','hint',mode==='report'?'सबकी स्थिति दर्ज है, या किसी को काम नहीं सौंपा।':'काम जोड़ते समय "कौन करेगा" चुनें, तब यहाँ हर किसी का अलग बटन आएगा।'));
+    if(!any)c.hidden=true;
   }
 
   function setView(v){
@@ -842,7 +846,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     ['tasks','orders','report','staff'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',String(view===k))});
     var isList=view==='tasks'||view==='orders';
     $('addCard').hidden=!isList;$('listCard').hidden=!isList;$('repCard').hidden=view!=='report';$('staffCard').hidden=view!=='staff';
-    $('monCard').hidden=view!=='report';$('listsCard').hidden=view!=='staff';$('cloudCard').hidden=view!=='staff';
+    $('monCard').hidden=view!=='report';$('listsCard').hidden=view!=='staff';$('cloudCard').hidden=view!=='staff';$('remCard').hidden=view!=='staff';
     $('txt').placeholder=view==='orders'?'निर्देश लिखें, जैसे: सरकारी बकाये की सूची आज भेजें':'काम लिखें, जैसे: 11kV फीडर ट्रिपिंग जाँच';
     renderWho();renderTpl();renderPlaces();
     if(isList)renderList();
@@ -923,7 +927,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     b.onclick=function(){S.color=c;save();renderNote()};swb.appendChild(b);
   });
   $('wa').addEventListener('click',function(){var m=noteMode();logIt('ग्रुप में भेजा · '+VIEWLBL[m],buildText(m,new Date()),listFor(m))});
-  $('copy').onclick=function(){var m=noteMode(),t=buildText(m,new Date());copyText(t);logIt('कॉपी किया · '+VIEWLBL[m],t,listFor(m))};
   $('lbClose').onclick=function(){$('lb').hidden=true};
   $('lb').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')$('lb').hidden=true});
@@ -1029,6 +1032,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   function nextHour(){var h=new Date().getHours()+1;if(h<9)h=9;if(h>18)return null;return h}
   function renderRemind(){
     $('remSw').setAttribute('aria-checked',String(S.remind));
+    $('bell').setAttribute('aria-pressed',String(S.remind));$('bell').textContent=S.remind?'🔔':'🔕';
+    $('bell').title=S.remind?'हर घंटे याद दिलाना चालू है':'हर घंटे याद दिलाना बंद है';
     var h=S.remind?nextHour():null;
     $('nextRem').textContent=S.remind?(h?'अगला रिमाइंडर: '+per(h)+' '+(h%12||12)+':00 बजे':'आज के रिमाइंडर पूरे, कल सुबह 9 बजे से'):'';
     renderPush();
@@ -1052,7 +1057,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   function startRemind(){stopRemind();remTimer=setInterval(tick,20000);getWake()}
   function stopRemind(){clearInterval(remTimer);remTimer=null;try{wake&&wake.release()}catch(e){}wake=null}
   document.addEventListener('visibilitychange',function(){if(S.remind&&document.visibilityState==='visible'){getWake();tick()}});
-  $('remSw').onclick=function(){S.remind=!S.remind;S.remind?startRemind():stopRemind();save();renderRemind();if(S.remind&&curDoc&&!lsGet(PSK))enablePush(false)};
+  function toggleRemind(){S.remind=!S.remind;S.remind?startRemind():stopRemind();save();renderRemind();if(S.remind&&curDoc&&!lsGet(PSK))enablePush(false)}
+  $('remSw').onclick=toggleRemind;
+  // The bell at the top does the same as the switch in the staff tab.
+  $('bell').onclick=function(){toggleRemind();toast(S.remind?'🔔 हर घंटे याद दिलाना चालू (सुबह 9 से शाम 6)':'🔕 हर घंटे याद दिलाना बंद')};
   $('bannerOk').onclick=function(){$('banner').hidden=true};
 
   /* ---------- speak to write (Chrome on Android needs internet for this) ---------- */
@@ -1072,10 +1080,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.11',APP_NOTES=[
-    '"आज के काम" में रोज़ के काम के बटनों के साथ "✏️ बदलें / हटाएँ" — वहीं बदलें या हटाएँ',
-    'लंबे रोज़ के काम बटन पर एक लाइन में दिखेंगे, दबाने पर पूरा लिखा जाएगा',
-    'स्टाफ़ टैब की सूचियों में भी "बदलें" बटन'
+  var APP_V='1.12',APP_NOTES=[
+    'भेजने वाला हिस्सा छोटा किया: "संदेश कॉपी करें" और लंबी जानकारी हटाई',
+    '"हर कर्मचारी को अलग भेजें" तभी दिखेगा जब किसी को काम सौंपा हो',
+    '"हर घंटे याद दिलाएँ" अब ऊपर 🔔 बटन से; पूरी जानकारी स्टाफ़ टैब में'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

@@ -96,10 +96,10 @@ const aGot = await until(A, () => JSON.parse(localStorage.getItem('priority-note
 
 // Hourly reminder on: each phone's token is saved, the rest of the document stays.
 await A.click('#tab-tasks');
-await A.click('#remSw');
+await A.click('#bell');
 const aPush = await until(A, () => document.getElementById('pushBox').innerText.includes('ऐप बंद होने पर भी इस फ़ोन पर सूचना आएगी'));
 const afterA = JSON.parse(doc);
-await B.click('#remSw');
+await B.click('#bell');
 await until(B, () => document.getElementById('pushBox').innerText.includes('ऐप बंद होने पर भी'));
 await B.waitForTimeout(400);
 const afterB = JSON.parse(doc);
