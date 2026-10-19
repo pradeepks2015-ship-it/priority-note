@@ -503,7 +503,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(x.img)subs.push('📎 पत्र का स्क्रीनशॉट नीचे लगा है');
     return {t:'i',x:x.t,num:num||0,st:x.st,c:PRI[x.p].c,dot:mode==='tasks'&&!x.st,glyph:(x.st!==''||mode==='report'),subs:subs,q:x.q};
   }
-  function listOf(mode,who){return who!=null?S.tasks.filter(function(x){return x.w===who}):listFor(mode)}
+  // One person's work: their own tasks, or the common (सभी / अन्य) tasks when none is in their name.
+  function mine(name){var own=S.tasks.filter(function(x){return x.w===name});return own.length?own:S.tasks.filter(function(x){return !x.w})}
+  function listOf(mode,who){return who!=null?mine(who):listFor(mode)}
   function model(mode,now,who){
     var B=[],list=listOf(mode,who),title=who!=null?'⚡ '+who+' जी के आज के काम':mode==='tasks'?'⚡ आज के प्राथमिकता वाले कार्य':mode==='orders'?'📋 वरिष्ठ कार्यालय के निर्देश':'📊 शाम की रिपोर्ट';
     B.push({t:'h',x:title});
@@ -602,7 +604,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       items.forEach(function(x){L.push(itemLine(x,false))});
       L.push('');L.push(REPLY);
     }else{
-      items=byStaff(S.tasks.filter(function(x){return x.w===name}))[0];items=items?items.items:[];
+      items=[];byStaff(mine(name)).forEach(function(g){items=items.concat(g.items)});
       L.push('नमस्ते *'+name+'* जी,');
       L.push('⚡ *आज के आपके काम | '+dateStr(now)+'*');L.push('🕒 '+tm(now));L.push('');
       items.forEach(function(x){L.push(itemLine(x,false))});
@@ -851,7 +853,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       g.addEventListener('toggle',function(){hqOpen[k]=g.open});
       var sm=mk('summary');sm.appendChild(mk('span','','📍 '+(k||'मुख्यालय नहीं लिखा')));sm.appendChild(mk('small','',groups[k].length+' स्टाफ़'));g.appendChild(sm);
       groups[k].forEach(function(st){
-        var open=S.tasks.filter(function(x){return x.w===st.n&&x.st!=='done'});
+        var open=S.tasks.filter(function(x){return x.w===st.n&&x.st!=='done'}),send=mine(st.n).filter(function(x){return x.st!=='done'});
         var old=open.reduce(function(m,x){return Math.max(m,ageOf(x))},0);
         var row=mk('div','pr');
         var who=mk('div','who');who.appendChild(mk('b','',st.n));
@@ -868,14 +870,14 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         row.appendChild(who);
         var acts=mk('div','acts');
         if(st.m){
-          var txt=open.length?personalText(st.n,'tasks',now):'';
+          var txt=send.length?personalText(st.n,'tasks',now):'';
           var w=mk('a','ic wa','💬');w.href='https://wa.me/'+st.m+(txt?'?text='+encodeURIComponent(txt):'');w.target='_blank';w.rel='noopener';
           w.setAttribute('aria-label',st.n+' को WhatsApp'+(txt?' (बाकी काम के साथ)':''));
-          if(txt)w.addEventListener('click',function(){logIt('अलग भेजा: '+st.n,txt,open,'tasks',st.n)});
+          if(txt)w.addEventListener('click',function(){logIt('अलग भेजा: '+st.n,txt,send,'tasks',st.n)});
           var c=mk('a','ic call','📞');c.href='tel:+'+st.m;c.setAttribute('aria-label',st.n+' को कॉल करें');
           acts.appendChild(w);acts.appendChild(c);
         }
-        if(open.length&&downloads){
+        if(send.length&&downloads){
           var ph=mk('button','ic','🖼️');ph.type='button';ph.setAttribute('aria-label',st.n+' के कामों का स्टीकर शेयर करें');
           ph.onclick=function(){savePhoto('tasks',st.n,S.staff.indexOf(st))};acts.appendChild(ph);
         }
@@ -994,10 +996,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     c.appendChild(mk('p','sec-title',mode==='report'?'जिनकी स्थिति नहीं आई, उन्हें याद दिलाएँ':'हर कर्मचारी को उसके काम अलग भेजें'));
     var now=new Date(),any=false;
     S.staff.forEach(function(st){
-      var items=S.tasks.filter(function(x){return x.w===st.n&&(mode==='report'?x.st==='':true)});
+      var own=S.tasks.some(function(x){return x.w===st.n}),items=mode==='report'?S.tasks.filter(function(x){return x.w===st.n&&x.st===''}):mine(st.n);
       if(!items.length)return;any=true;
       var r=mk('div','srow'),nm=mk('div','nm');
-      nm.appendChild(mk('b','',st.n));nm.appendChild(mk('span','',items.length+(mode==='report'?' काम की स्थिति बाकी':' काम')));
+      nm.appendChild(mk('b','',st.n));nm.appendChild(mk('span','',mode==='report'?items.length+' काम की स्थिति बाकी':own?items.length+' काम':'अलग काम नहीं · सबके '+items.length+' काम'));
       r.appendChild(nm);
       if(st.m){
         var a=mk('a','btn wa sm',mode==='report'?'याद दिलाएँ':'WhatsApp पर भेजें');
@@ -1378,8 +1380,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.26',APP_NOTES=[
-    'लिखे हुए काम में सुधार के लिए दबाने पर कीबोर्ड खुलेगा (🎤 से बोलकर लिखने के बाद भी)'
+  var APP_V='1.27',APP_NOTES=[
+    'जिस स्टाफ़ के नाम कोई काम नहीं, उसका भी अलग कार्ड और WhatsApp बनेगा (उसमें "सभी / अन्य" वाले काम)'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

@@ -176,6 +176,14 @@ await page.fill('#sh', 'नमूना गाँव');
 await page.click('#sbtn');
 await page.click('#staffEditBtn');
 const sampleRow = await page.$$eval('#staffList .pr', (rows) => { const r = rows.find((x) => x.querySelector('.who b').textContent === 'नमूना कर्मचारी'); return r ? { wa: r.querySelector('a.wa').href, txt: r.innerText, sticker: !!r.querySelector('button.ic') } : null; });
+// A staff member with no task in their name still gets a card: the common (सभी / अन्य) tasks.
+const noOwn = await page.evaluate(() => {
+  const S = JSON.parse(localStorage.getItem('priority-note-v2'));
+  const common = S.tasks.filter((x) => !x.w && x.st !== 'done').map((x) => x.t);
+  const r = [...document.querySelectorAll('#staffList .pr')].find((x) => x.querySelector('.who b').textContent === 'नमूना दो');
+  const wa = r ? decodeURIComponent((r.querySelector('a.wa') || {}).href || '') : '';
+  return { own: S.tasks.some((x) => x.w === 'नमूना दो'), common, ok: !!r && common.length > 0 && common.every((t) => wa.includes(t)) && !!r.querySelector('button.ic') };
+});
 const listsTxt = await page.$eval('#listsCard', (n) => n.innerText);
 const hScroll2 = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 await page.click('#tplList >> [aria-label="हटाएँ: बकाया वसूली"]');
@@ -233,6 +241,7 @@ const checks = {
   'स्टाफ़ में बाकी काम दिखें, "कोई काम बाकी नहीं" नहीं': staffTxt.includes('1 काम बाकी') && !staffTxt.includes('कोई काम बाकी नहीं'),
   'स्टाफ़ मुख्यालय-वार समूहों में': groups.some((g) => g.startsWith('📍 नमूना गाँव')) && groups.some((g) => g.startsWith('📍 मुख्यालय नहीं लिखा')),
   'हर नंबर पर 📞 कॉल और 💬 WhatsApp': links.filter((l) => l.tel).every((l) => /^tel:\+919\d{9}$/.test(l.tel) && l.wa.startsWith('https://wa.me/919')) && links.some((l) => l.n === 'नमूना दो' && l.tel === 'tel:+919000000002'),
+  'बिना अपने काम वाले स्टाफ़ को भी सबके काम का कार्ड/WhatsApp': !noOwn.own && noOwn.ok,
   'बदलें/हटाएँ सिर्फ़ "✏️ बदलें / हटाएँ" दबाने पर': !links.some((l) => l.edit) && editShown > 0,
   'बाकी काम वाले के WhatsApp में काम लिखा, 🖼️ स्टीकर बटन': !!sampleRow && sampleRow.wa.startsWith('https://wa.me/919000000004?text=') && decodeURIComponent(sampleRow.wa).includes('नमूना काम दो') && sampleRow.sticker,
   'कई स्टाफ़ एक साथ जुड़ें (नाम, नंबर, पद)': bulk.some((x) => x.n === 'नमूना एक' && x.m === '919000000001' && x.r === 'मीटर रीडर' && x.h === 'नमूना गाँव') && bulk.some((x) => x.n === 'नमूना दो' && x.m === '919000000002' && x.r === 'आउटसोर्स हेल्पर' && !x.h),

@@ -60,6 +60,8 @@ at the user's request (v1.15); their code and saved data remain but are unreacha
 - `model(mode, now, who)` builds the note as blocks; `renderNote()` draws it as HTML and
   `paint()` draws the same blocks on a canvas for the PNG. Change both together.
 - `buildText()` / `personalText()` build the WhatsApp messages (`wa.me` links).
+- `mine(name)`: one person's work for their own card/WhatsApp — their tasks, or the common (सभी / अन्य) tasks
+  when none is in their name.
 - `makeBlob()` renders the PNG and appends attached screenshots below the note.
 
 ## Conventions
