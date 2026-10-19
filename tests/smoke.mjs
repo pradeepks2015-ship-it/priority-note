@@ -69,6 +69,14 @@ await page.evaluate(() => { document.getElementById('loc').value = 'नमून
 await page.press('#txt', 'Enter');
 const placeOffered = await page.$$eval('#placeList option', (o) => o.map((x) => x.value));
 const micOk = await page.$eval('#mic', (b) => b.hidden || b.textContent.includes('🎤'));
+// Edit and delete daily-work buttons right where they are used.
+await page.click('#tplEdit');
+page.once('dialog', (d) => d.accept('मीटर रीडिंग की जाँच'));
+await page.click('#tplRow >> [aria-label="बदलें: मीटर रीडिंग"]');
+await page.click('#tplRow >> [aria-label="हटाएँ: फीडर पेट्रोलिंग"]');
+await page.click('#tplDone');
+const tplNow = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).tpl);
+const tplChips = await page.$eval('#tplRow', (n) => n.innerText);
 
 // Monthly summary counts what was added today; staff tab shows open work.
 await page.click('#tab-report');
@@ -103,6 +111,8 @@ const checks = {
   'रोज़ के काम का बटन लिखे': tplFilled === 'बकाया वसूली',
   'स्थान अगली बार चुनने को मिले': placeOffered.includes('नमूना फीडर'),
   'बोलकर लिखने का बटन ठीक': micOk,
+  '"✏️ बदलें" से रोज़ का काम बदले': tplNow.includes('मीटर रीडिंग की जाँच') && !tplNow.includes('मीटर रीडिंग') && tplChips.includes('मीटर रीडिंग की जाँच'),
+  'वहीं "हटाएँ" से रोज़ का काम हटे': !tplNow.includes('फीडर पेट्रोलिंग'),
   'महीने के सारांश में गिनती': mon.includes('निर्देश आए 1') && mon.includes('काम जोड़े 1'),
   'स्टाफ़ में बाकी काम दिखें': staffTxt.includes('1 काम बाकी'),
   'स्टाफ़ टैब में सूचियाँ दिखें': listsTxt.includes('बकाया वसूली') && listsTxt.includes('नमूना फीडर'),

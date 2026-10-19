@@ -70,7 +70,9 @@ input::placeholder{color:var(--muted)}
 .mic{flex:0 0 auto;min-width:52px;padding:8px 12px;font-size:20px}
 .mic[aria-pressed="true"]{border-color:var(--p1);color:var(--p1)}
 .tpl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.tpl .chip{font-weight:500}
+.tpl .chip{font-weight:500;max-width:100%}
+.tpl .chip .tt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tpl .edit{display:flex;flex-direction:column;width:100%;gap:0}
 .tpl .lbl{margin-right:2px}
 .mon{display:flex;flex-direction:column;gap:6px}
 .mon .srow span{white-space:nowrap}
@@ -267,7 +269,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
       <section class="card" id="listsCard" aria-label="सेव की गई सूचियाँ">
         <p class="sec-title">रोज़ के काम की सूची</p>
-        <p class="hint">ये बटन "आज के काम" में लिखने की जगह के नीचे आते हैं। नया जोड़ने के लिए वहाँ काम लिखकर ⭐ सेव दबाएँ।</p>
+        <p class="hint">ये बटन "आज के काम" में लिखने की जगह के नीचे आते हैं। नया जोड़ने के लिए वहाँ काम लिखकर ⭐ सेव दबाएँ; वहीं "✏️ बदलें / हटाएँ" से भी बदल सकते हैं।</p>
         <div id="tplList" style="margin-top:4px"></div>
         <p class="sec-title" style="margin-top:16px">फीडर / DT / गाँव की सूची</p>
         <p class="hint">स्थान एक बार लिखने पर अपने-आप सेव हो जाता है और अगली बार चुनने के लिए आता है।</p>
@@ -698,12 +700,38 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       bt.appendChild(e);bt.appendChild(d);r.appendChild(nm);r.appendChild(bt);box.appendChild(r);
     });
   }
+  // Daily-work buttons under the text box; "✏️ बदलें / हटाएँ" lists them with edit and delete in place.
+  var tplEdit=false;
+  function editTpl(i){
+    var v=prompt('रोज़ का काम बदलें (सब मिटाकर OK दबाएँ तो हट जाएगा):',S.tpl[i]);
+    if(v===null)return;v=v.trim();
+    if(!v){var old=S.tpl.splice(i,1)[0];toast('हटा दिया: '+old)}
+    else if(v!==S.tpl[i]&&S.tpl.indexOf(v)>=0){toast('यह पहले से सूची में है');return}
+    else S.tpl[i]=v;
+    save();renderAll();
+  }
   function renderTpl(){
     var row=$('tplRow');row.textContent='';
     if(view!=='tasks')return;
     row.appendChild(mk('span','lbl','रोज़ के काम:'));
+    if(tplEdit){
+      var box=mk('div','edit');
+      if(!S.tpl.length)box.appendChild(mk('p','hint','सूची खाली है।'));
+      S.tpl.forEach(function(t,i){
+        var r_=mk('div','srow'),nm=mk('div','nm');nm.appendChild(mk('b','',t));
+        var bt=mk('div','bt');
+        var e=mk('button','btn ghost sm','बदलें');e.type='button';e.setAttribute('aria-label','बदलें: '+t);e.onclick=function(){editTpl(i)};
+        var d=mk('button','btn ghost sm','हटाएँ');d.type='button';d.setAttribute('aria-label','हटाएँ: '+t);
+        d.onclick=function(){S.tpl.splice(i,1);save();renderAll();toast('हटा दिया: '+t)};
+        bt.appendChild(e);bt.appendChild(d);r_.appendChild(nm);r_.appendChild(bt);box.appendChild(r_);
+      });
+      row.appendChild(box);
+      var done=mk('button','chip','✓ हो गया');done.type='button';done.id='tplDone';done.onclick=function(){tplEdit=false;renderTpl()};
+      row.appendChild(done);return;
+    }
     S.tpl.forEach(function(t){
-      var c=mk('button','chip',t);c.type='button';c.setAttribute('aria-label','लिखें: '+t);
+      var c=mk('button','chip');c.type='button';c.setAttribute('aria-label','लिखें: '+t);c.title=t;
+      c.appendChild(mk('span','tt',t));
       c.onclick=function(){$('txt').value=t;$('txt').focus()};row.appendChild(c);
     });
     var sv=mk('button','chip','⭐ सेव');sv.type='button';sv.setAttribute('aria-label','लिखा हुआ काम रोज़ के काम में सेव करें');
@@ -713,6 +741,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       S.tpl.push(t);save();renderTpl();toast('रोज़ के काम में सेव हुआ');
     };
     row.appendChild(sv);
+    if(S.tpl.length){
+      var ed=mk('button','chip','✏️ बदलें / हटाएँ');ed.type='button';ed.id='tplEdit';ed.onclick=function(){tplEdit=true;renderTpl()};
+      row.appendChild(ed);
+    }
   }
   function renderPlaces(){
     var dl=$('placeList');dl.textContent='';
@@ -724,9 +756,16 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(!arr.length){box.appendChild(mk('p','hint',empty));return}
     arr.forEach(function(v,i){
       var row=mk('div','srow'),nm=mk('div','nm');nm.appendChild(mk('b','',v));
+      var bt=mk('div','bt');
+      var e=mk('button','btn ghost sm','बदलें');e.type='button';e.setAttribute('aria-label','बदलें: '+v);
+      e.onclick=function(){
+        var n=prompt('बदलें (सब मिटाकर OK दबाएँ तो हट जाएगा):',v);if(n===null)return;n=n.trim();
+        if(!n)arr.splice(i,1);else if(n!==v&&arr.indexOf(n)>=0){toast('यह पहले से सूची में है');return}else arr[i]=n;
+        save_();
+      };
       var d=mk('button','btn ghost sm','हटाएँ');d.type='button';d.setAttribute('aria-label','हटाएँ: '+v);
       d.onclick=function(){arr.splice(i,1);save_();toast('हटा दिया: '+v)};
-      row.appendChild(nm);row.appendChild(d);box.appendChild(row);
+      bt.appendChild(e);bt.appendChild(d);row.appendChild(nm);row.appendChild(bt);box.appendChild(row);
     });
   }
   function renderLists(){
@@ -1033,8 +1072,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.10',APP_NOTES=[
-    'स्टाफ़ टैब में रोज़ के काम और स्थान की सूची में हर नाम के आगे "हटाएँ" बटन'
+  var APP_V='1.11',APP_NOTES=[
+    '"आज के काम" में रोज़ के काम के बटनों के साथ "✏️ बदलें / हटाएँ" — वहीं बदलें या हटाएँ',
+    'लंबे रोज़ के काम बटन पर एक लाइन में दिखेंगे, दबाने पर पूरा लिखा जाएगा',
+    'स्टाफ़ टैब की सूचियों में भी "बदलें" बटन'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
