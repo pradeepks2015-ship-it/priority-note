@@ -72,7 +72,6 @@ input::placeholder{color:var(--muted)}
 .tpl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .tpl .chip{font-weight:500}
 .tpl .lbl{margin-right:2px}
-.chip .x{font-weight:700;color:var(--muted);margin-left:2px}
 .mon{display:flex;flex-direction:column;gap:6px}
 .mon .srow span{white-space:nowrap}
 .btn{font:700 16px var(--f-ui);border:0;border-radius:10px;padding:11px 18px;min-height:46px;cursor:pointer;background:var(--accent);color:var(--accent-ink);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center}
@@ -268,11 +267,11 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
       <section class="card" id="listsCard" aria-label="सेव की गई सूचियाँ">
         <p class="sec-title">रोज़ के काम की सूची</p>
-        <p class="hint">"आज के काम" में किसी काम को लिखकर ⭐ दबाने पर वह यहाँ जुड़ जाता है।</p>
-        <div class="chips" id="tplList" style="margin-top:8px"></div>
+        <p class="hint">ये बटन "आज के काम" में लिखने की जगह के नीचे आते हैं। नया जोड़ने के लिए वहाँ काम लिखकर ⭐ सेव दबाएँ।</p>
+        <div id="tplList" style="margin-top:4px"></div>
         <p class="sec-title" style="margin-top:16px">फीडर / DT / गाँव की सूची</p>
         <p class="hint">स्थान एक बार लिखने पर अपने-आप सेव हो जाता है और अगली बार चुनने के लिए आता है।</p>
-        <div class="chips" id="placeChips" style="margin-top:8px"></div>
+        <div id="placeChips" style="margin-top:4px"></div>
       </section>
 
       <section class="card" id="remCard" aria-label="हर घंटे याद दिलाना">
@@ -719,17 +718,20 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var dl=$('placeList');dl.textContent='';
     S.places.forEach(function(v){var o=document.createElement('option');o.value=v;dl.appendChild(o)});
   }
-  function removableChips(box,arr,empty,save_){
+  // One row per saved name with its own "हटाएँ" button, like the staff list.
+  function removableRows(box,arr,empty,save_){
     box.textContent='';
     if(!arr.length){box.appendChild(mk('p','hint',empty));return}
     arr.forEach(function(v,i){
-      var c=mk('button','chip',v);c.type='button';c.setAttribute('aria-label','हटाएँ: '+v);c.appendChild(mk('span','x','×'));
-      c.onclick=function(){arr.splice(i,1);save_()};box.appendChild(c);
+      var row=mk('div','srow'),nm=mk('div','nm');nm.appendChild(mk('b','',v));
+      var d=mk('button','btn ghost sm','हटाएँ');d.type='button';d.setAttribute('aria-label','हटाएँ: '+v);
+      d.onclick=function(){arr.splice(i,1);save_();toast('हटा दिया: '+v)};
+      row.appendChild(nm);row.appendChild(d);box.appendChild(row);
     });
   }
   function renderLists(){
-    removableChips($('tplList'),S.tpl,'सूची खाली है।',function(){save();renderAll()});
-    removableChips($('placeChips'),S.places,'अभी कोई स्थान सेव नहीं।',function(){save();renderAll()});
+    removableRows($('tplList'),S.tpl,'सूची खाली है।',function(){save();renderAll()});
+    removableRows($('placeChips'),S.places,'अभी कोई स्थान सेव नहीं।',function(){save();renderAll()});
   }
   function monthText(k){var p=k.split('-');return MONTHS[+p[1]-1]+' '+p[0]}
   function renderMonth(){
@@ -1031,9 +1033,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.9',APP_NOTES=[
-    '📲 ऐप बंद होने पर भी हर घंटे सूचना: लॉगिन करके "हर घंटे याद दिलाएँ" चालू करें',
-    'सूचना पर दबाने से ऐप खुल जाएगा'
+  var APP_V='1.10',APP_NOTES=[
+    'स्टाफ़ टैब में रोज़ के काम और स्थान की सूची में हर नाम के आगे "हटाएँ" बटन'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

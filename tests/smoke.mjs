@@ -77,6 +77,9 @@ await page.click('#tab-staff');
 const staffTxt = await page.$eval('#staffList', (n) => n.innerText);
 const listsTxt = await page.$eval('#listsCard', (n) => n.innerText);
 const hScroll2 = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+await page.click('#tplList >> [aria-label="हटाएँ: बकाया वसूली"]');
+const tplGone = !(await page.$eval('#tplList', (n) => n.innerText)).includes('बकाया वसूली')
+  && !(await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).tpl)).includes('बकाया वसूली');
 
 const checks = {
   'कोई JS error नहीं': errors.length === 0,
@@ -104,6 +107,7 @@ const checks = {
   'स्टाफ़ में बाकी काम दिखें': staffTxt.includes('1 काम बाकी'),
   'स्टाफ़ टैब में सूचियाँ दिखें': listsTxt.includes('बकाया वसूली') && listsTxt.includes('नमूना फीडर'),
   'स्टाफ़/रिपोर्ट टैब पर horizontal scroll नहीं': !hScroll2,
+  '"हटाएँ" से रोज़ का काम सूची से हटे': tplGone,
 };
 
 await browser.close();
