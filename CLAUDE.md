@@ -6,6 +6,10 @@ and the app turns them into a colourful sticky-note image (with date, time and t
 attached letter screenshot) to post in the staff WhatsApp group or send to each
 staff member. Staff never use the app; they only receive the note.
 
+## Scope
+JE-level only: two tabs, "आज के काम" and "स्टाफ़". The "निर्देश" (orders) and "शाम की रिपोर्ट" tabs were removed
+at the user's request (v1.15); their code and saved data remain but are unreachable and left out of reminders.
+
 ## Structure
 - `index.html` — the whole app: markup, CSS and JS in one file, no build step.
 - `manifest.webmanifest`, `icons/`, `sw.js` — installable PWA (home screen, opens offline).

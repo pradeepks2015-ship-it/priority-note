@@ -58,7 +58,7 @@ h1{font-family:var(--f-head);font-weight:700;font-size:30px;line-height:1.2;marg
 .col{display:flex;flex-direction:column;gap:16px;min-width:0}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
 .tab{font:600 14px var(--f-ui);padding:10px 2px;border:0;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer;min-height:44px}
 .tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
 button,select,input,textarea{font-family:var(--f-ui)}
@@ -211,8 +211,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     <div class="col">
       <div class="tabs" role="tablist" aria-label="भाग चुनें">
         <button class="tab" role="tab" id="tab-tasks" aria-selected="true" type="button">आज के काम</button>
-        <button class="tab" role="tab" id="tab-orders" aria-selected="false" type="button">निर्देश</button>
-        <button class="tab" role="tab" id="tab-report" aria-selected="false" type="button">शाम की रिपोर्ट</button>
         <button class="tab" role="tab" id="tab-staff" aria-selected="false" type="button">स्टाफ़</button>
       </div>
 
@@ -714,7 +712,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var box=$('staffList');box.textContent='';
     if(!S.staff.length){box.appendChild(mk('p','hint','अभी कोई कर्मचारी नहीं जोड़ा। नाम और मोबाइल नंबर जोड़ने पर काम चुनते समय नाम से चुन पाएँगे और हर किसी को उसके काम अलग से WhatsApp पर भेज पाएँगे।'));return}
     S.staff.forEach(function(st){
-      var open=S.tasks.concat(S.orders).filter(function(x){return x.w===st.n&&x.st!=='done'});
+      var open=S.tasks.filter(function(x){return x.w===st.n&&x.st!=='done'});
       var old=open.reduce(function(m,x){return Math.max(m,ageOf(x))},0);
       var r=mk('div','srow'),nm=mk('div','nm');
       nm.appendChild(mk('b','',st.n));
@@ -804,12 +802,12 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     keys.slice(0,3).forEach(function(k){
       var h=S.hist[k]||{ta:0,td:0,oa:0,od:0},r=mk('div','srow'),nm=mk('div','nm');
       nm.appendChild(mk('b','',monthText(k)+(k===cur?' (यह महीना)':'')));
-      nm.appendChild(mk('span','','निर्देश आए '+h.oa+' · पूरे '+h.od+'  |  काम जोड़े '+h.ta+' · पूरे '+h.td));
+      nm.appendChild(mk('span','','काम जोड़े '+h.ta+' · पूरे '+h.td));
       r.appendChild(nm);box.appendChild(r);
     });
     var oo=S.orders.filter(function(x){return x.st!=='done'}),to=S.tasks.filter(function(x){return x.st!=='done'});
     var oldest=function(a){return a.reduce(function(m,x){return Math.max(m,ageOf(x))},0)};
-    box.appendChild(mk('p','hint','अभी बाकी: निर्देश '+oo.length+(oldest(oo)?' (सबसे पुराना '+oldest(oo)+' दिन)':'')+' · काम '+to.length+(oldest(to)?' (सबसे पुराना '+oldest(to)+' दिन)':'')));
+    box.appendChild(mk('p','hint','अभी बाकी काम: '+to.length+(oldest(to)?' (सबसे पुराना '+oldest(to)+' दिन)':'')));
     var a=mk('a','btn wa sm','सारांश WhatsApp पर भेजें');a.target='_blank';a.rel='noopener';
     a.href='https://wa.me/?text='+encodeURIComponent(monthMsg());box.appendChild(a);
   }
@@ -817,8 +815,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var k=monKey(),h=S.hist[k]||{ta:0,td:0,oa:0,od:0};
     var oo=S.orders.filter(function(x){return x.st!=='done'}),to=S.tasks.filter(function(x){return x.st!=='done'});
     return ['📅 *'+monthText(k)+' का सारांश*','',
-      '📋 वरिष्ठ कार्यालय के निर्देश: आए '+h.oa+', पूरे '+h.od,'⚡ काम: जोड़े '+h.ta+', पूरे '+h.td,'',
-      'अभी बाकी: निर्देश '+oo.length+', काम '+to.length].concat(S.sign.trim()?['','— '+S.sign.trim()]:[]).join('\n');
+      '⚡ काम: जोड़े '+h.ta+', पूरे '+h.td,'',
+      'अभी बाकी काम: '+to.length].concat(S.sign.trim()?['','— '+S.sign.trim()]:[]).join('\n');
   }
   function resetStaffForm(){editStaff='';$('sn').value='';$('sm').value='';$('sbtn').textContent='स्टाफ़ जोड़ें';$('scancel').hidden=true}
   function renderWho(){
@@ -864,21 +862,21 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     renderAll();
   }
   function renderAll(){
-    ['tasks','orders','report','staff'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',String(view===k))});
+    ['tasks','staff'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',String(view===k))});
     var isList=view==='tasks'||view==='orders';
     $('addCard').hidden=!isList;$('listCard').hidden=!isList;$('repCard').hidden=view!=='report';$('staffCard').hidden=view!=='staff';
-    $('monCard').hidden=view!=='report';$('listsCard').hidden=view!=='staff';$('remCard').hidden=view!=='staff';
+    $('monCard').hidden=view!=='staff';$('listsCard').hidden=view!=='staff';$('remCard').hidden=view!=='staff';
     $('txt').placeholder=view==='orders'?'निर्देश लिखें, जैसे: सरकारी बकाये की सूची आज भेजें':'काम लिखें, जैसे: 11kV फीडर ट्रिपिंग जाँच';
     renderWho();renderTpl();renderPlaces();
     if(isList)renderList();
-    if(view==='report'){renderReport();renderMonth()}
-    if(view==='staff'){renderStaff();renderLists()}
+    if(view==='report')renderReport();
+    if(view==='staff'){renderStaff();renderLists();renderMonth()}
     renderNote();renderSend();renderLog();renderRemind();renderCloud();
   }
 
   /* ---------- events ---------- */
   $('today').textContent=full(new Date());
-  ['tasks','orders','report','staff'].forEach(function(k){$('tab-'+k).onclick=function(){setView(k)}});
+  ['tasks','staff'].forEach(function(k){$('tab-'+k).onclick=function(){setView(k)}});
   $('pchips').addEventListener('click',function(e){
     var b=e.target.closest('.chip');if(!b)return;curP=+b.dataset.p;
     this.querySelectorAll('.chip').forEach(function(c){c.setAttribute('aria-pressed',String(c===b))});
@@ -1060,7 +1058,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     renderPush();
   }
   function pendingTop(){
-    return S.tasks.concat(S.orders).filter(function(x){return x.st!=='done'}).sort(function(a,b){return a.p-b.p||(a.due||'99').localeCompare(b.due||'99')}).slice(0,3);
+    return S.tasks.filter(function(x){return x.st!=='done'}).sort(function(a,b){return a.p-b.p||(a.due||'99').localeCompare(b.due||'99')}).slice(0,3);
   }
   function fire(){
     var top=pendingTop();if(!top.length)return;
@@ -1101,9 +1099,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.14',APP_NOTES=[
-    'भेजे गए नोटों के रिकॉर्ड में अब नोट की छोटी फोटो, दबाने पर बड़ी',
-    'ये छोटी फोटो सिर्फ़ इसी फ़ोन में रहती हैं, इंटरनेट का डेटा नहीं लगता'
+  var APP_V='1.15',APP_NOTES=[
+    'ऐप अब सिर्फ़ JE स्तर का: "निर्देश" और "शाम की रिपोर्ट" टैब हटाए',
+    'महीने का सारांश अब स्टाफ़ टैब में'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

@@ -3,7 +3,7 @@
 const PRI = { 1: '🔴', 2: '🟡', 3: '🟢' };
 
 export function buildReminder(s) {
-  const open = [...(s.tasks || []), ...(s.orders || [])].filter((x) => x && x.st !== 'done');
+  const open = (s.tasks || []).filter((x) => x && x.st !== 'done');
   if (!open.length) return null;
   open.sort((a, b) => (a.p || 2) - (b.p || 2) || (a.due || '99').localeCompare(b.due || '99'));
   const line = (x) => (PRI[x.p] || '🟡') + ' ' + (x.no ? 'No. ' + x.no + ' · ' : '') + x.t
