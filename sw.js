@@ -1,7 +1,7 @@
 // Service worker: lets the app open without internet.
 // Pages load from the network first (so updates show up), with the saved copy as a fallback.
-const CACHE = 'priority-note-v1';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
+const CACHE = 'priority-note-v2';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './lib/leaflet/leaflet.js', './lib/leaflet/leaflet.css'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

@@ -7,11 +7,14 @@ attached letter screenshot) to post in the staff WhatsApp group or send to each
 staff member. Staff never use the app; they only receive the note.
 
 ## Scope
-JE-level only: two tabs, "आज के काम" and "स्टाफ़". The "निर्देश" (orders) and "शाम की रिपोर्ट" tabs were removed
-at the user's request (v1.15); their code and saved data remain but are unreachable and left out of reminders.
+JE-level only: three tabs, "आज के काम", "स्टाफ़" and "🗺️ फीडर" (feeder survey map, v1.28). The "निर्देश" (orders) and
+"शाम की रिपोर्ट" tabs were removed at the user's request (v1.15); their code and saved data remain but are unreachable
+and left out of reminders.
 
 ## Structure
 - `index.html` — the whole app: markup, CSS and JS in one file, no build step.
+- `lib/leaflet/` — Leaflet 1.9.4 (BSD-2, from npm), used only by the feeder tab and loaded when it opens; kept in the
+  repo so it opens offline (in `sw.js` SHELL). Map pictures: OpenStreetMap / Esri satellite tiles (need internet, no key).
 - `manifest.webmanifest`, `icons/`, `sw.js` — installable PWA (home screen, opens offline).
   Bump `CACHE` in `sw.js` when the cached file list changes.
 - `netlify.toml` — publish the repo root as-is; no build command.
@@ -56,6 +59,12 @@ at the user's request (v1.15); their code and saved data remain but are unreacha
   Made by `noteThumb()` at send time; records without one get it drawn once from the text (`textCard()`, `fillThumbs()`).
   The record view has a month picker and one folded group per date.
 
+- `feeders[]`: `{id, n, poles (0 = use the estimate: GPS length / 65 m + 1), segs [[[lat,lng],…],…] (one per
+  recording, 5 decimals), dts[], at}`; `dts[]`: `{id, n, kva, c (consumers), lt (LT line, m), lat, lng, img, note, at}`.
+  GPS (`watchPosition`) adds a point only if accuracy ≤ 35 m, ≥ 8 m from the last and < 45 m/s (bike-speed jumps are
+  noise). Screen wake lock while recording; a web page cannot record with the phone locked. DT photos stay on the phone.
+  Shares a WhatsApp summary with `maps.google.com/?q=` links and a KML file (Google Earth / My Maps).
+
 ## Key functions
 - `model(mode, now, who)` builds the note as blocks; `renderNote()` draws it as HTML and
   `paint()` draws the same blocks on a canvas for the PNG. Change both together.
@@ -88,7 +97,8 @@ monthly summary and staff open-work counts. CI runs it on
 every push (`.github/workflows/smoke.yml`). Locally: `python3 -m http.server 8080`, then
 `node tests/smoke.mjs` (set `CHROMIUM_PATH` to use an installed Chromium). `tests/cloud.mjs` checks the
 online backup and push tokens across several "phones" with a stand-in Firebase (no real login needed);
-`tests/notify.mjs` checks the reminder text and the 9–6 window. Update its checks when
+`tests/notify.mjs` checks the reminder text and the 9–6 window. `tests/feeder.mjs` walks a stand-in GPS along a feeder
+(length, skipped bad fixes, DT with photo, summary, KML). Update its checks when
 the note text changes.
 
 ## Planned next steps

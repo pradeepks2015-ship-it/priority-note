@@ -35,3 +35,7 @@ jobs:
         run: node tests/cloud.mjs
         env:
           APP_URL: http://127.0.0.1:8080/
+      - name: Run feeder-map test (stand-in GPS)
+        run: node tests/feeder.mjs
+        env:
+          APP_URL: http://127.0.0.1:8080/

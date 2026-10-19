@@ -58,13 +58,13 @@ h1{font-family:var(--f-head);font-weight:700;font-size:30px;line-height:1.2;marg
 .col{display:flex;flex-direction:column;gap:16px;min-width:0}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
 .tab{font:600 14px var(--f-ui);padding:10px 2px;border:0;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer;min-height:44px}
 .tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
 button,select,input,textarea{font-family:var(--f-ui)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 form{display:flex;flex-direction:column;gap:10px}
-input[type=text],input[type=tel],input[type=time],select{width:100%;font:500 16px var(--f-ui);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:46px}
+input[type=text],input[type=tel],input[type=time],input[type=number],select{width:100%;font:500 16px var(--f-ui);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:46px}
 input::placeholder{color:var(--muted)}
 textarea.bulk{width:100%;min-height:160px;font:500 15px/1.5 var(--f-ui);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);resize:vertical}
 textarea.bulk::placeholder{color:var(--muted)}
@@ -94,6 +94,26 @@ details.more{border:1px dashed var(--line);border-radius:10px;padding:0 12px}
 details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--muted);min-height:44px}
 .fields{display:flex;flex-direction:column;gap:10px;padding-bottom:12px}
 .lbl{font-weight:600;font-size:14px;color:var(--muted)}
+.fdmap{height:340px;border-radius:12px;border:1px solid var(--line);margin:10px 0 8px;background:var(--bg);z-index:0}
+.fdhead b{font:700 18px var(--f-head);flex:1;min-width:0}
+.fdlayers .btn{flex:1 1 0;padding:6px 8px}
+.fdlayers .btn[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.fdstat{font-weight:600;margin:8px 0}
+.fdstat.rec{color:var(--p1)}
+.fdsum{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:14px 0 10px}
+.fdsum div{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.fdsum small{display:block;color:var(--muted);font-size:13px}
+.fdsum b{font-size:18px}
+.fdi{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.fdi .who{flex:1;min-width:0}
+.fdi small{display:block;color:var(--muted);font-size:14px}
+.fdi .thumb{width:56px;height:56px}
+.dtform{border:1.5px solid var(--accent);border-radius:12px;padding:12px;margin:10px 0}
+.dtsym{flex:none;width:36px;height:24px}
+.dtsym circle,.dtico circle{fill:none;stroke:var(--p1);stroke-width:2.5}
+.dtico{background:none;border:0}
+.dtico svg{background:var(--surface);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.dtico span{position:absolute;left:50%;top:26px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
 .prev{display:flex;align-items:center;gap:10px}
 .thumb{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block;background:var(--bg)}
 .thumbbtn{border:0;padding:0;background:transparent;cursor:pointer;border-radius:8px}
@@ -239,6 +259,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       <div class="tabs" role="tablist" aria-label="भाग चुनें">
         <button class="tab" role="tab" id="tab-tasks" aria-selected="true" type="button">आज के काम</button>
         <button class="tab" role="tab" id="tab-staff" aria-selected="false" type="button">स्टाफ़</button>
+        <button class="tab" role="tab" id="tab-feeder" aria-selected="false" type="button">🗺️ फीडर</button>
       </div>
 
       <section class="card" id="addCard" aria-label="नया जोड़ें">
@@ -333,9 +354,72 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         <summary>📅 महीने का सारांश</summary>
         <div class="mon" id="monBox" style="margin-top:8px"></div>
       </details>
+
+      <section class="card" id="feederCard" aria-label="फीडर का नक्शा" hidden>
+        <div id="fdList">
+          <p class="sec-title">11kV फीडर का नक्शा</p>
+          <p class="hint">फीडर के साथ-साथ पैदल या बाइक से चलें: रास्ता GPS से नक्शे पर बनता जाएगा और कुल लंबाई आ जाएगी। ट्रांसफार्मर पर पहुँचकर "⚡ यहाँ ट्रांसफार्मर" दबाएँ।</p>
+          <form id="fdNew" class="row" style="margin-top:10px" autocomplete="off">
+            <input type="text" id="fdName" placeholder="फीडर का नाम, जैसे: 11kV आदेगाँव" aria-label="फीडर का नाम" style="flex:1 1 200px">
+            <button class="btn" type="submit">➕ नया फीडर</button>
+          </form>
+          <div id="fdItems" style="margin-top:12px"></div>
+        </div>
+        <div id="fdOne" hidden>
+          <div class="row fdhead"><button class="btn ghost sm" id="fdBack" type="button">← सूची</button><b id="fdTitle"></b></div>
+          <div class="fdmap" id="fdMap"></div>
+          <div class="row fdlayers">
+            <button class="btn ghost sm" type="button" data-l="map" aria-pressed="true">नक्शा</button>
+            <button class="btn ghost sm" type="button" data-l="sat" aria-pressed="false">सैटेलाइट</button>
+            <button class="btn ghost sm" type="button" id="fdMe">◎ मेरी जगह</button>
+          </div>
+          <p class="fdstat" id="fdStat" role="status"></p>
+          <div class="row">
+            <button class="btn" type="button" id="fdRec" style="flex:1 1 150px">▶ चलना शुरू करें</button>
+            <button class="btn ghost" type="button" id="fdDt" style="flex:1 1 150px">⚡ यहाँ ट्रांसफार्मर</button>
+          </div>
+          <p class="hint" style="margin-top:6px">चलते समय स्क्रीन चालू और यह ऐप खुला रखें; फ़ोन लॉक होने पर GPS रुक जाती है। खुले में GPS 5–15 मीटर तक सही रहती है।</p>
+          <form id="dtForm" class="fields dtform" hidden autocomplete="off">
+            <p class="sec-title" id="dtFormT">नया ट्रांसफार्मर</p>
+            <input type="text" id="dtN" placeholder="DT का नाम / नंबर" aria-label="DT का नाम / नंबर">
+            <label class="lbl" for="dtKva">क्षमता (kVA)</label>
+            <select id="dtKva"><option value="">क्षमता चुनें</option><option>10</option><option>16</option><option>25</option><option>63</option><option>100</option><option>160</option><option>200</option><option>250</option><option>315</option><option>500</option></select>
+            <input type="number" id="dtC" inputmode="numeric" min="0" placeholder="उपभोक्ता संख्या" aria-label="उपभोक्ता संख्या">
+            <input type="number" id="dtLt" inputmode="numeric" min="0" placeholder="LT लाइन की लंबाई (मीटर)" aria-label="LT लाइन की लंबाई (मीटर)">
+            <input type="text" id="dtNote" placeholder="टिप्पणी (वैकल्पिक)" aria-label="टिप्पणी">
+            <p class="hint" id="dtPos"></p>
+            <div class="row">
+              <button class="btn ghost sm" type="button" id="dtPhotoBtn">📷 फोटो लें</button>
+              <button class="btn ghost sm" type="button" id="dtHere">📍 जगह फिर से लें</button>
+            </div>
+            <input type="file" id="dtPhoto" accept="image/*" capture="environment" hidden>
+            <div class="prev" id="dtPrev" hidden></div>
+            <div class="row">
+              <button class="btn" type="submit">सेव करें</button>
+              <button class="btn ghost" type="button" id="dtCancel">रद्द</button>
+              <button class="btn ghost" type="button" id="dtDel" hidden>हटाएँ</button>
+            </div>
+          </form>
+          <div class="fdsum" id="fdSum"></div>
+          <label class="lbl" for="fdPoles">खंभे (अनुमान से लिखें)</label>
+          <div class="row"><input type="number" id="fdPoles" inputmode="numeric" min="0" style="flex:1 1 120px"><span class="hint" id="fdPoleHint" style="flex:1 1 160px"></span></div>
+          <div id="dtList" style="margin-top:12px"></div>
+          <div class="row" style="margin-top:12px">
+            <a class="btn wa" id="fdWa" href="#" target="_blank" rel="noopener" style="flex:1 1 150px">💬 WhatsApp पर सारांश</a>
+            <button class="btn ghost" type="button" id="fdKml" style="flex:1 1 150px">🌍 Google Earth फ़ाइल</button>
+          </div>
+          <details class="more" style="margin-top:12px">
+            <summary>और विकल्प</summary>
+            <div class="row" style="padding:10px 0">
+              <button class="btn ghost sm" type="button" id="fdClear">रास्ता मिटाएँ</button>
+              <button class="btn ghost sm" type="button" id="fdDelete">🗑️ यह फीडर हटाएँ</button>
+            </div>
+          </details>
+        </div>
+      </section>
     </div>
 
-    <div class="col">
+    <div class="col" id="noteCol">
       <section class="card" aria-label="स्टिकी नोट">
         <p class="sec-title" id="noteTitle">ग्रुप में जाने वाला नोट</p>
         <div class="stage"><div class="note" id="note"></div></div>
@@ -386,7 +470,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   var VIEWLBL={tasks:'काम',orders:'निर्देश',report:'रिपोर्ट'};
 
   var S={tasks:[],orders:[],staff:[],log:[],color:'yellow',sign:'',remind:false,ordNo:0,
-    tpl:['बिलिंग का काम','बकाया वसूली','शिकायतों का निराकरण','मीटर रीडिंग','फीडर पेट्रोलिंग'],places:[],hist:{}};
+    tpl:['बिलिंग का काम','बकाया वसूली','शिकायतों का निराकरण','मीटर रीडिंग','फीडर पेट्रोलिंग'],places:[],hist:{},feeders:[]};
   var view='tasks',lastList='tasks',curP=1,ref=null,saveTimer=null,chain=Promise.resolve();
   var downloads=null,assets=null,pendingImg='',editStaff='',confirmNew=false;
   var $=function(id){return document.getElementById(id)};
@@ -437,6 +521,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var strs=function(a){return Array.isArray(a)?a.filter(function(v){return typeof v==='string'&&v.trim()}):null};
     if(strs(d.tpl))S.tpl=strs(d.tpl);
     if(strs(d.places))S.places=strs(d.places);
+    if(Array.isArray(d.feeders))S.feeders=d.feeders.map(cleanFeeder).filter(Boolean);
     if(d.hist&&typeof d.hist==='object')Object.keys(d.hist).forEach(function(k){var h=d.hist[k];if(/^\d{4}-\d{2}$/.test(k)&&h)S.hist[k]={ta:+h.ta||0,td:+h.td||0,oa:+h.oa||0,od:+h.od||0}});
   }
   // "मीटर रीडर, पिंडरई" → पद = first part, मुख्यालय = last part (when there are two or more).
@@ -455,7 +540,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   }
 
   /* ---------- helpers on lists ---------- */
-  function noteMode(){return view==='staff'?lastList:view}
+  function noteMode(){return view==='staff'||view==='feeder'?lastList:view}
   function listFor(mode){return mode==='orders'?S.orders:S.tasks}
   function summ(list){var r={tot:list.length,done:0,part:0,block:0,pend:0};list.forEach(function(x){if(x.st==='done')r.done++;else if(x.st==='part')r.part++;else if(x.st==='block')r.block++;else r.pend++});return r}
   function byStaff(list){
@@ -1025,7 +1110,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     renderAll();
   }
   function renderAll(){
-    ['tasks','staff'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',String(view===k))});
+    ['tasks','staff','feeder'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',String(view===k))});
+    $('feederCard').hidden=view!=='feeder';$('noteCol').hidden=view==='feeder';
     var isList=view==='tasks'||view==='orders';
     $('addCard').hidden=!isList;$('listCard').hidden=!isList;$('repCard').hidden=view!=='report';$('staffCard').hidden=view!=='staff';
     $('monCard').hidden=view!=='staff';$('listsCard').hidden=view!=='staff';
@@ -1034,12 +1120,13 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(isList)renderList();
     if(view==='report')renderReport();
     if(view==='staff'){renderStaff();renderLists();renderMonth()}
+    if(view==='feeder')renderFeeder();
     renderNote();renderSend();renderLog();renderRemind();renderCloud();
   }
 
   /* ---------- events ---------- */
   $('today').textContent=full(new Date());
-  ['tasks','staff'].forEach(function(k){$('tab-'+k).onclick=function(){setView(k)}});
+  ['tasks','staff','feeder'].forEach(function(k){$('tab-'+k).onclick=function(){setView(k)}});
   $('pchips').addEventListener('click',function(e){
     var b=e.target.closest('.chip');if(!b)return;curP=+b.dataset.p;
     this.querySelectorAll('.chip').forEach(function(c){c.setAttribute('aria-pressed',String(c===b))});
@@ -1380,8 +1467,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.27',APP_NOTES=[
-    'जिस स्टाफ़ के नाम कोई काम नहीं, उसका भी अलग कार्ड और WhatsApp बनेगा (उसमें "सभी / अन्य" वाले काम)'
+  var APP_V='1.28',APP_NOTES=[
+    'नया "🗺️ फीडर" टैब: फीडर के साथ पैदल/बाइक से चलें, GPS से रास्ता और लंबाई नक्शे पर बनेगी',
+    'हर ट्रांसफार्मर का निशान, फोटो, kVA, उपभोक्ता संख्या और LT लंबाई; खंभे अनुमान से',
+    'सारांश WhatsApp पर, और Google Earth / My Maps के लिए KML फ़ाइल'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1563,6 +1652,322 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   $('mePanel').addEventListener('click',function(e){e.stopPropagation()});
   document.addEventListener('click',function(){if(!$('mePanel').hidden)showMe(false)});
   window.addEventListener('online',function(){if(lsGet(FBK)&&cloud.st==='err'){fbOn=false;fbStart()}});
+
+  /* ---------- feeder map: walk or ride along an 11kV feeder; GPS draws the line, DTs are marked on it ---------- */
+  // S.feeders[]: {id, n, poles (0 = not written, use the estimate), segs [[[lat,lng],…],…] (one per recording), dts[], at}
+  // dts[]: {id, n, kva, c (consumers), lt (LT line, m), lat, lng, img (photo id, this phone only), note, at}
+  var SPAN=65,GPS_ACC=35,GPS_STEP=8,GPS_MAXV=45;  // metres per pole (estimate), worst accepted accuracy, min step, max m/s
+  var FD={open:'',rec:false,live:null,watch:null,fix:null,lastT:0,weak:false,unsaved:0,lastSave:0,lock:null,map:null,grp:null,me:null,base:null,tiles:{},follow:true,dt:'',dtPos:null,dtImg:'',dtNewImg:[]};
+  function cleanFeeder(f){
+    if(!f||typeof f.n!=='string'||!f.n.trim())return null;
+    var num=function(v){v=+v;return isFinite(v)&&v>0?v:0};
+    var segs=(Array.isArray(f.segs)?f.segs:[]).map(function(sg){return Array.isArray(sg)?sg.filter(function(p){return Array.isArray(p)&&isFinite(p[0])&&isFinite(p[1])}).map(function(p){return [+p[0],+p[1]]}):[]}).filter(function(sg){return sg.length});
+    var dts=(Array.isArray(f.dts)?f.dts:[]).filter(function(d){return d&&isFinite(d.lat)&&isFinite(d.lng)}).map(function(d){
+      return {id:str(d.id)||uid(),n:str(d.n),kva:num(d.kva),c:Math.floor(num(d.c)),lt:Math.round(num(d.lt)),lat:+d.lat,lng:+d.lng,img:str(d.img),note:str(d.note),at:num(d.at)||Date.now()};
+    });
+    return {id:str(f.id)||uid(),n:f.n.trim(),poles:Math.floor(num(f.poles)),segs:segs,dts:dts,at:num(f.at)||Date.now()};
+  }
+  function curF(){for(var i=0;i<S.feeders.length;i++)if(S.feeders[i].id===FD.open)return S.feeders[i];return null}
+  function hav(a,b){
+    var R=6371000,r=Math.PI/180,dLa=(b[0]-a[0])*r,dLo=(b[1]-a[1])*r;
+    var h=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dLo/2)*Math.sin(dLo/2);
+    return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+  }
+  function trackLen(f){var m=0;f.segs.forEach(function(sg){for(var i=1;i<sg.length;i++)m+=hav(sg[i-1],sg[i])});return m}
+  function fmtLen(m){return m>=1000?(m/1000).toFixed(2)+' km':Math.round(m)+' मी.'}
+  function r5(v){return Math.round(v*1e5)/1e5}
+  function mapsLink(lat,lng){return 'https://maps.google.com/?q='+r5(lat)+','+r5(lng)}
+  function poleEst(f){var m=trackLen(f);return m>0?Math.round(m/SPAN)+1:0}
+  function fdTotals(f){
+    var t={len:trackLen(f),dt:f.dts.length,c:0,lt:0,kva:0};
+    f.dts.forEach(function(d){t.c+=d.c;t.lt+=d.lt;t.kva+=d.kva});
+    t.poles=f.poles||poleEst(f);t.est=!f.poles;return t;
+  }
+  function dtSym(){return '<svg class="dtsym" viewBox="0 0 36 24" width="36" height="24" aria-hidden="true"><circle cx="13" cy="12" r="8"/><circle cx="23" cy="12" r="8"/></svg>'}
+  function dtLine(d){return [d.kva?d.kva+' kVA':'',d.c?d.c+' उपभोक्ता':'',d.lt?'LT '+fmtLen(d.lt):''].filter(Boolean).join(' · ')||'विवरण नहीं लिखा'}
+
+  function renderFeeder(){
+    var f=curF();
+    $('fdList').hidden=!!f;$('fdOne').hidden=!f;
+    if(!f){
+      var box=$('fdItems');box.textContent='';
+      if(!S.feeders.length)box.appendChild(mk('p','hint','अभी कोई फीडर नहीं। ऊपर नाम लिखकर "➕ नया फीडर" दबाएँ।'));
+      S.feeders.forEach(function(x){
+        var t=fdTotals(x),row=mk('div','fdi'),who=mk('div','who');
+        who.appendChild(mk('b','',x.n));
+        who.appendChild(mk('small','',fmtLen(t.len)+' · '+t.dt+' ट्रांसफार्मर · '+t.c+' उपभोक्ता'));
+        row.appendChild(who);
+        var o=mk('button','btn ghost sm','खोलें');o.type='button';o.setAttribute('aria-label','खोलें: '+x.n);
+        o.onclick=function(){FD.open=x.id;FD.follow=true;renderFeeder()};row.appendChild(o);
+        box.appendChild(row);
+      });
+      return;
+    }
+    $('fdTitle').textContent=f.n;
+    renderFdInfo();
+    loadLeaflet().then(drawMap,function(){$('fdMap').textContent='नक्शा नहीं खुल सका। इंटरनेट देखें; GPS से नापना फिर भी चलेगा।'});
+  }
+  function renderFdInfo(){
+    var f=curF();if(!f)return;
+    var t=fdTotals(f),sum=$('fdSum');sum.textContent='';
+    [['फीडर की लंबाई (GPS)',fmtLen(t.len)],['खंभे'+(t.est?' (अनुमान)':''),t.poles?String(t.poles):'—'],['ट्रांसफार्मर',t.dt+(t.kva?' · '+t.kva+' kVA':'')],['उपभोक्ता',String(t.c)],['LT लाइन कुल',fmtLen(t.lt)]].forEach(function(p){
+      var d=mk('div');d.appendChild(mk('small','',p[0]));d.appendChild(mk('b','',p[1]));sum.appendChild(d);
+    });
+    var pe=poleEst(f);
+    if(document.activeElement!==$('fdPoles'))$('fdPoles').value=f.poles||'';
+    $('fdPoles').placeholder=pe?'लगभग '+pe:'संख्या';
+    $('fdPoleHint').textContent=pe?'GPS लंबाई से अनुमान: लगभग '+pe+' (हर '+SPAN+' मी. पर एक)':'चलकर लंबाई नापने पर अनुमान भी दिखेगा';
+    var list=$('dtList');list.textContent='';
+    if(!f.dts.length)list.appendChild(mk('p','hint','ट्रांसफार्मर पर पहुँचकर "⚡ यहाँ ट्रांसफार्मर" दबाएँ।'));
+    f.dts.forEach(function(d,i){
+      var row=mk('div','fdi');row.insertAdjacentHTML('beforeend',dtSym());
+      var who=mk('div','who');who.appendChild(mk('b','',(i+1)+'. '+(d.n||'DT')));who.appendChild(mk('small','',dtLine(d)));
+      if(d.note)who.appendChild(mk('small','',d.note));
+      row.appendChild(who);
+      if(d.img&&blobURL(d.img)){var im=mk('img','thumb');im.src=blobURL(d.img);im.alt=(d.n||'DT')+' की फोटो';im.onclick=function(){$('lbImg').src=blobURL(d.img);$('lb').hidden=false};row.appendChild(im)}
+      var g=mk('a','btn ghost sm','🗺️');g.href=mapsLink(d.lat,d.lng);g.target='_blank';g.rel='noopener';g.setAttribute('aria-label',(d.n||'DT')+' Google Maps में');row.appendChild(g);
+      var e=mk('button','btn ghost sm','बदलें');e.type='button';e.setAttribute('aria-label','बदलें: '+(d.n||'DT'));e.onclick=function(){openDt(d)};row.appendChild(e);
+      list.appendChild(row);
+    });
+    $('fdWa').href='https://wa.me/?text='+encodeURIComponent(fdText(f));
+    fdStat();
+  }
+  function fdStat(){
+    var f=curF();if(!f)return;
+    var x=$('fdStat'),fx=FD.fix;
+    x.className='fdstat'+(FD.rec?' rec':'');
+    x.textContent=(FD.rec?'🔴 नाप रहे हैं · ':'')+'लंबाई '+fmtLen(trackLen(f))+(fx?' · GPS ±'+Math.round(fx.acc)+' मी.':'')+(FD.weak?' · GPS कमज़ोर, खुले में आएँ':'');
+    $('fdRec').textContent=FD.rec?'⏸ रोकें':(f.segs.length?'▶ आगे नापें':'▶ चलना शुरू करें');
+  }
+
+  /* map (Leaflet, kept in lib/ so it also opens offline; the map pictures themselves need internet) */
+  var leafletP=null;
+  function loadLeaflet(){
+    if(window.L)return Promise.resolve();
+    if(leafletP)return leafletP;
+    leafletP=new Promise(function(res,rej){
+      var c=document.createElement('link');c.rel='stylesheet';c.href='lib/leaflet/leaflet.css';document.head.appendChild(c);
+      var j=document.createElement('script');j.src='lib/leaflet/leaflet.js';j.onload=function(){res()};j.onerror=function(){leafletP=null;rej()};document.head.appendChild(j);
+    });
+    return leafletP;
+  }
+  function tok(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+  function lineStyle(){return {color:tok('--accent')||'blue',weight:5,opacity:.9}}
+  function drawMap(){
+    var f=curF();if(!f||!window.L)return;
+    if(!FD.map){
+      FD.map=L.map('fdMap',{zoomControl:true,attributionControl:true});
+      FD.tiles.map=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+      FD.tiles.sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'});
+      FD.grp=L.layerGroup().addTo(FD.map);
+      FD.map.on('dragstart',function(){FD.follow=false});
+      setBase('map');
+    }
+    setTimeout(function(){FD.map.invalidateSize()},50);
+    drawLayers(true);
+  }
+  function setBase(k){
+    if(FD.base)FD.map.removeLayer(FD.tiles[FD.base]);
+    FD.base=k;FD.tiles[k].addTo(FD.map);
+    document.querySelectorAll('.fdlayers [data-l]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.l===k))});
+  }
+  function drawLayers(fit){
+    var f=curF();if(!f||!FD.map)return;
+    FD.grp.clearLayers();FD.me=null;FD.live=null;
+    var all=[];
+    f.segs.forEach(function(sg,i){
+      var pl=L.polyline(sg,lineStyle()).addTo(FD.grp);all=all.concat(sg);
+      if(FD.rec&&i===f.segs.length-1)FD.live=pl;  // the line being recorded grows in place
+    });
+    f.dts.forEach(function(d){
+      var ic=L.divIcon({className:'dtico',html:dtSym()+'<span>'+xmlEsc(d.n||'DT')+'</span>',iconSize:[36,24],iconAnchor:[18,12]});
+      L.marker([d.lat,d.lng],{icon:ic,title:d.n||'DT'}).on('click',function(){openDt(d)}).addTo(FD.grp);
+      all.push([d.lat,d.lng]);
+    });
+    drawMe();
+    if(!fit)return;
+    if(all.length>1)FD.map.fitBounds(all,{padding:[30,30],maxZoom:17});
+    else if(all.length)FD.map.setView(all[0],16);
+    else if(FD.fix)FD.map.setView([FD.fix.lat,FD.fix.lng],16);
+    else FD.map.setView([22.5,79.2],8);
+  }
+  function drawMe(){
+    if(!FD.map||!FD.fix)return;
+    var ll=[FD.fix.lat,FD.fix.lng];
+    if(FD.me)FD.me.setLatLng(ll);
+    else FD.me=L.circleMarker(ll,{radius:8,color:tok('--surface')||'white',weight:3,fillColor:tok('--accent')||'blue',fillOpacity:1}).addTo(FD.grp);
+    if(FD.follow)FD.map.panTo(ll);
+  }
+
+  /* GPS */
+  function geoErr(e){toast(e&&e.code===1?'स्थान (GPS) की अनुमति दें: Chrome की सेटिंग में इस साइट के लिए "स्थान" चालू करें':'GPS नहीं मिल रही, खुले में आएँ')}
+  function startWatch(){
+    if(FD.watch!=null)return true;
+    if(!navigator.geolocation){toast('इस फ़ोन/ब्राउज़र में GPS नहीं मिला');return false}
+    FD.watch=navigator.geolocation.watchPosition(onFix,geoErr,{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+    return true;
+  }
+  function stopWatch(){if(FD.watch!=null){navigator.geolocation.clearWatch(FD.watch);FD.watch=null}}
+  function onFix(p){
+    FD.fix={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy||0,t:p.timestamp||Date.now()};
+    if(FD.rec)addPoint(FD.fix);
+    drawMe();
+    if(view==='feeder')fdStat();
+  }
+  // Skips fixes that are too rough, too close to the last point, or an impossible jump (GPS noise).
+  function addPoint(fx){
+    var f=curF();if(!f)return;
+    if(fx.acc>GPS_ACC){FD.weak=true;return}
+    FD.weak=false;
+    var sg=f.segs[f.segs.length-1],pt=[r5(fx.lat),r5(fx.lng)],last=sg[sg.length-1];
+    if(last){
+      var d=hav(last,pt);if(d<GPS_STEP)return;
+      var dt=(fx.t-FD.lastT)/1000;if(dt>0&&d/dt>GPS_MAXV)return;
+    }
+    sg.push(pt);FD.lastT=fx.t;FD.unsaved++;
+    if(FD.map){if(FD.live)FD.live.setLatLngs(sg);else FD.live=L.polyline(sg,lineStyle()).addTo(FD.grp)}
+    if(FD.unsaved>=10||Date.now()-FD.lastSave>30000)flushTrack();
+    renderFdInfo();
+  }
+  function flushTrack(){if(FD.unsaved){FD.unsaved=0;FD.lastSave=Date.now();save()}}
+  function fdWake(){if(navigator.wakeLock&&navigator.wakeLock.request)navigator.wakeLock.request('screen').then(function(l){FD.lock=l},function(){})}
+  function stopRec(){
+    var f=curF();FD.rec=false;FD.live=null;
+    if(f)f.segs=f.segs.filter(function(sg){return sg.length>1});
+    if(FD.lock){FD.lock.release().catch(function(){});FD.lock=null}
+    FD.unsaved=1;flushTrack();
+  }
+  document.addEventListener('visibilitychange',function(){if(!FD.rec)return;if(document.visibilityState==="visible")fdWake();else flushTrack()});
+  $('fdRec').onclick=function(){
+    var f=curF();if(!f)return;
+    if(FD.rec){stopRec();toast('रोका गया · लंबाई '+fmtLen(trackLen(f)));renderFdInfo();drawLayers(false);return}
+    if(!startWatch())return;
+    FD.rec=true;FD.follow=true;FD.weak=false;FD.lastT=0;FD.live=null;f.segs.push([]);fdWake();
+    if(FD.fix&&Date.now()-FD.fix.t<15000)addPoint(FD.fix);
+    toast('नापना शुरू · फीडर के साथ चलें');fdStat();
+  };
+  $('fdMe').onclick=function(){FD.follow=true;if(startWatch()&&FD.fix&&FD.map)FD.map.setView([FD.fix.lat,FD.fix.lng],Math.max(FD.map.getZoom(),16))};
+  document.querySelectorAll('.fdlayers [data-l]').forEach(function(b){b.onclick=function(){if(FD.map)setBase(b.dataset.l)}});
+  $('fdBack').onclick=function(){
+    if(FD.rec&&!confirm('नापना चल रहा है। रोककर सूची पर जाएँ?'))return;
+    if(FD.rec)stopRec();
+    stopWatch();closeDt(true);FD.open='';renderFeeder();
+  };
+  $('fdNew').addEventListener('submit',function(e){
+    e.preventDefault();var n=$('fdName').value.trim();if(!n){$('fdName').focus();return}
+    var f={id:uid(),n:n,poles:0,segs:[],dts:[],at:Date.now()};S.feeders.unshift(f);$('fdName').value='';
+    save();FD.open=f.id;FD.follow=true;renderFeeder();
+  });
+  $('fdPoles').addEventListener('change',function(){var f=curF();if(!f)return;var v=Math.floor(+this.value);f.poles=v>0?v:0;save();renderFdInfo()});
+
+  /* transformer form */
+  function herePos(){
+    return new Promise(function(res,rej){
+      if(FD.fix&&Date.now()-FD.fix.t<20000&&FD.fix.acc<=GPS_ACC*2)return res(FD.fix);
+      if(!navigator.geolocation)return rej();
+      toast('GPS से जगह ली जा रही है…');
+      navigator.geolocation.getCurrentPosition(function(p){FD.fix={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy||0,t:p.timestamp||Date.now()};drawMe();res(FD.fix)},function(e){geoErr(e);rej()},{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+    });
+  }
+  function showDtPos(){var p=FD.dtPos;$('dtPos').textContent=p?'📍 जगह: '+r5(p.lat)+', '+r5(p.lng)+(p.acc?' (±'+Math.round(p.acc)+' मी.)':''):''}
+  function showDtImg(){
+    var b=$('dtPrev');b.textContent='';b.hidden=!FD.dtImg;if(!FD.dtImg)return;
+    var im=mk('img','thumb');im.src=blobURL(FD.dtImg);im.alt='ट्रांसफार्मर की फोटो';b.appendChild(im);
+    var x=mk('button','btn ghost sm','फोटो हटाएँ');x.type='button';x.onclick=function(){FD.dtImg='';showDtImg()};b.appendChild(x);
+  }
+  function openDt(d){
+    var f=curF();if(!f)return;
+    closeDt(true);
+    FD.dt=d?d.id:'';FD.dtPos=d?{lat:d.lat,lng:d.lng,acc:0}:FD.dtPos;FD.dtImg=d?d.img:'';FD.dtNewImg=[];
+    $('dtFormT').textContent=d?'ट्रांसफार्मर बदलें':'नया ट्रांसफार्मर';
+    $('dtN').value=d?d.n:'DT-'+(f.dts.length+1);$('dtKva').value=d&&d.kva?String(d.kva):'';
+    $('dtC').value=d&&d.c?d.c:'';$('dtLt').value=d&&d.lt?d.lt:'';$('dtNote').value=d?d.note:'';
+    $('dtDel').hidden=!d;$('dtForm').hidden=false;showDtPos();showDtImg();
+    $('dtForm').scrollIntoView({block:'center'});
+  }
+  // keep=true: leave the photos alone (form closed by save or by leaving)
+  function closeDt(keep){
+    if(!keep)FD.dtNewImg.forEach(function(id){assets&&assets.delete(id).catch(function(){})});
+    FD.dt='';FD.dtImg='';FD.dtNewImg=[];$('dtForm').hidden=true;
+  }
+  $('fdDt').onclick=function(){
+    startWatch();
+    herePos().then(function(p){FD.dtPos=p;openDt(null)},function(){});
+  };
+  $('dtHere').onclick=function(){FD.fix=null;herePos().then(function(p){FD.dtPos=p;showDtPos()},function(){})};
+  $('dtPhotoBtn').onclick=function(){$('dtPhoto').click()};
+  $('dtPhoto').onchange=async function(){
+    var file=this.files&&this.files[0];this.value='';if(!file||!assets)return;
+    try{toast('फोटो जुड़ रही है…');var b=await shrink(file),r=await assets.upload(b,{type:b.type||'image/jpeg'});FD.dtNewImg.push(r.id);FD.dtImg=r.id;showDtImg()}
+    catch(e){toast('फोटो नहीं जुड़ सकी')}
+  };
+  $('dtCancel').onclick=function(){closeDt(false)};
+  $('dtForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    var f=curF();if(!f)return;
+    if(!FD.dtPos){toast('पहले "📍 जगह फिर से लें" दबाएँ');return}
+    var d=null;f.dts.forEach(function(x){if(x.id===FD.dt)d=x});
+    var old=d?d.img:'';
+    if(!d){d={id:uid(),at:Date.now()};f.dts.push(d)}
+    d.n=$('dtN').value.trim();d.kva=+$('dtKva').value||0;d.c=Math.max(0,Math.floor(+$('dtC').value||0));d.lt=Math.max(0,Math.round(+$('dtLt').value||0));
+    d.note=$('dtNote').value.trim();d.lat=r5(FD.dtPos.lat);d.lng=r5(FD.dtPos.lng);d.img=FD.dtImg;
+    // photos added and then replaced in this form, and the old photo if it was changed, go
+    FD.dtNewImg.concat(old?[old]:[]).forEach(function(id){if(id!==d.img&&assets)assets.delete(id).catch(function(){})});
+    closeDt(true);save();renderFdInfo();drawLayers(false);toast('सेव हुआ: '+(d.n||'DT'));
+  });
+  $('dtDel').onclick=function(){
+    var f=curF();if(!f||!FD.dt)return;
+    if(!confirm('यह ट्रांसफार्मर हटाएँ?'))return;
+    f.dts=f.dts.filter(function(x){if(x.id===FD.dt&&x.img&&assets)assets.delete(x.img).catch(function(){});return x.id!==FD.dt});
+    closeDt(false);save();renderFdInfo();drawLayers(false);
+  };
+  $('fdClear').onclick=function(){
+    var f=curF();if(!f||FD.rec)return;
+    if(!confirm('इस फीडर का GPS रास्ता मिटाएँ? ट्रांसफार्मर बने रहेंगे।'))return;
+    f.segs=[];save();renderFdInfo();drawLayers(false);
+  };
+  $('fdDelete').onclick=function(){
+    var f=curF();if(!f)return;
+    if(!confirm('"'+f.n+'" फीडर पूरा हटाएँ? रास्ता, ट्रांसफार्मर और उनकी फोटो सब हट जाएँगे।'))return;
+    if(FD.rec)stopRec();
+    stopWatch();f.dts.forEach(function(x){if(x.img&&assets)assets.delete(x.img).catch(function(){})});
+    S.feeders=S.feeders.filter(function(x){return x!==f});closeDt(true);FD.open='';save();renderFeeder();
+  };
+
+  /* sharing: WhatsApp summary, and a KML file for Google Earth / Google My Maps */
+  function fdText(f){
+    var t=fdTotals(f),L=[];
+    L.push('🗺️ *फीडर: '+f.n+'*');L.push('📅 '+dateStr(new Date()));L.push('');
+    L.push('📏 लंबाई (GPS से): '+fmtLen(t.len));
+    if(t.poles)L.push('🪵 खंभे: '+t.poles+(t.est?' (अनुमान)':''));
+    L.push('⚡ ट्रांसफार्मर: '+t.dt+(t.kva?' (कुल '+t.kva+' kVA)':''));
+    L.push('👥 उपभोक्ता: '+t.c);
+    if(t.lt)L.push('〰️ LT लाइन कुल: '+fmtLen(t.lt));
+    f.dts.forEach(function(d,i){L.push('');L.push((i+1)+'. '+(d.n||'DT')+' — '+dtLine(d)+(d.note?' — '+d.note:''));L.push('   📍 '+mapsLink(d.lat,d.lng))});
+    if(S.sign.trim()){L.push('');L.push('— '+S.sign.trim())}
+    return L.join('\n');
+  }
+  function xmlEsc(v){return String(v).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]})}
+  function fdKml(f){
+    var t=fdTotals(f),k=['<?xml version="1.0" encoding="UTF-8"?>','<kml xmlns="http://www.opengis.net/kml/2.2"><Document>','<name>'+xmlEsc(f.n)+'</name>',
+      '<Style id="line"><LineStyle><color>ffd85d2f</color><width>4</width></LineStyle></Style>',
+      '<Style id="dt"><IconStyle><scale>1.1</scale><Icon><href>https://maps.google.com/mapfiles/kml/shapes/triangle.png</href></Icon></IconStyle></Style>'];
+    var segs=f.segs.filter(function(sg){return sg.length>1});
+    if(segs.length){
+      k.push('<Placemark><name>'+xmlEsc(f.n+' · '+fmtLen(t.len))+'</name><styleUrl>#line</styleUrl><MultiGeometry>');
+      segs.forEach(function(sg){k.push('<LineString><tessellate>1</tessellate><coordinates>'+sg.map(function(p){return p[1]+','+p[0]+',0'}).join(' ')+'</coordinates></LineString>')});
+      k.push('</MultiGeometry></Placemark>');
+    }
+    f.dts.forEach(function(d){k.push('<Placemark><name>'+xmlEsc(d.n||'DT')+'</name><description>'+xmlEsc(dtLine(d)+(d.note?' — '+d.note:''))+'</description><styleUrl>#dt</styleUrl><Point><coordinates>'+d.lng+','+d.lat+',0</coordinates></Point></Placemark>')});
+    k.push('</Document></kml>');
+    return k.join('\n');
+  }
+  $('fdWa').addEventListener('click',function(){var f=curF();if(f)this.href='https://wa.me/?text='+encodeURIComponent(fdText(f))});
+  $('fdKml').onclick=function(){
+    var f=curF();if(!f||!downloads)return;
+    var b=new Blob([fdKml(f)],{type:'application/vnd.google-earth.kml+xml'});
+    downloads.save({filename:'feeder-'+fileStamp(new Date())+'.kml',data:b}).then(function(){toast('KML फ़ाइल बनी: Google Earth या Google My Maps में खोलें')},function(e){if(!e||e.code!=='declined')toast('फ़ाइल नहीं बन सकी')});
+  };
 
   /* ---------- start ---------- */
   loadLocal();renderAll();if(S.remind)startRemind();
