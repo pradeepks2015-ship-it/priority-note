@@ -4,6 +4,7 @@
 // Uses made-up sample tasks only — never real staff data.
 import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
+import { makeXlsx } from './xlsx-fixture.mjs';
 
 const url = process.env.APP_URL || 'http://127.0.0.1:8080/';
 const fileV = JSON.parse(readFileSync(new URL('../version.json', import.meta.url), 'utf8')).v;
@@ -44,6 +45,11 @@ const updClosed = await page.$eval('#upd', (n) => n.hidden);
 const updSaved = await page.evaluate(() => localStorage.getItem('priority-note-ver'));
 
 // A newer version.json on the server should bring up the "new version" banner.
+// Wait until the service worker controls the page: a check made while it is taking over can get lost (first open only).
+await page.evaluate(async () => {
+  await navigator.serviceWorker.ready;
+  if (!navigator.serviceWorker.controller) await new Promise((r) => navigator.serviceWorker.addEventListener('controllerchange', r, { once: true }));
+});
 // Routed on the context, so it also catches the request when the service worker already controls the page.
 await page.context().route('**/version.json*', (r) => r.fulfill({ contentType: 'application/json', body: '{"v":"99.0"}' }));
 await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
@@ -100,6 +106,24 @@ await page.click('#bulkBox summary');
 await page.fill('#bulkTxt', 'नमूना एक बदला नाम 9000000001');
 await page.click('#bulkAdd');
 const bulk2 = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).staff);
+// Excel file: heading row and serial numbers skipped, numbers stored as numbers. Made-up data only.
+const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+await page.click('#bulkBox summary');
+await page.setInputFiles('#bulkFile', { name: 'staff.xlsx', mimeType: XLSX, buffer: makeXlsx([
+  ['क्र.', 'नाम', 'मोबाइल', 'पद', 'गाँव'],
+  [1, 'एक्सेल नमूना एक', 9000000011, 'मीटर रीडर', 'नमूना गाँव'],
+  [2, 'EXCEL SAMPLE TWO', '9000000012', 'OUTSOURCE HELPER', ''],
+]) });
+await page.waitForFunction(() => document.getElementById('bulkTxt').value.includes('EXCEL SAMPLE TWO'), null, { timeout: 5000 }).catch(() => {});
+const fromXlsx = await page.inputValue('#bulkTxt');
+await page.click('#bulkAdd');
+const afterXlsx = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).staff);
+// Villages from the first column of an .xlsx and a .csv.
+await page.setInputFiles('#placeFile', { name: 'gaon.xlsx', mimeType: XLSX, buffer: makeXlsx([['गाँव का नाम'], ['नमूना गाँव क'], ['नमूना गाँव ख'], [''], [123]]) });
+await page.waitForFunction(() => JSON.parse(localStorage.getItem('priority-note-v2')).places.includes('नमूना गाँव ख'), null, { timeout: 5000 }).catch(() => {});
+await page.setInputFiles('#placeFile', { name: 'gaon.csv', mimeType: 'text/csv', buffer: Buffer.from('\uFEFFक्र.,गाँव\n1,"नमूना गाँव ग, टोला"\n2,नमूना गाँव क\n') });
+await page.waitForFunction(() => JSON.parse(localStorage.getItem('priority-note-v2')).places.includes('नमूना गाँव ग, टोला'), null, { timeout: 5000 }).catch(() => {});
+const placesNow = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).places);
 const staffTxt = await page.$eval('#staffList', (n) => n.innerText);
 const listsTxt = await page.$eval('#listsCard', (n) => n.innerText);
 const hScroll2 = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
@@ -137,6 +161,10 @@ const checks = {
   'स्टाफ़ में बाकी काम दिखें': staffTxt.includes('1 काम बाकी'),
   'कई स्टाफ़ एक साथ जुड़ें (नाम, नंबर, पद)': bulk.some((x) => x.n === 'नमूना एक' && x.m === '919000000001' && x.d === 'मीटर रीडर, नमूना गाँव') && bulk.some((x) => x.n === 'नमूना दो' && x.m === '919000000002' && x.d === 'आउटसोर्स हेल्पर'),
   'बिना नंबर वाली लाइन छोड़ी': !bulk.some((x) => x.n.includes('बिना नंबर')),
+  'Excel फ़ाइल से स्टाफ़ (शीर्षक/क्र. छोड़े)': fromXlsx.includes('एक्सेल नमूना एक — 9000000011 — मीटर रीडर — नमूना गाँव') && !fromXlsx.includes('मोबाइल')
+    && afterXlsx.some((x) => x.n === 'EXCEL SAMPLE TWO' && x.m === '919000000012' && x.d === 'OUTSOURCE HELPER'),
+  'Excel और CSV से गाँव (शीर्षक/अंक/दोहराव छोड़े)': ['नमूना गाँव क', 'नमूना गाँव ख', 'नमूना गाँव ग, टोला'].every((v) => placesNow.includes(v))
+    && placesNow.filter((v) => v === 'नमूना गाँव क').length === 1 && !placesNow.some((v) => /गाँव का नाम|^123$|^गाँव$/.test(v)),
   'वही नंबर दोबारा: नाम बदला, दोहराया नहीं (पद बना रहा)': bulk2.length === bulk.length && bulk2.some((x) => x.n === 'नमूना एक बदला नाम' && x.d === 'मीटर रीडर, नमूना गाँव'),
   'स्टाफ़ टैब में सूचियाँ दिखें': listsTxt.includes('बकाया वसूली') && listsTxt.includes('नमूना फीडर'),
   'स्टाफ़/रिपोर्ट टैब पर horizontal scroll नहीं': !hScroll2,

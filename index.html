@@ -279,6 +279,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
           <summary>📋 कई स्टाफ़ एक साथ जोड़ें</summary>
           <div class="fields">
             <p class="hint">हर लाइन में एक कर्मचारी: नाम, फिर 10 अंक का मोबाइल नंबर, फिर पद और स्थान (चाहें तो)। जिसका नंबर पहले से है, उसका नाम और पद बदल जाएगा।</p>
+            <button class="btn ghost sm" type="button" id="bulkFileBtn" style="align-self:flex-start">📊 Excel फ़ाइल चुनें (.xlsx / .csv)</button>
+            <input type="file" id="bulkFile" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden>
             <textarea class="bulk" id="bulkTxt" placeholder="जैसे:&#10;रामू यादव — 98xxxxxxxx — मीटर रीडर, पिंडरई&#10;श्याम साहू 97xxxxxxxx आउटसोर्स हेल्पर"></textarea>
             <button class="btn" type="button" id="bulkAdd">सबको जोड़ें</button>
           </div>
@@ -291,7 +293,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         <p class="hint">ये बटन "आज के काम" में लिखने की जगह के नीचे आते हैं। नया जोड़ने के लिए वहाँ काम लिखकर ⭐ सेव दबाएँ; वहीं "✏️ बदलें / हटाएँ" से भी बदल सकते हैं।</p>
         <div id="tplList" style="margin-top:4px"></div>
         <p class="sec-title" style="margin-top:16px">फीडर / DT / गाँव की सूची</p>
-        <p class="hint">स्थान एक बार लिखने पर अपने-आप सेव हो जाता है और अगली बार चुनने के लिए आता है।</p>
+        <p class="hint">स्थान एक बार लिखने पर अपने-आप सेव हो जाता है और अगली बार चुनने के लिए आता है। Excel फ़ाइल के पहले कॉलम से भी जोड़ सकते हैं।</p>
+        <button class="btn ghost sm" type="button" id="placeFileBtn" style="margin-top:8px">📊 Excel से गाँव जोड़ें (.xlsx / .csv)</button>
+        <input type="file" id="placeFile" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden>
         <div id="placeChips" style="margin-top:4px"></div>
       </section>
 
@@ -923,7 +927,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var t=$('txt').value.trim();if(!t){$('txt').focus();return}
     var it={id:uid(),t:t,p:curP,w:$('who').value,st:'',r:'',loc:$('loc').value.trim(),due:$('due').value,ref:$('ref').value.trim(),q:$('q').value.trim(),img:pendingImg,carry:false,no:lastList==='orders'?++S.ordNo:0,at:Date.now()};
     S[lastList].push(it);bump(it,'a',1);
-    if(it.loc){S.places=[it.loc].concat(S.places.filter(function(v){return v!==it.loc})).slice(0,40)}
+    if(it.loc){S.places=[it.loc].concat(S.places.filter(function(v){return v!==it.loc})).slice(0,300)}
     $('txt').value='';$('loc').value='';$('due').value='';$('ref').value='';$('q').value='';pendingImg='';showPrev();
     $('txt').focus();save();renderAll();
   });
@@ -954,6 +958,89 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     });
     return out;
   }
+  /* ---------- Excel (.xlsx) / CSV reading, no library: an .xlsx is a zip of XML files ---------- */
+  function readSheet(file){
+    if(/\.csv$/i.test(file.name)||file.type==='text/csv')return file.text().then(parseCSV);
+    return file.arrayBuffer().then(function(buf){
+      var dv=new DataView(buf),u8=new Uint8Array(buf),e=-1;
+      for(var i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-66000);i--){if(dv.getUint32(i,true)===0x06054b50){e=i;break}}
+      if(e<0)throw new Error('notxlsx');
+      var n=dv.getUint16(e+10,true),p=dv.getUint32(e+16,true),files={},dec=new TextDecoder();
+      for(var k=0;k<n;k++){
+        if(dv.getUint32(p,true)!==0x02014b50)break;
+        var meth=dv.getUint16(p+10,true),csz=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),off=dv.getUint32(p+42,true);
+        files[dec.decode(u8.subarray(p+46,p+46+nl))]={meth:meth,csz:csz,off:off};p+=46+nl+xl+cl;
+      }
+      function get(name){
+        var f=files[name];if(!f)return Promise.resolve('');
+        var s0=f.off+30+dv.getUint16(f.off+26,true)+dv.getUint16(f.off+28,true),raw=u8.slice(s0,s0+f.csz);
+        if(f.meth===0)return Promise.resolve(dec.decode(raw));
+        return new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+      }
+      var sheet=Object.keys(files).filter(function(k){return /^xl\/worksheets\/sheet\d+\.xml$/.test(k)}).sort(function(a,b){return parseInt(a.match(/\d+/)[0])-parseInt(b.match(/\d+/)[0])})[0];
+      if(!sheet)throw new Error('notxlsx');
+      return Promise.all([get('xl/sharedStrings.xml'),get(sheet)]).then(function(x){
+        var dp=new DOMParser(),ss=[],rows=[];
+        if(x[0])Array.prototype.forEach.call(dp.parseFromString(x[0],'application/xml').getElementsByTagName('si'),function(si){
+          ss.push(Array.prototype.map.call(si.getElementsByTagName('t'),function(t){return t.textContent}).join(''));
+        });
+        Array.prototype.forEach.call(dp.parseFromString(x[1],'application/xml').getElementsByTagName('row'),function(row){
+          var cells=[];
+          Array.prototype.forEach.call(row.getElementsByTagName('c'),function(c){
+            var ref=(c.getAttribute('r')||'').replace(/\d+/g,''),col=0;
+            for(var j=0;j<ref.length;j++)col=col*26+ref.charCodeAt(j)-64;col=col?col-1:cells.length;
+            var t=c.getAttribute('t'),v=c.getElementsByTagName('v')[0],val='';
+            if(t==='s'&&v)val=ss[+v.textContent]||'';
+            else if(t==='inlineStr')val=Array.prototype.map.call(c.getElementsByTagName('t'),function(q){return q.textContent}).join('');
+            else if(v){val=v.textContent;if(/^-?\d+(\.\d+)?[eE]\+?\d+$/.test(val))val=Number(val).toFixed(0);else val=val.replace(/^(\d+)\.0+$/,'$1')}
+            cells[col]=String(val).trim();
+          });
+          rows.push(cells.map(function(v){return v||''}));
+        });
+        return rows;
+      });
+    });
+  }
+  function parseCSV(text){
+    var rows=[],row=[],f='',q=false;text=String(text).replace(/^﻿/,'');
+    for(var i=0;i<text.length;i++){
+      var ch=text[i];
+      if(q){if(ch==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
+      else if(ch==='"')q=true;
+      else if(ch===','||ch===';'||ch==='\t'){row.push(f.trim());f=''}
+      else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(f.trim());rows.push(row);row=[];f=''}
+      else f+=ch;
+    }
+    if(f||row.length){row.push(f.trim());rows.push(row)}
+    return rows;
+  }
+  // A row's cells as one "name — number — पद" line; serial-number cells (क्र. 1, 2 …) are dropped.
+  function rowLine(cells){return cells.filter(function(v){return v&&!/^\d{1,4}\.?$/.test(v)}).join(' — ')}
+  function sheetError(e){toast(e&&e.message==='notxlsx'?'यह फ़ाइल नहीं पढ़ी जा सकी — Excel में "Save as .xlsx" या .csv करके फिर चुनें':'फ़ाइल नहीं पढ़ी जा सकी')}
+  $('bulkFileBtn').onclick=function(){$('bulkFile').click()};
+  $('bulkFile').onchange=function(){
+    var f=this.files&&this.files[0];this.value='';if(!f)return;
+    readSheet(f).then(function(rows){
+      var lines=rows.map(rowLine).filter(function(l){return parseStaffLines(l).length});
+      if(!lines.length){toast('फ़ाइल में मोबाइल नंबर वाली कोई पंक्ति नहीं मिली');return}
+      var t=$('bulkTxt');t.value=(t.value.trim()?t.value.trim()+'\n':'')+lines.join('\n');
+      toast(lines.length+' कर्मचारी मिले — देखकर "सबको जोड़ें" दबाएँ');
+    }).catch(sheetError);
+  };
+  $('placeFileBtn').onclick=function(){$('placeFile').click()};
+  $('placeFile').onchange=function(){
+    var f=this.files&&this.files[0];this.value='';if(!f)return;
+    readSheet(f).then(function(rows){
+      var added=0,head=/^(गाँव|गांव|ग्राम|स्थान|फीडर|डीटी|village|name|नाम|क्र|क्रमांक|s\.?\s*no|sr\.?\s*no|location|feeder|dt)(?=$|[\s.:,।-])/i;  // not \b: it only knows English letters
+      rows.forEach(function(cells){
+        var v=(cells.filter(function(c){return c&&!/^\d{1,4}\.?$/.test(c)})[0]||'').replace(/\s+/g,' ').trim();
+        if(!v||head.test(v)||/^[\d\s+.-]+$/.test(v)||S.places.indexOf(v)>=0)return;
+        S.places.push(v);added++;
+      });
+      S.places=S.places.slice(0,300);save();renderAll();
+      toast(added?added+' गाँव/स्थान जुड़े':'कोई नया गाँव नहीं मिला');
+    }).catch(sheetError);
+  };
   $('bulkAdd').onclick=function(){
     var rows=parseStaffLines($('bulkTxt').value),added=0,changed=0;
     if(!rows.length){toast('कोई सही लाइन नहीं मिली — हर लाइन में नाम और 10 अंक का नंबर लिखें');return}
@@ -1125,9 +1212,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.18',APP_NOTES=[
-    'स्टाफ़ टैब में "📋 कई स्टाफ़ एक साथ जोड़ें": नाम, नंबर, पद और स्थान की सूची चिपकाकर सबको एक बार में जोड़ें',
-    'हर कर्मचारी के नाम के नीचे अब पद और स्थान भी दिखेगा'
+  var APP_V='1.19',APP_NOTES=[
+    'स्टाफ़ टैब: Excel (.xlsx) या CSV फ़ाइल चुनकर स्टाफ़ की सूची भरें',
+    'गाँव/स्थान की सूची भी Excel फ़ाइल के पहले कॉलम से जोड़ें'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
