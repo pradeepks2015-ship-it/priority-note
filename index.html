@@ -674,15 +674,25 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         var id=blobURL(thId(l))?thId(l):(l.th&&blobURL(l.th)?l.th:'');
         if(id){var t=thumbBtn(id,'भेजा गया नोट');t.style.alignSelf='flex-start';t.firstChild.className+=' card-th';r.appendChild(t)}
         else if(l.txt)r.appendChild(mk('small','','कार्ड बन रहा है…'));
+        var sh=null;
         if(l.txt&&downloads){
-          var sh=mk('button','btn ghost sm','🔔 रिमाइंडर भेजें');sh.type='button';sh.style.alignSelf='flex-start';
+          sh=mk('button','btn ghost sm','🔔 रिमाइंडर भेजें');sh.type='button';sh.style.alignSelf='flex-start';
           sh.setAttribute('aria-label',dateStr(new Date(l.ts))+' के प्राथमिकता वाले कार्य रिमाइंडर के रूप में भेजें');
-          sh.onclick=function(){sendReminder(l)};r.appendChild(sh);
+          sh.onclick=function(){sendReminder(l)};
         }
+        var bt=mk('div','row');if(sh&&l.txt&&downloads)bt.appendChild(sh);
+        var del=mk('button','btn ghost sm','🗑️ हटाएँ');del.type='button';del.setAttribute('aria-label',tm(new Date(l.ts))+' वाला रिकॉर्ड हटाएँ');
+        del.onclick=function(){if(confirm('यह रिकॉर्ड हटाएँ? ('+dateStr(new Date(l.ts))+', '+tm(new Date(l.ts))+')'))deleteLog(l)};
+        bt.appendChild(del);r.appendChild(bt);
         g.appendChild(r);
       });
       b.appendChild(g);
     });
+  }
+  function deleteLog(l){
+    S.log=S.log.filter(function(x){return x!==l});
+    if(assets){assets.delete(thId(l)).catch(function(){});if(l.th)assets.delete(l.th).catch(function(){})}
+    save();renderLog();toast('रिकॉर्ड हटा दिया');
   }
   // "फोटो सेव की · काम" → "⚡ प्राथमिकता वाले कार्य" (who it went to, if it was for one person).
   function logLabel(l){
@@ -1357,9 +1367,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.24',APP_NOTES=[
-    'रिकॉर्ड में अब "⚡ प्राथमिकता वाले कार्य" लिखा आता है',
-    'हर रिकॉर्ड पर "🔔 रिमाइंडर भेजें": उस दिन का कार्ड नीचे छोटी रिमाइंडर पट्टी के साथ WhatsApp में भेजें'
+  var APP_V='1.25',APP_NOTES=[
+    'भेजे गए नोटों के रिकॉर्ड में हर कार्ड पर "🗑️ हटाएँ" (पूछकर हटाता है)'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

@@ -89,7 +89,14 @@ const stripLight = remInfo ? await page.evaluate(async (b64) => {
   const c = new OffscreenCanvas(bmp.width, bmp.height), x = c.getContext('2d'); x.drawImage(bmp, 0, 0);
   const [r, g, b] = x.getImageData(20, bmp.height - 20, 1, 1).data; return (r + g + b) / 3 > 120;
 }, remInfo.b64) : false;
-await page.selectOption('#logMonth', await page.$$eval('#logMonth option', (o) => o[0].value));
+// "🗑️ हटाएँ" asks first; cancel keeps it, OK removes the record (and the month, now empty, from the list).
+page.once('dialog', (d) => d.dismiss());
+await page.click('#logBody >> text=🗑️ हटाएँ');
+const keptAfterCancel = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).log.some((l) => l.id === 'old'));
+page.once('dialog', (d) => d.accept());
+await page.click('#logBody >> text=🗑️ हटाएँ');
+const goneAfterOk = await page.evaluate(() => !JSON.parse(localStorage.getItem('priority-note-v2')).log.some((l) => l.id === 'old'));
+const monthsAfterDelete = await page.$$eval('#logMonth option', (o) => o.length);
 const logThumb = await page.evaluate(async () => {
   const i = document.querySelector('#logBody img.card-th'); if (!i) return null;
   const blob = await (await fetch(i.src)).blob(), bmp = await createImageBitmap(blob);
@@ -185,6 +192,7 @@ const checks = {
   'हस्ताक्षर दिखे': note.includes('— JE'),
   'PNG बनी': true,
   'रिकॉर्ड में महीना चुनें (2 महीने)': logMonths === 2,
+  '"🗑️ हटाएँ": रद्द पर बचा, OK पर हटा': keptAfterCancel && goneAfterOk && monthsAfterDelete === 1,
   'रिकॉर्ड में "⚡ प्राथमिकता वाले कार्य" लिखा': oldLabel.startsWith('⚡ प्राथमिकता वाले कार्य'),
   '"🔔 रिमाइंडर भेजें" से रिमाइंडर फोटो बने': !!remInfo && /^reminder-.*\.jpg$/.test(remInfo.name),
   'रिमाइंडर की नीचे वाली पट्टी हल्के रंग की (काली नहीं)': stripLight,
