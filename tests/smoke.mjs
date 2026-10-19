@@ -64,6 +64,8 @@ await page.waitForFunction(() => window.__pngSize > 0, null, { timeout: 15000 })
 // The record keeps a small JPEG of the card instead of a "copy message" button.
 await page.waitForFunction(() => !!document.querySelector('#logBody img.card-th'), null, { timeout: 8000 }).catch(() => {});
 // Record: month list, newest month first; older month shows the card drawn from its message.
+// The new record lands just after the photo is saved, so wait for both months to be listed.
+await page.waitForFunction(() => document.querySelectorAll('#logMonth option').length >= 2, null, { timeout: 5000 }).catch(() => {});
 const logMonths = await page.$$eval('#logMonth option', (o) => o.length);
 const oldKey = await page.$$eval('#logMonth option', (o) => o[o.length - 1].value);
 await page.click('#logSum');
@@ -103,8 +105,9 @@ const logThumb = await page.evaluate(async () => {
   return { type: blob.type, kb: blob.size / 1024, w: bmp.width };
 });
 
-// JE-level app: only "आज के काम" and "स्टाफ़" tabs.
+// JE-level app: "आज के काम" and "स्टाफ़" tabs, and a separate "🗺️ फीडर" button beside them.
 const tabs = await page.$$eval('.tabs .tab', (t) => t.map((x) => x.innerText.trim()));
+const fdBtn = await page.$eval('.tabbar > #tab-feeder', (b) => b.innerText.trim()).catch(() => '');
 
 // Daily-work button fills the text; a place typed once is offered next time.
 await page.click('#tab-tasks');
@@ -227,7 +230,7 @@ const checks = {
   'अपडेट के बाद नारंगी बैनर दिखे': updTitle.includes('ऐप अपडेट हुआ') && updTitle.includes(appV),
   '"ठीक है" से बैनर बंद हो और याद रहे': updClosed && updSaved === appV,
   'नया संस्करण आने पर बैनर दिखे': newTitle.includes('नया संस्करण 99.0'),
-  'तीन टैब: आज के काम, स्टाफ़, फीडर': tabs.join('|') === 'आज के काम|स्टाफ़|🗺️ फीडर',
+  'दो टैब और बगल में अलग "🗺️ फीडर" बटन': tabs.join('|') === 'आज के काम|स्टाफ़' && fdBtn === '🗺️ फीडर',
   'पुराने काम पर "3 दिन से बाकी"': note.includes('⏳ 3 दिन से बाकी'),
   'रोज़ के काम का बटन लिखे': tplFilled === 'बकाया वसूली',
   'स्थान अगली बार चुनने को मिले': placeOffered.includes('नमूना फीडर'),

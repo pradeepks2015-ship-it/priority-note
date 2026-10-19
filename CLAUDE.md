@@ -7,7 +7,7 @@ attached letter screenshot) to post in the staff WhatsApp group or send to each
 staff member. Staff never use the app; they only receive the note.
 
 ## Scope
-JE-level only: three tabs, "आज के काम", "स्टाफ़" and "🗺️ फीडर" (feeder survey map, v1.28). The "निर्देश" (orders) and
+JE-level only: two tabs, "आज के काम" and "स्टाफ़", and beside them a separate "🗺️ फीडर" button (feeder survey map, v1.28; own button since v1.29). The "निर्देश" (orders) and
 "शाम की रिपोर्ट" tabs were removed at the user's request (v1.15); their code and saved data remain but are unreachable
 and left out of reminders.
 
