@@ -88,7 +88,8 @@ const tplChips = await page.$eval('#tplRow', (n) => n.innerText);
 
 // Monthly summary (staff tab) counts what was added today; staff tab shows open work.
 await page.click('#tab-staff');
-const mon = await page.$eval('#monBox', (n) => n.innerText);
+const monFolded = await page.$eval('#monCard', (d) => !d.open);
+const mon = await page.$eval('#monBox', (n) => n.textContent);
 const staffTxt = await page.$eval('#staffList', (n) => n.innerText);
 const listsTxt = await page.$eval('#listsCard', (n) => n.innerText);
 const hScroll2 = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
@@ -122,6 +123,7 @@ const checks = {
   '"✏️ बदलें" से रोज़ का काम बदले': tplNow.includes('मीटर रीडिंग की जाँच') && !tplNow.includes('मीटर रीडिंग') && tplChips.includes('मीटर रीडिंग की जाँच'),
   'वहीं "हटाएँ" से रोज़ का काम हटे': !tplNow.includes('फीडर पेट्रोलिंग'),
   'स्टाफ़ टैब में महीने के सारांश की गिनती': mon.includes('काम जोड़े 1') && !mon.includes('निर्देश'),
+  'महीने का सारांश शुरू में बंद': monFolded,
   'स्टाफ़ में बाकी काम दिखें': staffTxt.includes('1 काम बाकी'),
   'स्टाफ़ टैब में सूचियाँ दिखें': listsTxt.includes('बकाया वसूली') && listsTxt.includes('नमूना फीडर'),
   'स्टाफ़/रिपोर्ट टैब पर horizontal scroll नहीं': !hScroll2,

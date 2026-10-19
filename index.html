@@ -260,11 +260,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         <div id="repList" style="margin-top:12px"></div>
       </section>
 
-      <section class="card" id="monCard" aria-label="महीने का सारांश">
-        <p class="sec-title">📅 महीने का सारांश</p>
-        <div class="mon" id="monBox"></div>
-      </section>
-
       <section class="card" id="staffCard" aria-label="स्टाफ़">
         <form id="sf" autocomplete="off">
           <input type="text" id="sn" placeholder="कर्मचारी का नाम" aria-label="कर्मचारी का नाम">
@@ -297,6 +292,11 @@ textarea.hold{position:fixed;left:-9999px;top:0}
           <button class="switch" id="remSw" role="switch" aria-checked="false" aria-label="हर घंटे याद दिलाएँ" type="button"></button>
         </div>
       </section>
+
+      <details class="card" id="monCard">
+        <summary>📅 महीने का सारांश</summary>
+        <div class="mon" id="monBox" style="margin-top:8px"></div>
+      </details>
     </div>
 
     <div class="col">
@@ -1099,9 +1099,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.15',APP_NOTES=[
-    'ऐप अब सिर्फ़ JE स्तर का: "निर्देश" और "शाम की रिपोर्ट" टैब हटाए',
-    'महीने का सारांश अब स्टाफ़ टैब में'
+  var APP_V='1.16',APP_NOTES=[
+    'महीने का सारांश अब स्टाफ़ टैब में नीचे, बंद रहता है; दबाने पर खुलेगा'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
