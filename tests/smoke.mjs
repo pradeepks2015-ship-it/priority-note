@@ -90,6 +90,16 @@ const tplChips = await page.$eval('#tplRow', (n) => n.innerText);
 await page.click('#tab-staff');
 const monFolded = await page.$eval('#monCard', (d) => !d.open);
 const mon = await page.$eval('#monBox', (n) => n.textContent);
+// Bulk add: made-up names and numbers only. The existing sample person's number updates that person.
+await page.click('#bulkBox summary');
+await page.fill('#bulkTxt', 'नमूना एक — 9000000001 — मीटर रीडर, नमूना गाँव\nनमूना दो 90000 00002 आउटसोर्स हेल्पर\nबिना नंबर वाली लाइन\nनमूना कर्मचारी पूरा नाम, +91 9000000003, LA');
+await page.click('#bulkAdd');
+const bulk = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).staff);
+// Same number again with a new name: that person is updated, not added twice.
+await page.click('#bulkBox summary');
+await page.fill('#bulkTxt', 'नमूना एक बदला नाम 9000000001');
+await page.click('#bulkAdd');
+const bulk2 = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).staff);
 const staffTxt = await page.$eval('#staffList', (n) => n.innerText);
 const listsTxt = await page.$eval('#listsCard', (n) => n.innerText);
 const hScroll2 = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
@@ -125,6 +135,9 @@ const checks = {
   'स्टाफ़ टैब में महीने के सारांश की गिनती': mon.includes('काम जोड़े 1') && !mon.includes('निर्देश'),
   'महीने का सारांश शुरू में बंद': monFolded,
   'स्टाफ़ में बाकी काम दिखें': staffTxt.includes('1 काम बाकी'),
+  'कई स्टाफ़ एक साथ जुड़ें (नाम, नंबर, पद)': bulk.some((x) => x.n === 'नमूना एक' && x.m === '919000000001' && x.d === 'मीटर रीडर, नमूना गाँव') && bulk.some((x) => x.n === 'नमूना दो' && x.m === '919000000002' && x.d === 'आउटसोर्स हेल्पर'),
+  'बिना नंबर वाली लाइन छोड़ी': !bulk.some((x) => x.n.includes('बिना नंबर')),
+  'वही नंबर दोबारा: नाम बदला, दोहराया नहीं (पद बना रहा)': bulk2.length === bulk.length && bulk2.some((x) => x.n === 'नमूना एक बदला नाम' && x.d === 'मीटर रीडर, नमूना गाँव'),
   'स्टाफ़ टैब में सूचियाँ दिखें': listsTxt.includes('बकाया वसूली') && listsTxt.includes('नमूना फीडर'),
   'स्टाफ़/रिपोर्ट टैब पर horizontal scroll नहीं': !hScroll2,
   '"हटाएँ" से रोज़ का काम सूची से हटे': tplGone,

@@ -45,7 +45,8 @@ at the user's request (v1.15); their code and saved data remain but are unreacha
 - `tpl[]`: daily-work buttons ("रोज़ के काम"); `places[]`: feeder/DT/village list, filled from the स्थान field.
 - `hist{'YYYY-MM': {ta, td, oa, od}}`: monthly counts (t=task, o=instruction; a=added, d=done), last 12 months.
   Change status only through `setSt()` so the counts stay right.
-- `staff[]`: `{id, n, m}` — `m` is a normalised 12-digit number starting with 91.
+- `staff[]`: `{id, n, m, d}` — `m` is a normalised 12-digit number starting with 91; `d` = पद / स्थान.
+  "📋 कई स्टाफ़ एक साथ जोड़ें" (`parseStaffLines`) takes one person per line; same number updates that person.
 - `log[]`: last 25 sends/photo saves with timestamp and message text; `th` = id of a ~10 KB JPEG of the card
   (420px, made by `noteThumb()` at send time) in IndexedDB on this phone only; old entries without it show a copy button.
 

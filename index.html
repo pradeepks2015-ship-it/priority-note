@@ -66,6 +66,8 @@ button,select,input,textarea{font-family:var(--f-ui)}
 form{display:flex;flex-direction:column;gap:10px}
 input[type=text],input[type=tel],input[type=time],select{width:100%;font:500 16px var(--f-ui);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:46px}
 input::placeholder{color:var(--muted)}
+textarea.bulk{width:100%;min-height:160px;font:500 15px/1.5 var(--f-ui);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);resize:vertical}
+textarea.bulk::placeholder{color:var(--muted)}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{display:inline-flex;align-items:center;gap:6px;font:600 14px var(--f-ui);padding:8px 12px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
@@ -273,6 +275,14 @@ textarea.hold{position:fixed;left:-9999px;top:0}
             <button class="btn ghost" type="button" id="scancel" hidden>रद्द</button>
           </div>
         </form>
+        <details class="more" id="bulkBox" style="margin-top:10px">
+          <summary>📋 कई स्टाफ़ एक साथ जोड़ें</summary>
+          <div class="fields">
+            <p class="hint">हर लाइन में एक कर्मचारी: नाम, फिर 10 अंक का मोबाइल नंबर, फिर पद और स्थान (चाहें तो)। जिसका नंबर पहले से है, उसका नाम और पद बदल जाएगा।</p>
+            <textarea class="bulk" id="bulkTxt" placeholder="जैसे:&#10;रामू यादव — 98xxxxxxxx — मीटर रीडर, पिंडरई&#10;श्याम साहू 97xxxxxxxx आउटसोर्स हेल्पर"></textarea>
+            <button class="btn" type="button" id="bulkAdd">सबको जोड़ें</button>
+          </div>
+        </details>
         <div id="staffList" style="margin-top:10px"></div>
       </section>
 
@@ -381,7 +391,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   function apply(d){
     if(!d||typeof d!=='object')return;
     ['tasks','orders'].forEach(function(k){if(Array.isArray(d[k]))S[k]=d[k].map(cleanItem).filter(Boolean)});
-    if(Array.isArray(d.staff))S.staff=d.staff.filter(function(s){return s&&typeof s.n==='string'&&s.n}).map(function(s){return {id:str(s.id)||uid(),n:s.n,m:str(s.m)}});
+    if(Array.isArray(d.staff))S.staff=d.staff.filter(function(s){return s&&typeof s.n==='string'&&s.n}).map(function(s){return {id:str(s.id)||uid(),n:s.n,m:str(s.m),d:str(s.d)}});
     if(Array.isArray(d.log))S.log=d.log.filter(function(l){return l&&typeof l.ts==='number'}).slice(0,25);
     if(NOTE[d.color])S.color=d.color;
     if(typeof d.sign==='string')S.sign=d.sign;
@@ -708,7 +718,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       var old=open.reduce(function(m,x){return Math.max(m,ageOf(x))},0);
       var r=mk('div','srow'),nm=mk('div','nm');
       nm.appendChild(mk('b','',st.n));
-      nm.appendChild(mk('span','',(st.m?showNum(st.m):'नंबर नहीं जोड़ा')+' · '+(open.length?open.length+' काम बाकी'+(old>=1?' (सबसे पुराना '+old+' दिन)':''):'कोई काम बाकी नहीं')));
+      nm.appendChild(mk('span','',(st.m?showNum(st.m):'नंबर नहीं जोड़ा')+(st.d?' · '+st.d:'')+' · '+(open.length?open.length+' काम बाकी'+(old>=1?' (सबसे पुराना '+old+' दिन)':''):'कोई काम बाकी नहीं')));
       var bt=mk('div','bt');
       var e=mk('button','btn ghost sm','बदलें');e.type='button';e.onclick=function(){editStaff=st.id;$('sn').value=st.n;$('sm').value=st.m?st.m.slice(2):'';$('sbtn').textContent='सेव करें';$('scancel').hidden=false;$('sn').focus()};
       var d=mk('button','btn ghost sm','हटाएँ');d.type='button';d.setAttribute('aria-label','हटाएँ: '+st.n);d.onclick=function(){S.staff=S.staff.filter(function(s){return s!==st});save();renderAll()};
@@ -931,6 +941,32 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     resetStaffForm();save();renderAll();
   });
   $('scancel').onclick=resetStaffForm;
+  // "कई स्टाफ़ एक साथ जोड़ें": one person per line — name, mobile number, then पद/स्थान. Same number = update.
+  function parseStaffLines(text){
+    var out=[];
+    String(text||'').split(/\n+/).forEach(function(line){
+      var mm=line.match(/(\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}/);if(!mm)return;
+      var m=normNum(mm[0]);if(!m)return;
+      var clean=function(t){return t.replace(/^[\s,;:|—–-]+|[\s,;:|—–-]+$/g,'').replace(/\s+/g,' ')};
+      var n=clean(line.slice(0,mm.index)),d=clean(line.slice(mm.index+mm[0].length));
+      if(!n&&d){n=d;d=''}
+      if(n)out.push({n:n,m:m,d:d});
+    });
+    return out;
+  }
+  $('bulkAdd').onclick=function(){
+    var rows=parseStaffLines($('bulkTxt').value),added=0,changed=0;
+    if(!rows.length){toast('कोई सही लाइन नहीं मिली — हर लाइन में नाम और 10 अंक का नंबर लिखें');return}
+    rows.forEach(function(x){
+      var s=S.staff.filter(function(y){return y.m===x.m})[0];
+      if(s){
+        var old=s.n;s.n=x.n;if(x.d)s.d=x.d;changed++;
+        if(old!==x.n)S.tasks.concat(S.orders).forEach(function(t){if(t.w===old)t.w=x.n});
+      }else{S.staff.push({id:uid(),n:x.n,m:x.m,d:x.d});added++}
+    });
+    $('bulkTxt').value='';$('bulkBox').open=false;save();renderAll();
+    toast(added+' नए जोड़े'+(changed?', '+changed+' पहले से थे (नाम/पद बदला)':''));
+  };
   $('sign').addEventListener('input',function(){S.sign=this.value;save();renderNote()});
   var swb=$('swatches');
   Object.keys(NOTE).forEach(function(c){
@@ -1089,9 +1125,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.17',APP_NOTES=[
-    'महीने का सारांश अब स्टाफ़ टैब में नीचे, बंद रहता है; दबाने पर खुलेगा',
-    '"हर घंटे याद दिलाएँ" का अलग डिब्बा हटाया — ऊपर 🔔 से चालू/बंद, जानकारी 👤 में'
+  var APP_V='1.18',APP_NOTES=[
+    'स्टाफ़ टैब में "📋 कई स्टाफ़ एक साथ जोड़ें": नाम, नंबर, पद और स्थान की सूची चिपकाकर सबको एक बार में जोड़ें',
+    'हर कर्मचारी के नाम के नीचे अब पद और स्थान भी दिखेगा'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
