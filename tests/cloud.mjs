@@ -129,7 +129,7 @@ const afterLogout = JSON.parse(doc);
 
 await browser.close();
 const checks = {
-  'लॉगिन से पहले "Google से लॉगिन करें" दिखे': offBtn.includes('Google खाते से लॉगिन करें'),
+  'लॉगिन से पहले "Google से लॉगिन करें" दिखे': offBtn.includes('Google से लॉगिन करें: सारा डेटा'),
   'लॉगिन के बाद "ऑनलाइन सेव चालू"': aOn,
   'फ़ोन A का डेटा ऑनलाइन गया': uploaded,
   'नीचे "☁️ ऑनलाइन सेव चालू"': footer.includes('☁️ ऑनलाइन सेव चालू'),
