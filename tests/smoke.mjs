@@ -131,10 +131,12 @@ await page.click('#tplDone');
 const tplNow = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).tpl);
 const tplChips = await page.$eval('#tplRow', (n) => n.innerText);
 
-// Monthly summary (staff tab) counts what was added today; staff tab shows open work.
-await page.click('#tab-staff');
-const monFolded = await page.$eval('#monCard', (d) => !d.open);
+// Monthly summary (folded, under today's work) counts what was added today.
+const monFolded = await page.$eval('#monCard', (d) => !d.open && !d.hidden);
 const mon = await page.$eval('#monBox', (n) => n.textContent);
+// The staff tab shows only the staff list: no note, record, month summary or saved lists.
+await page.click('#tab-staff');
+const staffOnly = await page.evaluate(() => ['noteCol', 'monCard', 'listsCard', 'addCard'].every((id) => document.getElementById(id).hidden) && !document.getElementById('staffCard').hidden);
 // Bulk add: made-up names and numbers only. The existing sample person's number updates that person.
 await page.click('#addStaffBox summary');
 await page.click('#bulkBox summary');
@@ -187,11 +189,11 @@ const noOwn = await page.evaluate(() => {
   const wa = r ? decodeURIComponent((r.querySelector('a.wa') || {}).href || '') : '';
   return { own: S.tasks.some((x) => x.w === 'नमूना दो'), common, ok: !!r && common.length > 0 && common.every((t) => wa.includes(t)) && !!r.querySelector('button.ic') };
 });
-const listsTxt = await page.$eval('#listsCard', (n) => n.innerText);
 const hScroll2 = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
-await page.click('#tplList >> [aria-label="हटाएँ: बकाया वसूली"]');
-const tplGone = !(await page.$eval('#tplList', (n) => n.innerText)).includes('बकाया वसूली')
-  && !(await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).tpl)).includes('बकाया वसूली');
+// The place list lives in the feeder view, folded.
+await page.click('#tab-feeder');
+await page.click('#placesSum');
+const listsTxt = await page.$eval('#listsCard', (n) => n.innerText);
 
 // A long paragraph shows in full in the task box (it grows), and Enter still adds the task.
 await page.click('#tab-tasks');
@@ -250,7 +252,8 @@ const checks = {
   'ऊपर 🔔 से हर घंटे याद दिलाना चालू हो': bellOn,
   '"✏️ बदलें" से रोज़ का काम बदले': tplNow.includes('मीटर रीडिंग की जाँच') && !tplNow.includes('मीटर रीडिंग') && tplChips.includes('मीटर रीडिंग की जाँच'),
   'वहीं "हटाएँ" से रोज़ का काम हटे': !tplNow.includes('फीडर पेट्रोलिंग'),
-  'स्टाफ़ टैब में महीने के सारांश की गिनती': mon.includes('काम जोड़े 1') && !mon.includes('निर्देश'),
+  'महीने के सारांश की गिनती': mon.includes('काम जोड़े 1') && !mon.includes('निर्देश'),
+  'स्टाफ़ वाले हिस्से में सिर्फ़ स्टाफ़ की सूची': staffOnly,
   'महीने का सारांश शुरू में बंद': monFolded,
   'स्टाफ़ में बाकी काम दिखें, "कोई काम बाकी नहीं" नहीं': staffTxt.includes('1 काम बाकी') && !staffTxt.includes('कोई काम बाकी नहीं'),
   'स्टाफ़ मुख्यालय-वार समूहों में': groups.some((g) => g.startsWith('📍 नमूना गाँव')) && groups.some((g) => g.startsWith('📍 मुख्यालय नहीं लिखा')),
@@ -265,9 +268,8 @@ const checks = {
   'Excel और CSV से गाँव (शीर्षक/अंक/दोहराव छोड़े)': ['नमूना गाँव क', 'नमूना गाँव ख', 'नमूना गाँव ग, टोला'].every((v) => placesNow.includes(v))
     && placesNow.filter((v) => v === 'नमूना गाँव क').length === 1 && !placesNow.some((v) => /गाँव का नाम|^123$|^गाँव$/.test(v)),
   'वही नंबर दोबारा: नाम बदला, दोहराया नहीं (पद बना रहा)': bulk2.length === bulk.length && bulk2.some((x) => x.n === 'नमूना एक बदला नाम' && x.r === 'मीटर रीडर' && x.h === 'नमूना गाँव'),
-  'स्टाफ़ टैब में सूचियाँ दिखें': listsTxt.includes('बकाया वसूली') && listsTxt.includes('नमूना फीडर'),
+  'फीडर में गाँव/स्थान की सूची': listsTxt.includes('नमूना फीडर') && listsTxt.includes('नमूना गाँव ख'),
   'स्टाफ़/रिपोर्ट टैब पर horizontal scroll नहीं': !hScroll2,
-  '"हटाएँ" से रोज़ का काम सूची से हटे': tplGone,
 };
 
 await browser.close();

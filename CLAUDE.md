@@ -30,7 +30,7 @@ and left out of reminders.
   login on a phone with data on both sides asks which to keep. Letter screenshots are not uploaded.
   Security rules: `firestore.rules` (paste into Firestore → Rules). The web config in `index.html` is public by design.
 - "हर घंटे याद दिलाएँ": only the 🔔 button in the header toggles it; next-reminder time and the phone-notification
-  status/button are in the 👤 panel. The monthly summary is a folded `<details>` at the bottom of the staff tab.
+  status/button are in the 👤 panel. The monthly summary is a folded `<details>` under "आज के काम". The staff tab shows only the staff list (no note or record); the feeder/DT/village list (`places`) is a folded card in the feeder view.
 - Login/backup: the round 👤 profile button in the header (`#me`, Google photo or first letter when logged in)
   opens `#mePanel` with the cloud status, login and logout.
 - Hourly reminder when the app is closed (project is on the Blaze plan): with "हर घंटे याद दिलाएँ" on and logged in,

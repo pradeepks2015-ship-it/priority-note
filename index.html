@@ -347,16 +347,13 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         <div id="staffList"></div>
       </section>
 
-      <section class="card" id="listsCard" aria-label="सेव की गई सूचियाँ">
-        <p class="sec-title">रोज़ के काम की सूची</p>
-        <p class="hint">ये बटन "आज के काम" में लिखने की जगह के नीचे आते हैं। नया जोड़ने के लिए वहाँ काम लिखकर ⭐ सेव दबाएँ; वहीं "✏️ बदलें / हटाएँ" से भी बदल सकते हैं।</p>
-        <div id="tplList" style="margin-top:4px"></div>
-        <p class="sec-title" style="margin-top:16px">फीडर / DT / गाँव की सूची</p>
-        <p class="hint">स्थान एक बार लिखने पर अपने-आप सेव हो जाता है और अगली बार चुनने के लिए आता है। Excel फ़ाइल के पहले कॉलम से भी जोड़ सकते हैं।</p>
+      <details class="card" id="listsCard">
+        <summary id="placesSum">📍 फीडर / DT / गाँव की सूची</summary>
+        <p class="hint" style="margin-top:8px">स्थान एक बार लिखने पर अपने-आप सेव हो जाता है और अगली बार चुनने के लिए आता है। Excel फ़ाइल के पहले कॉलम से भी जोड़ सकते हैं।</p>
         <button class="btn ghost sm" type="button" id="placeFileBtn" style="margin-top:8px">📊 Excel से गाँव जोड़ें (.xlsx / .csv)</button>
         <input type="file" id="placeFile" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden>
         <div id="placeChips" style="margin-top:4px"></div>
-      </section>
+      </details>
 
       <details class="card" id="monCard">
         <summary>📅 महीने का सारांश</summary>
@@ -1048,7 +1045,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     });
   }
   function renderLists(){
-    removableRows($('tplList'),S.tpl,'सूची खाली है।',function(){save();renderAll()});
+    $('placesSum').textContent='📍 फीडर / DT / गाँव की सूची ('+S.places.length+')';
     removableRows($('placeChips'),S.places,'अभी कोई स्थान सेव नहीं।',function(){save();renderAll()});
   }
   function monthText(k){var p=k.split('-');return MONTHS[+p[1]-1]+' '+p[0]}
@@ -1120,16 +1117,17 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   function renderAll(){
     ['tasks','staff'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',String(view===k))});
     $('tab-feeder').setAttribute('aria-pressed',String(view==='feeder'));
-    $('feederCard').hidden=view!=='feeder';$('noteCol').hidden=view==='feeder';
+    $('feederCard').hidden=view!=='feeder';$('noteCol').hidden=view==='feeder'||view==='staff';
     var isList=view==='tasks'||view==='orders';
     $('addCard').hidden=!isList;$('listCard').hidden=!isList;$('repCard').hidden=view!=='report';$('staffCard').hidden=view!=='staff';
-    $('monCard').hidden=view!=='staff';$('listsCard').hidden=view!=='staff';
+    $('monCard').hidden=view!=='tasks';$('listsCard').hidden=view!=='feeder';
     $('txt').placeholder=view==='orders'?'निर्देश लिखें, जैसे: सरकारी बकाये की सूची आज भेजें':'काम लिखें, जैसे: 11kV फीडर ट्रिपिंग जाँच';
     renderWho();renderTpl();renderPlaces();
     if(isList)renderList();
     if(view==='report')renderReport();
-    if(view==='staff'){renderStaff();renderLists();renderMonth()}
-    if(view==='feeder')renderFeeder();
+    if(view==='staff')renderStaff();
+    if(view==='tasks')renderMonth();
+    if(view==='feeder'){renderFeeder();renderLists()}
     renderNote();renderSend();renderLog();renderRemind();renderCloud();
   }
 
@@ -1482,9 +1480,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.31',APP_NOTES=[
-    'काम लिखने का खाना अब लंबे पैराग्राफ़ के साथ बढ़ता है: पूरा लिखा दिखेगा, कहीं भी दबाकर सुधार करें',
-    'रोज़ के काम के लंबे बटन भी पूरे दिखेंगे'
+  var APP_V='1.32',APP_NOTES=[
+    'स्टाफ़ वाले हिस्से में अब सिर्फ़ स्टाफ़ की सूची',
+    'महीने का सारांश "आज के काम" में नीचे; फीडर / DT / गाँव की सूची "🗺️ फीडर" में'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
