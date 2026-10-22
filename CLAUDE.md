@@ -30,7 +30,7 @@ and left out of reminders.
   login on a phone with data on both sides asks which to keep. Letter screenshots are not uploaded.
   Security rules: `firestore.rules` (paste into Firestore → Rules). The web config in `index.html` is public by design.
 - "हर घंटे याद दिलाएँ": only the 🔔 button in the header toggles it; next-reminder time and the phone-notification
-  status/button are in the 👤 panel. The monthly summary is a folded `<details>` under "आज के काम". The staff tab shows only the staff list (no note or record); the feeder/DT/village list (`places`) is a folded card in the feeder view.
+  status/button are in the 👤 panel. The "महीने का सारांश" card was removed (v1.34); `hist` is still counted. The staff tab shows only the staff list (no note or record); the feeder/DT/village list (`places`) is a folded card in the feeder view.
 - Login/backup: the round 👤 profile button in the header (`#me`, Google photo or first letter when logged in)
   opens `#mePanel` with the cloud status, login and logout.
 - Hourly reminder when the app is closed (project is on the Blaze plan): with "हर घंटे याद दिलाएँ" on and logged in,
@@ -93,7 +93,7 @@ Open `index.html` in a browser, or `npx serve .` and open the printed URL.
 `tests/smoke.mjs` (Playwright) opens the app at 400px with sample tasks and checks the note
 title, the date shown once, the signature, no "बनाया गया" line, PNG creation, no horizontal scroll, the update banner
 and instruction "No." numbering, daily-work buttons, pending days, places list,
-monthly summary and staff open-work counts. CI runs it on
+monthly counts and staff open-work counts. CI runs it on
 every push (`.github/workflows/smoke.yml`). Locally: `python3 -m http.server 8080`, then
 `node tests/smoke.mjs` (set `CHROMIUM_PATH` to use an installed Chromium). `tests/cloud.mjs` checks the
 online backup and push tokens across several "phones" with a stand-in Firebase (no real login needed);

@@ -131,12 +131,12 @@ await page.click('#tplDone');
 const tplNow = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).tpl);
 const tplChips = await page.$eval('#tplRow', (n) => n.innerText);
 
-// Monthly summary (folded, under today's work) counts what was added today.
-const monFolded = await page.$eval('#monCard', (d) => !d.open && !d.hidden);
-const mon = await page.$eval('#monBox', (n) => n.textContent);
+// Monthly counts are still kept (hist), though the "महीने का सारांश" card was removed at the user's request.
+const monGone = !(await page.$('#monCard'));
+const histNow = await page.evaluate(() => { const S = JSON.parse(localStorage.getItem('priority-note-v2')); const d = new Date(); return (S.hist[d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')] || {}).ta; });
 // The staff tab shows only the staff list: no note, record, month summary or saved lists.
 await page.click('#tab-staff');
-const staffOnly = await page.evaluate(() => ['noteCol', 'monCard', 'listsCard', 'addCard'].every((id) => document.getElementById(id).hidden) && !document.getElementById('staffCard').hidden);
+const staffOnly = await page.evaluate(() => ['noteCol', 'listsCard', 'addCard'].every((id) => document.getElementById(id).hidden) && !document.getElementById('staffCard').hidden);
 // Bulk add: made-up names and numbers only. The existing sample person's number updates that person.
 await page.click('#addStaffBox summary');
 await page.click('#bulkBox summary');
@@ -254,9 +254,8 @@ const checks = {
   'ऊपर 🔔 से हर घंटे याद दिलाना चालू हो': bellOn,
   '"✏️ बदलें" से रोज़ का काम बदले': tplNow.includes('मीटर रीडिंग की जाँच') && !tplNow.includes('मीटर रीडिंग') && tplChips.includes('मीटर रीडिंग की जाँच'),
   'वहीं "हटाएँ" से रोज़ का काम हटे': !tplNow.includes('फीडर पेट्रोलिंग'),
-  'महीने के सारांश की गिनती': mon.includes('काम जोड़े 1') && !mon.includes('निर्देश'),
+  '"महीने का सारांश" नहीं, पर महीने की गिनती बनी रहे': monGone && histNow >= 1,
   'स्टाफ़ वाले हिस्से में सिर्फ़ स्टाफ़ की सूची': staffOnly,
-  'महीने का सारांश शुरू में बंद': monFolded,
   'स्टाफ़ में बाकी काम दिखें, "कोई काम बाकी नहीं" नहीं': staffTxt.includes('1 काम बाकी') && !staffTxt.includes('कोई काम बाकी नहीं'),
   'स्टाफ़ मुख्यालय-वार समूहों में': groups.some((g) => g.startsWith('📍 नमूना गाँव')) && groups.some((g) => g.startsWith('📍 मुख्यालय नहीं लिखा')),
   'हर नंबर पर 📞 कॉल और 💬 WhatsApp': links.filter((l) => l.tel).every((l) => /^tel:\+919\d{9}$/.test(l.tel) && l.wa.startsWith('https://wa.me/919')) && links.some((l) => l.n === 'नमूना दो' && l.tel === 'tel:+919000000002'),

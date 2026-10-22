@@ -355,10 +355,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         <div id="placeChips" style="margin-top:4px"></div>
       </details>
 
-      <details class="card" id="monCard">
-        <summary>📅 महीने का सारांश</summary>
-        <div class="mon" id="monBox" style="margin-top:8px"></div>
-      </details>
 
       <section class="card" id="feederCard" aria-label="फीडर का नक्शा" hidden>
         <div id="fdList">
@@ -1045,28 +1041,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     removableRows($('placeChips'),S.places,'अभी कोई स्थान सेव नहीं।',function(){save();renderAll()});
   }
   function monthText(k){var p=k.split('-');return MONTHS[+p[1]-1]+' '+p[0]}
-  function renderMonth(){
-    var box=$('monBox');box.textContent='';
-    var cur=monKey(),keys=Object.keys(S.hist).sort().reverse().slice(0,3);if(keys.indexOf(cur)<0)keys.unshift(cur);
-    keys.slice(0,3).forEach(function(k){
-      var h=S.hist[k]||{ta:0,td:0,oa:0,od:0},r=mk('div','srow'),nm=mk('div','nm');
-      nm.appendChild(mk('b','',monthText(k)+(k===cur?' (यह महीना)':'')));
-      nm.appendChild(mk('span','','काम जोड़े '+h.ta+' · पूरे '+h.td));
-      r.appendChild(nm);box.appendChild(r);
-    });
-    var oo=S.orders.filter(function(x){return x.st!=='done'}),to=S.tasks.filter(function(x){return x.st!=='done'});
-    var oldest=function(a){return a.reduce(function(m,x){return Math.max(m,ageOf(x))},0)};
-    box.appendChild(mk('p','hint','अभी बाकी काम: '+to.length+(oldest(to)?' (सबसे पुराना '+oldest(to)+' दिन)':'')));
-    var a=mk('a','btn wa sm','सारांश WhatsApp पर भेजें');a.target='_blank';a.rel='noopener';
-    a.href='https://wa.me/?text='+encodeURIComponent(monthMsg());box.appendChild(a);
-  }
-  function monthMsg(){
-    var k=monKey(),h=S.hist[k]||{ta:0,td:0,oa:0,od:0};
-    var oo=S.orders.filter(function(x){return x.st!=='done'}),to=S.tasks.filter(function(x){return x.st!=='done'});
-    return ['📅 *'+monthText(k)+' का सारांश*','',
-      '⚡ काम: जोड़े '+h.ta+', पूरे '+h.td,'',
-      'अभी बाकी काम: '+to.length].concat(S.sign.trim()?['','— '+S.sign.trim()]:[]).join('\n');
-  }
   function resetStaffForm(){editStaff='';$('sn').value='';$('sm').value='';$('sr').value='';$('sh').value='';$('sbtn').textContent='स्टाफ़ जोड़ें';$('scancel').hidden=true}
   function renderWho(){
     var sel=$('who'),cur=sel.value;sel.textContent='';
@@ -1116,13 +1090,12 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     $('feederCard').hidden=view!=='feeder';$('noteCol').hidden=view==='feeder'||view==='staff';
     var isList=view==='tasks'||view==='orders';
     $('addCard').hidden=!isList;$('listCard').hidden=!isList;$('repCard').hidden=view!=='report';$('staffCard').hidden=view!=='staff';
-    $('monCard').hidden=view!=='tasks';$('listsCard').hidden=view!=='feeder';
+    $('listsCard').hidden=view!=='feeder';
     $('txt').placeholder=view==='orders'?'निर्देश लिखें, जैसे: सरकारी बकाये की सूची आज भेजें':'काम लिखें, जैसे: 11kV फीडर ट्रिपिंग जाँच';
     renderWho();renderTpl();renderPlaces();
     if(isList)renderList();
     if(view==='report')renderReport();
     if(view==='staff')renderStaff();
-    if(view==='tasks')renderMonth();
     if(view==='feeder'){renderFeeder();renderLists()}
     renderNote();renderSend();renderLog();renderRemind();renderCloud();
   }
@@ -1475,8 +1448,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.33',APP_NOTES=[
-    '"ग्रुप के लिए WhatsApp खोलें" बटन हटाया; नोट "फोटो शेयर / सेव करें" से भेजें'
+  var APP_V='1.34',APP_NOTES=[
+    '"📅 महीने का सारांश" हटाया'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
