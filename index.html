@@ -81,8 +81,6 @@ textarea.bulk::placeholder{color:var(--muted)}
 .txtrow{flex-wrap:nowrap;align-items:flex-start}
 .txtrow textarea{flex:1 1 0;min-width:0;font:500 16px/1.45 var(--f-ui);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:46px;max-height:45vh;resize:none;overflow-y:hidden}
 .txtrow textarea::placeholder{color:var(--muted)}
-.mic{flex:0 0 auto;min-width:52px;padding:8px 12px;font-size:20px}
-.mic[aria-pressed="true"]{border-color:var(--p1);color:var(--p1)}
 .tpl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .tpl .chip{font-weight:500;max-width:100%}
 .tpl .chip{border-radius:16px;text-align:left}
@@ -274,14 +272,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         <form id="f" autocomplete="off">
           <div class="row txtrow">
             <textarea id="txt" rows="1" enterkeyhint="done" aria-label="काम या निर्देश"></textarea>
-            <button type="button" class="btn ghost mic" id="mic" aria-label="बोलकर लिखें" aria-pressed="false" hidden>🎤</button>
           </div>
           <div class="tpl" id="tplRow" role="group" aria-label="रोज़ के काम"></div>
-          <div class="chips" id="pchips" role="group" aria-label="प्राथमिकता">
-            <button type="button" class="chip" data-p="1" aria-pressed="true"><i style="background:var(--p1)"></i>तुरंत</button>
-            <button type="button" class="chip" data-p="2" aria-pressed="false"><i style="background:var(--p2)"></i>आज दिन में</button>
-            <button type="button" class="chip" data-p="3" aria-pressed="false"><i style="background:var(--p3)"></i>समय मिले तो</button>
-          </div>
           <div class="row">
             <label class="sr" for="who">कौन करेगा</label>
             <select id="who" class="who"></select>
@@ -471,6 +463,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   var S={tasks:[],orders:[],staff:[],log:[],color:'yellow',sign:'',remind:false,ordNo:0,
     tpl:['बिलिंग का काम','बकाया वसूली','शिकायतों का निराकरण','मीटर रीडिंग','फीडर पेट्रोलिंग'],places:[],hist:{},feeders:[]};
+  // curP: priority of new tasks; its buttons were removed (v1.35), so every new task is तुरंत.
   var view='tasks',lastList='tasks',curP=1,ref=null,saveTimer=null,chain=Promise.resolve();
   var downloads=null,assets=null,pendingImg='',editStaff='',confirmNew=false;
   var $=function(id){return document.getElementById(id)};
@@ -1103,10 +1096,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   /* ---------- events ---------- */
   $('today').textContent=full(new Date());
   ['tasks','staff','feeder'].forEach(function(k){$('tab-'+k).onclick=function(){setView(k)}});
-  $('pchips').addEventListener('click',function(e){
-    var b=e.target.closest('.chip');if(!b)return;curP=+b.dataset.p;
-    this.querySelectorAll('.chip').forEach(function(c){c.setAttribute('aria-pressed',String(c===b))});
-  });
   function showPrev(){
     var p=$('photoPrev');p.textContent='';
     if(!pendingImg){p.hidden=true;return}
@@ -1431,25 +1420,11 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     },{capture:true,passive:true});
   })();
 
-  /* ---------- speak to write (Chrome on Android needs internet for this) ---------- */
-  (function(){
-    var SR=window.SpeechRecognition||window.webkitSpeechRecognition,mic=$('mic'),rec=null;if(!SR)return;
-    mic.hidden=false;
-    function stop(){mic.setAttribute('aria-pressed','false');mic.textContent='🎤';rec=null}
-    mic.onclick=function(){
-      if(rec){rec.stop();return}
-      rec=new SR();rec.lang='hi-IN';rec.interimResults=false;rec.maxAlternatives=1;
-      rec.onresult=function(e){var t=e.results[0][0].transcript.trim();var f=$('txt');f.value=(f.value.trim()?f.value.trim()+' ':'')+t;growTxt();f.blur()};
-      rec.onerror=function(e){toast(e.error==='not-allowed'?'माइक की अनुमति दें':e.error==='network'?'बोलकर लिखने के लिए इंटरनेट चाहिए':'आवाज़ समझ नहीं आई, फिर से बोलें')};
-      rec.onend=stop;
-      try{rec.start();mic.setAttribute('aria-pressed','true');mic.textContent='⏺';toast('बोलिए…')}catch(e){stop()}
-    };
-  })();
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.34',APP_NOTES=[
-    '"📅 महीने का सारांश" हटाया'
+  var APP_V='1.35',APP_NOTES=[
+    '🎤 बोलकर लिखने का बटन और तुरंत / आज दिन में / समय मिले तो वाले बटन हटाए'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

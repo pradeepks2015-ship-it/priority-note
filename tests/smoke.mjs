@@ -116,7 +116,7 @@ const tplFilled = await page.inputValue('#txt');
 await page.evaluate(() => { document.getElementById('loc').value = 'नमूना फीडर'; });
 await page.press('#txt', 'Enter');
 const placeOffered = await page.$$eval('#placeList option', (o) => o.map((x) => x.value));
-const micOk = await page.$eval('#mic', (b) => b.hidden || b.textContent.includes('🎤'));
+const micGone = !(await page.$('#mic')) && !(await page.$('#pchips'));
 const remCardGone = !(await page.$('#remCard')) && !(await page.$('#remSw'));
 await page.click('#bell');
 const bellOn = await page.$eval('#bell', (b) => b.getAttribute('aria-pressed') === 'true' && b.textContent === '🔔')
@@ -249,7 +249,7 @@ const checks = {
   'पुराने काम पर "3 दिन से बाकी"': note.includes('⏳ 3 दिन से बाकी'),
   'रोज़ के काम का बटन लिखे': tplFilled === 'बकाया वसूली',
   'स्थान अगली बार चुनने को मिले': placeOffered.includes('नमूना फीडर'),
-  'बोलकर लिखने का बटन ठीक': micOk,
+  '🎤 और प्राथमिकता वाले बटन नहीं': micGone,
   'याद दिलाने का अलग डिब्बा/switch नहीं (सिर्फ़ 🔔)': remCardGone,
   'ऊपर 🔔 से हर घंटे याद दिलाना चालू हो': bellOn,
   '"✏️ बदलें" से रोज़ का काम बदले': tplNow.includes('मीटर रीडिंग की जाँच') && !tplNow.includes('मीटर रीडिंग') && tplChips.includes('मीटर रीडिंग की जाँच'),

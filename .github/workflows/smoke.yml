@@ -19,10 +19,14 @@ jobs:
           node-version: 22
       - name: Hourly reminder text
         run: node tests/notify.mjs
+      # The runner already has Google Chrome; use it, so a stalled browser download can't hang the job.
+      # Download Playwright's Chromium only if the runner has no Chrome.
       - name: Install Playwright
+        timeout-minutes: 6
         run: |
           npm install --no-save playwright@1.56.1
-          npx playwright install --with-deps chromium
+          C=$(command -v google-chrome || command -v google-chrome-stable || true)
+          if [ -n "$C" ]; then echo "CHROMIUM_PATH=$C" >> "$GITHUB_ENV"; "$C" --version; else npx playwright install --with-deps chromium; fi
       - name: Serve app
         run: |
           python3 -m http.server 8080 --bind 127.0.0.1 &
