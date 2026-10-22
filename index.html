@@ -435,9 +435,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       </section>
 
       <section class="card actions" aria-label="ग्रुप में भेजें">
-        <a class="btn wa" id="wa" href="#" target="_blank" rel="noopener">ग्रुप के लिए WhatsApp खोलें</a>
         <div class="row">
-          <button class="btn ghost" id="img" type="button" hidden>फोटो शेयर / सेव करें</button>
+          <button class="btn" id="img" type="button" hidden>फोटो शेयर / सेव करें</button>
         </div>
       </section>
 
@@ -641,10 +640,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       else if(b.t==='sg')n.appendChild(mk('div','sg',b.x));
     });
     $('noteTitle').textContent=mode==='report'?'ग्रुप में जाने वाली रिपोर्ट':mode==='orders'?'ग्रुप में जाने वाले निर्देश':'ग्रुप में जाने वाला नोट';
-    var has=listFor(mode).length>0,wa=$('wa');
-    wa.href=has?'https://wa.me/?text='+encodeURIComponent(buildText(mode,now)):'#';
-    wa.setAttribute('aria-disabled',String(!has));
-    $('img').disabled=!has;
+    $('img').disabled=!listFor(mode).length;
     $('swatches').querySelectorAll('.sw').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.c===S.color))});
   }
 
@@ -1317,7 +1313,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var b=mk('button','sw');b.type='button';b.dataset.c=c;b.style.background=NOTE[c];b.setAttribute('aria-label','रंग: '+CNAME[c]);
     b.onclick=function(){S.color=c;save();renderNote()};swb.appendChild(b);
   });
-  $('wa').addEventListener('click',function(){var m=noteMode();logIt('ग्रुप में भेजा · '+VIEWLBL[m],buildText(m,new Date()),listFor(m),m)});
   $('lbClose').onclick=function(){$('lb').hidden=true};
   $('lb').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')$('lb').hidden=true});
@@ -1480,9 +1475,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.32',APP_NOTES=[
-    'स्टाफ़ वाले हिस्से में अब सिर्फ़ स्टाफ़ की सूची',
-    'महीने का सारांश "आज के काम" में नीचे; फीडर / DT / गाँव की सूची "🗺️ फीडर" में'
+  var APP_V='1.33',APP_NOTES=[
+    '"ग्रुप के लिए WhatsApp खोलें" बटन हटाया; नोट "फोटो शेयर / सेव करें" से भेजें'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

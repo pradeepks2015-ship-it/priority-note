@@ -218,7 +218,9 @@ await tp.waitForTimeout(200);
 const reTap = await tp.evaluate(() => ({ blurs: window.__blurs, focused: document.activeElement.id, v: document.getElementById('txt').value }));
 await tctx.close();
 
+const waGone = !(await page.$('#wa'));
 const checks = {
+  '"ग्रुप के लिए WhatsApp खोलें" बटन नहीं': waGone,
   'लंबा पैराग्राफ़ काम के खाने में पूरा दिखे': box.tag === 'TEXTAREA' && box.h > 80 && box.sh <= box.h + 2 && box.sw <= box.cw + 1,
   'Enter से लंबा काम जुड़े, खाना फिर छोटा हो': paraAdded && boxAfter < 70,
   'लिखे खाने पर दोबारा दबाने से कीबोर्ड के लिए फिर से फ़ोकस': reTap.blurs === 1 && reTap.focused === 'txt' && reTap.v === 'रवि सर्वे',
