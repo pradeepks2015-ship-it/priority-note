@@ -78,13 +78,15 @@ textarea.bulk::placeholder{color:var(--muted)}
 .chip i{width:12px;height:12px;border-radius:50%;display:block}
 .chip[aria-pressed="true"]{border-color:var(--accent);background:var(--bg);box-shadow:inset 0 0 0 1px var(--accent)}
 .who{flex:1 1 150px;min-width:0}
-.txtrow{flex-wrap:nowrap}
-.txtrow input{flex:1 1 0;min-width:0}
+.txtrow{flex-wrap:nowrap;align-items:flex-start}
+.txtrow textarea{flex:1 1 0;min-width:0;font:500 16px/1.45 var(--f-ui);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:46px;max-height:45vh;resize:none;overflow-y:hidden}
+.txtrow textarea::placeholder{color:var(--muted)}
 .mic{flex:0 0 auto;min-width:52px;padding:8px 12px;font-size:20px}
 .mic[aria-pressed="true"]{border-color:var(--p1);color:var(--p1)}
 .tpl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .tpl .chip{font-weight:500;max-width:100%}
-.tpl .chip .tt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tpl .chip{border-radius:16px;text-align:left}
+.tpl .chip .tt{white-space:normal;overflow-wrap:anywhere;min-width:0}
 .tpl .edit{display:flex;flex-direction:column;width:100%;gap:0}
 .tpl .lbl{margin-right:2px}
 .mon{display:flex;flex-direction:column;gap:6px}
@@ -271,7 +273,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       <section class="card" id="addCard" aria-label="नया जोड़ें">
         <form id="f" autocomplete="off">
           <div class="row txtrow">
-            <input type="text" id="txt" aria-label="काम या निर्देश">
+            <textarea id="txt" rows="1" enterkeyhint="done" aria-label="काम या निर्देश"></textarea>
             <button type="button" class="btn ghost mic" id="mic" aria-label="बोलकर लिखें" aria-pressed="false" hidden>🎤</button>
           </div>
           <div class="tpl" id="tplRow" role="group" aria-label="रोज़ के काम"></div>
@@ -1009,7 +1011,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     S.tpl.forEach(function(t){
       var c=mk('button','chip');c.type='button';c.setAttribute('aria-label','लिखें: '+t);c.title=t;
       c.appendChild(mk('span','tt',t));
-      c.onclick=function(){$('txt').value=t;$('txt').focus()};row.appendChild(c);
+      c.onclick=function(){$('txt').value=t;growTxt();$('txt').focus()};row.appendChild(c);
     });
     var sv=mk('button','chip','⭐ सेव');sv.type='button';sv.setAttribute('aria-label','लिखा हुआ काम रोज़ के काम में सेव करें');
     sv.onclick=function(){
@@ -1162,6 +1164,12 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       im.src=u;
     });
   }
+  // The task box grows with its text, so a whole paragraph shows and the cursor can be put anywhere in it.
+  function growTxt(){var t=$('txt');t.style.height='auto';var h=t.scrollHeight+2;t.style.height=h+'px';t.style.overflowY=h>innerHeight*.45?'auto':'hidden'}
+  $('txt').addEventListener('input',growTxt);
+  window.addEventListener('resize',growTxt);
+  // Enter adds the task (as the one-line box did); Shift+Enter starts a new line.
+  $('txt').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('f').requestSubmit()}});
   $('photoBtn').onclick=function(){$('photoInput').click()};
   $('photoInput').onchange=async function(){
     var f=this.files&&this.files[0];this.value='';
@@ -1179,7 +1187,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var it={id:uid(),t:t,p:curP,w:$('who').value,st:'',r:'',loc:$('loc').value.trim(),due:$('due').value,ref:$('ref').value.trim(),q:$('q').value.trim(),img:pendingImg,carry:false,no:lastList==='orders'?++S.ordNo:0,at:Date.now()};
     S[lastList].push(it);bump(it,'a',1);
     if(it.loc){S.places=[it.loc].concat(S.places.filter(function(v){return v!==it.loc})).slice(0,300)}
-    $('txt').value='';$('loc').value='';$('due').value='';$('ref').value='';$('q').value='';pendingImg='';showPrev();
+    $('txt').value='';growTxt();$('loc').value='';$('due').value='';$('ref').value='';$('q').value='';pendingImg='';showPrev();
     $('txt').focus();save();renderAll();
   });
   $('sf').addEventListener('submit',function(e){
@@ -1465,7 +1473,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     mic.onclick=function(){
       if(rec){rec.stop();return}
       rec=new SR();rec.lang='hi-IN';rec.interimResults=false;rec.maxAlternatives=1;
-      rec.onresult=function(e){var t=e.results[0][0].transcript.trim();var f=$('txt');f.value=(f.value.trim()?f.value.trim()+' ':'')+t;f.blur()};
+      rec.onresult=function(e){var t=e.results[0][0].transcript.trim();var f=$('txt');f.value=(f.value.trim()?f.value.trim()+' ':'')+t;growTxt();f.blur()};
       rec.onerror=function(e){toast(e.error==='not-allowed'?'माइक की अनुमति दें':e.error==='network'?'बोलकर लिखने के लिए इंटरनेट चाहिए':'आवाज़ समझ नहीं आई, फिर से बोलें')};
       rec.onend=stop;
       try{rec.start();mic.setAttribute('aria-pressed','true');mic.textContent='⏺';toast('बोलिए…')}catch(e){stop()}
@@ -1474,9 +1482,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.30',APP_NOTES=[
-    '"🗺️ फीडर" अब स्टाफ़ के बगल में अलग बटन है',
-    'फीडर का नाम लिखने का खाना सामान्य आकार का'
+  var APP_V='1.31',APP_NOTES=[
+    'काम लिखने का खाना अब लंबे पैराग्राफ़ के साथ बढ़ता है: पूरा लिखा दिखेगा, कहीं भी दबाकर सुधार करें',
+    'रोज़ के काम के लंबे बटन भी पूरे दिखेंगे'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';

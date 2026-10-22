@@ -193,6 +193,15 @@ await page.click('#tplList >> [aria-label="हटाएँ: बकाया व�
 const tplGone = !(await page.$eval('#tplList', (n) => n.innerText)).includes('बकाया वसूली')
   && !(await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).tpl)).includes('बकाया वसूली');
 
+// A long paragraph shows in full in the task box (it grows), and Enter still adds the task.
+await page.click('#tab-tasks');
+const para = 'पिंडरई और मठी मुख्यालय के कर्मचारी पाँच साल से जिन्होंने बिल जमा नहीं किया उनकी सूची बनाकर आज शाम तक कार्यालय में जमा करें, साथ में बकाया राशि और कनेक्शन नंबर भी लिखें';
+await page.fill('#txt', para);
+const box = await page.$eval('#txt', (t) => ({ tag: t.tagName, h: t.clientHeight, sh: t.scrollHeight, sw: t.scrollWidth, cw: t.clientWidth }));
+await page.press('#txt', 'Enter');
+const paraAdded = (await page.$eval('#list', (n) => n.innerText)).includes('कनेक्शन नंबर भी लिखें') && (await page.inputValue('#txt')) === '';
+const boxAfter = await page.$eval('#txt', (t) => t.clientHeight);
+
 // A phone with touch: tapping a box that already has the cursor (keyboard closed) must leave it focused,
 // after a quick blur so the phone opens the keyboard again.
 const tctx = await browser.newContext({ viewport: { width: 400, height: 900 }, hasTouch: true, isMobile: true });
@@ -208,6 +217,8 @@ const reTap = await tp.evaluate(() => ({ blurs: window.__blurs, focused: documen
 await tctx.close();
 
 const checks = {
+  'लंबा पैराग्राफ़ काम के खाने में पूरा दिखे': box.tag === 'TEXTAREA' && box.h > 80 && box.sh <= box.h + 2 && box.sw <= box.cw + 1,
+  'Enter से लंबा काम जुड़े, खाना फिर छोटा हो': paraAdded && boxAfter < 70,
   'लिखे खाने पर दोबारा दबाने से कीबोर्ड के लिए फिर से फ़ोकस': reTap.blurs === 1 && reTap.focused === 'txt' && reTap.v === 'रवि सर्वे',
   'कोई JS error नहीं': errors.length === 0,
   'शीर्षक: आज के प्राथमिकता वाले कार्य': note.includes('आज के प्राथमिकता वाले कार्य'),
