@@ -43,6 +43,9 @@ and left out of reminders.
 - `tasks[]` / `orders[]` items: `{id, t, p (1 तुरंत | 2 आज दिन में | 3 समय मिले तो), w (staff name),
   st ('' | done | part | block), r (block reason), loc, due ("HH:MM"), ref, q (quoted line), img (image id), carry,
   no (instruction serial number; 0 for tasks), at (created, ms — drives "⏳ N दिन से बाकी")}`
+- `tb`: an optional table with a task (v1.36), raw text: one row per line, cells split by tab (pasted from Excel) or
+  `|`, first row the heading (`tbRows()`, max 30 rows × 8 columns). Shown on the note (`tbEl`), drawn on the PNG
+  (`paintTb`) and in WhatsApp as one line per row (`tbLines`). "📍 मुख्यालय भरें" fills column 1 from the staff मुख्यालय.
 - `ordNo`: last instruction serial number. It only goes up (new day, delete and "पूरे हुए हटाएँ" never
   reset it); shown as "No. 12 · …" on the card, the note, the PNG and the WhatsApp text.
 - `tpl[]`: daily-work buttons ("रोज़ के काम"); `places[]`: feeder/DT/village list, filled from the स्थान field.

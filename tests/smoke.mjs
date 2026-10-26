@@ -204,6 +204,24 @@ await page.press('#txt', 'Enter');
 const paraAdded = (await page.$eval('#list', (n) => n.innerText)).includes('कनेक्शन नंबर भी लिखें') && (await page.inputValue('#txt')) === '';
 const boxAfter = await page.$eval('#txt', (t) => t.clientHeight);
 
+// A comparison table with a task: "📍 मुख्यालय भरें" fills the first column from the staff list; the table shows
+// on the note, in the list row and in the PNG.
+await page.click('#addCard details.more summary');
+await page.fill('#tb', 'मुख्यालय | वसूली %');
+await page.click('#tbHq');
+const tbFilled = await page.inputValue('#tb');
+await page.fill('#tb', 'मुख्यालय | वसूली % | बकाया\nनमूना क | 82 | 4.5\nनमूना ख | 75 | 6.1');
+const tbPrevRows = await page.$$eval('#tbPrev tr', (r) => r.length);
+await page.fill('#txt', 'मुख्यालय-वार वसूली की तुलना');
+await page.press('#txt', 'Enter');
+const noteTb = await page.$$eval('#note table.ntb tr', (r) => r.map((x) => x.innerText.replace(/\s+/g, ' ').trim()));
+const rowMeta = (await page.$eval('#list', (n) => n.innerText)).includes('📊 तालिका (3 पंक्ति)');
+const tbCleared = (await page.inputValue('#tb')) === '';
+await page.evaluate(() => { window.__pngSize = 0; });
+await page.click('#img');
+await page.waitForFunction(() => window.__pngSize > 0, null, { timeout: 15000 }).catch(() => {});
+const tbPng = await page.evaluate(() => window.__pngSize);
+
 // A phone with touch: tapping a box that already has the cursor (keyboard closed) must leave it focused,
 // after a quick blur so the phone opens the keyboard again.
 const tctx = await browser.newContext({ viewport: { width: 400, height: 900 }, hasTouch: true, isMobile: true });
@@ -220,6 +238,11 @@ await tctx.close();
 
 const waGone = !(await page.$('#wa'));
 const checks = {
+  '"मुख्यालय भरें" से पहला कॉलम स्टाफ़ के मुख्यालयों से': tbFilled.split('\n')[0] === 'मुख्यालय | वसूली %' && tbFilled.includes('नमूना गाँव |') && tbFilled.split('\n').length >= 2,
+  'तालिका का पूर्वावलोकन': tbPrevRows === 3,
+  'नोट पर तालिका': noteTb.length === 3 && noteTb[0] === 'मुख्यालय वसूली % बकाया' && noteTb[2] === 'नमूना ख 75 6.1',
+  'सूची में "📊 तालिका" और खाना खाली': rowMeta && tbCleared,
+  'तालिका वाले नोट की PNG बनी': tbPng > 0,
   '"ग्रुप के लिए WhatsApp खोलें" बटन नहीं': waGone,
   'लंबा पैराग्राफ़ काम के खाने में पूरा दिखे': box.tag === 'TEXTAREA' && box.h > 80 && box.sh <= box.h + 2 && box.sw <= box.cw + 1,
   'Enter से लंबा काम जुड़े, खाना फिर छोटा हो': paraAdded && boxAfter < 70,

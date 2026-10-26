@@ -190,6 +190,11 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .note .ni .dt{position:absolute;left:3px;top:.5em;width:12px;height:12px;border-radius:50%}
 .note .ni .ic{position:absolute;left:0;top:0;font-size:17px}
 .note .ni .sub{display:block;font-size:15px;opacity:.78;line-height:1.3}
+.ntb{border-collapse:collapse;width:100%;margin:6px 0 4px;font-size:15px;line-height:1.3}
+.ntb th,.ntb td{border:1px solid var(--note-ink);padding:3px 6px;text-align:left;vertical-align:top;overflow-wrap:break-word}
+.ntb th{background:color-mix(in srgb,var(--note-ink) 12%,transparent)}
+.tbin{width:100%;font:500 15px/1.45 var(--f-ui);padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);resize:vertical}
+.tbprev{overflow-x:auto;background:var(--n-yellow);color:var(--note-ink);border-radius:10px;padding:8px}
 .note .ni .q{font-style:italic}
 .note .ni.d .mt{text-decoration:line-through;opacity:.6}
 .note .sumb{margin:6px 0 4px}
@@ -280,7 +285,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
             <button class="btn" type="submit">जोड़ें</button>
           </div>
           <details class="more">
-            <summary>और विवरण: स्थान, समय-सीमा, संदर्भ, फोटो</summary>
+            <summary>और विवरण: स्थान, समय-सीमा, संदर्भ, फोटो, तालिका</summary>
             <div class="fields">
               <input type="text" id="loc" list="placeList" placeholder="स्थान: फीडर / DT / गाँव" aria-label="स्थान">
               <datalist id="placeList"></datalist>
@@ -293,6 +298,14 @@ textarea.hold{position:fixed;left:-9999px;top:0}
                 <input type="file" id="photoInput" accept="image/*" hidden>
               </div>
               <div class="prev" id="photoPrev" hidden></div>
+              <label class="lbl" for="tb">📊 तालिका (जैसे मुख्यालय-वार तुलना)</label>
+              <p class="hint">हर लाइन एक पंक्ति; खाने | से अलग करें। पहली लाइन शीर्षक। Excel से कॉपी करके भी चिपका सकते हैं।</p>
+              <textarea id="tb" class="tbin" rows="4" placeholder="मुख्यालय | वसूली % | बकाया (लाख)&#10;पिंडरई | 82 | 4.5&#10;आदेगाँव | 75 | 6.1"></textarea>
+              <div class="row">
+                <button type="button" class="btn ghost sm" id="tbHq">📍 मुख्यालय भरें</button>
+                <button type="button" class="btn ghost sm" id="tbClear">तालिका मिटाएँ</button>
+              </div>
+              <div class="tbprev" id="tbPrev" hidden></div>
             </div>
           </details>
         </form>
@@ -497,7 +510,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(!x||typeof x.t!=='string')return null;
     var st=x.st;if(!st&&x.done===true)st='done';
     if(['done','part','block'].indexOf(st)<0)st='';
-    return {id:str(x.id)||uid(),t:x.t,p:PRI[x.p]?x.p:2,w:str(x.w),st:st,r:str(x.r),loc:str(x.loc),due:str(x.due),ref:str(x.ref),q:str(x.q),img:str(x.img),carry:!!x.carry,no:x.no>0?Math.floor(x.no):0,at:x.at>0?x.at:Date.now()};
+    return {id:str(x.id)||uid(),t:x.t,p:PRI[x.p]?x.p:2,w:str(x.w),st:st,r:str(x.r),loc:str(x.loc),due:str(x.due),ref:str(x.ref),q:str(x.q),img:str(x.img),tb:str(x.tb).slice(0,4000),carry:!!x.carry,no:x.no>0?Math.floor(x.no):0,at:x.at>0?x.at:Date.now()};
   }
   function apply(d){
     if(!d||typeof d!=='object')return;
@@ -575,11 +588,38 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     if(showReason&&x.st==='block'&&x.r)a.push('कारण: '+x.r);
     return a;
   }
+  // A task's table (x.tb): one row per line, cells split by tab (pasted from Excel) or "|". First row is the heading.
+  var TB_COLS=8,TB_ROWS=30;
+  function tbRows(t){
+    var lines=String(t||'').split(/\r?\n/).filter(function(l){return l.trim()});if(!lines.length)return [];
+    var tab=lines.some(function(l){return l.indexOf('\t')>=0});
+    var rows=lines.slice(0,TB_ROWS).map(function(l){
+      var c=tab?l.split('\t'):l.split('|');
+      if(!tab){if(c.length>1&&!c[0].trim())c.shift();if(c.length>1&&!c[c.length-1].trim())c.pop()}
+      return c.slice(0,TB_COLS).map(function(v){return v.trim()});
+    });
+    var n=rows.reduce(function(m,r){return Math.max(m,r.length)},0);
+    return rows.map(function(r){while(r.length<n)r.push('');return r});
+  }
+  function tbEl(rows){
+    var t=mk('table','ntb');
+    rows.forEach(function(r,i){var tr=mk('tr');r.forEach(function(c){tr.appendChild(mk(i?'td':'th','',c))});t.appendChild(tr)});
+    return t;
+  }
+  // WhatsApp: each data row as "पिंडरई — वसूली %: 82, बकाया: 4.5".
+  function tbLines(rows){
+    if(!rows.length)return [];
+    var h=rows[0];if(rows.length===1||h.length===1)return rows.map(function(r){return '   • '+r.filter(Boolean).join(' | ')});
+    return rows.slice(1).map(function(r){
+      var rest=r.slice(1).map(function(v,i){return v?(h[i+1]?h[i+1]+': ':'')+v:''}).filter(Boolean).join(', ');
+      return '   • '+(r[0]||'—')+(rest?' — '+rest:'');
+    });
+  }
   function itemBlock(x,mode,num){
     var subs=subsOf(x,true);
     if(x.ref)subs.push('संदर्भ: '+x.ref);
     if(x.img)subs.push('📎 पत्र का स्क्रीनशॉट नीचे लगा है');
-    return {t:'i',x:x.t,num:num||0,st:x.st,c:PRI[x.p].c,dot:mode==='tasks'&&!x.st,glyph:(x.st!==''||mode==='report'),subs:subs,q:x.q};
+    return {t:'i',x:x.t,num:num||0,st:x.st,c:PRI[x.p].c,dot:mode==='tasks'&&!x.st,glyph:(x.st!==''||mode==='report'),subs:subs,q:x.q,tb:tbRows(x.tb)};
   }
   // One person's work: their own tasks, or the common (सभी / अन्य) tasks when none is in their name.
   function mine(name){var own=S.tasks.filter(function(x){return x.w===name});return own.length?own:S.tasks.filter(function(x){return !x.w})}
@@ -623,6 +663,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         it.appendChild(mk('span','mt',(b.num?'No. '+b.num+' · ':'')+b.x));
         b.subs.forEach(function(s){it.appendChild(mk('span','sub',s))});
         if(b.q)it.appendChild(mk('span','sub q','“'+b.q+'”'));
+        if(b.tb.length)it.appendChild(tbEl(b.tb));
         n.appendChild(it);
       }
       else if(b.t==='none')n.appendChild(mk('p','none',b.x));
@@ -643,6 +684,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var L=[s];
     if(x.ref)L.push('   _संदर्भ: '+x.ref+'_');
     if(x.q)L.push('   _“'+x.q+'”_');
+    L=L.concat(tbLines(tbRows(x.tb)));
     return L.join('\n');
   }
   var REPLY='_शाम को हर काम की स्थिति भेजें: ✅ पूरा | 🕒 आधा | ⛔ रुका (कारण सहित)_';
@@ -827,7 +869,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     t.onclick=function(){setSt(x,x.st==='done'?'':'done');x.r='';save();renderAll()};
     var d=mk('div','itxt');
     d.appendChild(mk('b','',(x.no?'No. '+x.no+' · ':'')+x.t));
-    var meta=[PRI[x.p].k];if(x.w)meta.push('👷 '+x.w);subsOf(x,false).forEach(function(s){meta.push(s)});
+    var meta=[PRI[x.p].k];if(x.w)meta.push('👷 '+x.w);subsOf(x,false).forEach(function(s){meta.push(s)});var tr=tbRows(x.tb);if(tr.length)meta.push('📊 तालिका ('+tr.length+' पंक्ति)');
     d.appendChild(mk('small','',meta.join(' · ')));
     if(x.ref)d.appendChild(mk('small','','संदर्भ: '+x.ref));
     if(x.q)d.appendChild(mk('small','q','“'+x.q+'”'));
@@ -1126,6 +1168,19 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   window.addEventListener('resize',growTxt);
   // Enter adds the task (as the one-line box did); Shift+Enter starts a new line.
   $('txt').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('f').requestSubmit()}});
+  function tbPreview(){var rows=tbRows($('tb').value),b=$('tbPrev');b.textContent='';b.hidden=!rows.length;if(rows.length)b.appendChild(tbEl(rows))}
+  $('tb').addEventListener('input',tbPreview);
+  // Fills the first column with the मुख्यालय names from the staff list, keeping any heading already written.
+  $('tbHq').onclick=function(){
+    var hq=[];S.staff.forEach(function(s){if(s.h&&hq.indexOf(s.h)<0)hq.push(s.h)});
+    if(!hq.length){toast('स्टाफ़ में मुख्यालय नहीं लिखे हैं');return}
+    hq.sort(function(a,b){return a.localeCompare(b,'hi')});
+    var rows=tbRows($('tb').value),head=rows.length?rows[0]:['मुख्यालय','',''];
+    var blank=head.slice(1).map(function(){return ''});
+    $('tb').value=[head.join(' | ')].concat(hq.map(function(h){return [h].concat(blank).join(' | ')})).join('\n');
+    tbPreview();toast(hq.length+' मुख्यालय भरे; अब हर लाइन में | के बाद आँकड़े लिखें');
+  };
+  $('tbClear').onclick=function(){$('tb').value='';tbPreview()};
   $('photoBtn').onclick=function(){$('photoInput').click()};
   $('photoInput').onchange=async function(){
     var f=this.files&&this.files[0];this.value='';
@@ -1140,10 +1195,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   $('f').addEventListener('submit',function(e){
     e.preventDefault();
     var t=$('txt').value.trim();if(!t){$('txt').focus();return}
-    var it={id:uid(),t:t,p:curP,w:$('who').value,st:'',r:'',loc:$('loc').value.trim(),due:$('due').value,ref:$('ref').value.trim(),q:$('q').value.trim(),img:pendingImg,carry:false,no:lastList==='orders'?++S.ordNo:0,at:Date.now()};
+    var it={id:uid(),t:t,p:curP,w:$('who').value,st:'',r:'',loc:$('loc').value.trim(),due:$('due').value,ref:$('ref').value.trim(),q:$('q').value.trim(),img:pendingImg,tb:$('tb').value.trim(),carry:false,no:lastList==='orders'?++S.ordNo:0,at:Date.now()};
     S[lastList].push(it);bump(it,'a',1);
     if(it.loc){S.places=[it.loc].concat(S.places.filter(function(v){return v!==it.loc})).slice(0,300)}
-    $('txt').value='';growTxt();$('loc').value='';$('due').value='';$('ref').value='';$('q').value='';pendingImg='';showPrev();
+    $('txt').value='';growTxt();$('tb').value='';tbPreview();$('loc').value='';$('due').value='';$('ref').value='';$('q').value='';pendingImg='';showPrev();
     $('txt').focus();save();renderAll();
   });
   $('sf').addEventListener('submit',function(e){
@@ -1285,6 +1340,30 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     words.forEach(function(w){var t=cur?cur+' '+w:w;if(ctx.measureText(t).width>max&&cur){lines.push(cur);cur=w}else cur=t});
     if(cur)lines.push(cur);return lines;
   }
+  // The table on the PNG: columns sized to their text, shrunk to fit, cells wrap; heading row shaded.
+  function paintTb(ctx,rows,x0,y,w,draw){
+    var LH=40,P=12,n=rows[0].length,nat=[];
+    ctx.font='400 30px Kalam, Hind, sans-serif';
+    for(var c=0;c<n;c++)nat[c]=rows.reduce(function(m,r){return Math.max(m,ctx.measureText(r[c]).width+P*2+10)},60);
+    var tot=nat.reduce(function(a,v){return a+v},0),cw=nat.map(function(v){return tot>w?Math.max(70,v*w/tot):v});
+    var sum=cw.reduce(function(a,v){return a+v},0);if(sum>w)cw=cw.map(function(v){return v*w/sum});
+    y-=22;
+    rows.forEach(function(r,i){
+      ctx.font=(i?'400':'700')+' 30px Kalam, Hind, sans-serif';
+      var cells=r.map(function(v,c){return v?wrapT(ctx,v,cw[c]-P*2):['']}),h=Math.max.apply(null,cells.map(function(l){return l.length}))*LH+P;
+      if(draw){
+        var x=x0;
+        if(!i){ctx.fillStyle='rgba(38,34,15,.12)';ctx.fillRect(x0,y,cw.reduce(function(a,v){return a+v},0),h)}
+        cells.forEach(function(ls,c){
+          ctx.strokeStyle='rgba(38,34,15,.55)';ctx.lineWidth=2;ctx.strokeRect(x,y,cw[c],h);
+          ctx.fillStyle=INK;ls.forEach(function(l,k){ctx.fillText(l,x+P,y+LH*(k+1)-6)});
+          x+=cw[c];
+        });
+      }
+      y+=h;
+    });
+    return y+46;
+  }
   function paint(ctx,W,B,draw){
     var pad=64,max=W-pad*2,y=96;
     function F(w,s){ctx.font=w+' '+s+'px Kalam, Hind, sans-serif'}
@@ -1325,6 +1404,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         F(400,31);
         var subs=b.subs.slice();if(b.q)subs.push('“'+b.q+'”');
         subs.forEach(function(s){wrapT(ctx,s,max-56).forEach(function(l){if(draw){ctx.fillStyle='rgba(38,34,15,.75)';ctx.fillText(l,tx,y)}y+=42})});
+        if(b.tb.length)y=paintTb(ctx,b.tb,tx,y,max-56,draw);
         y+=8;
       }
       else if(b.t==='none'){F(400,38);ctx.fillStyle='rgba(38,34,15,.7)';wrapT(ctx,b.x,max).forEach(function(l){if(draw)ctx.fillText(l,pad,y);y+=54})}
@@ -1423,8 +1503,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.35',APP_NOTES=[
-    '🎤 बोलकर लिखने का बटन और तुरंत / आज दिन में / समय मिले तो वाले बटन हटाए'
+  var APP_V='1.36',APP_NOTES=[
+    'काम के साथ 📊 तालिका: "और विवरण" में लिखें या Excel से चिपकाएँ; नोट की फोटो और WhatsApp में दिखेगी',
+    '"📍 मुख्यालय भरें" से स्टाफ़ के सारे मुख्यालय पहले कॉलम में अपने-आप'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
