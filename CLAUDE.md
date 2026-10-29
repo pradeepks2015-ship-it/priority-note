@@ -2,8 +2,8 @@
 
 A single-user tool for a Junior Engineer (JE) at an electricity distribution centre
 (MPPKVVCL, Adegaon DC). The JE writes the day's work and senior-office instructions,
-and the app turns them into a colourful sticky-note image (with date, time and the
-attached letter screenshot) to post in the staff WhatsApp group or send to each
+and the app turns them into a colourful sticky-note image (with date and time; the
+attached letter screenshot goes as a separate photo with it) to post in the staff WhatsApp group or send to each
 staff member. Staff never use the app; they only receive the note.
 
 ## Scope
@@ -74,7 +74,8 @@ and left out of reminders.
 - `buildText()` / `personalText()` build the WhatsApp messages (`wa.me` links).
 - `mine(name)`: one person's work for their own card/WhatsApp — their tasks, or the common (सभी / अन्य) tasks
   when none is in their name.
-- `makeBlob()` renders the PNG and appends attached screenshots below the note.
+- `makeBlob()` renders the note PNG; `letterFiles()` gives the attached letter screenshots, which are shared as separate
+  photos with it in one share (v1.38; before that they were stuck below the note). The note says "अगली फोटो में".
 
 ## Conventions
 - All UI text is Hindi (Devanagari). Keep it plain, short and in office vocabulary.

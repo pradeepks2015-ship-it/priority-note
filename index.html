@@ -1406,7 +1406,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
           y+=54;
         });
         F(400,31);
-        var subs=b.subs.slice();if(b.q)subs.push('“'+b.q+'”');if(b.img)subs.push('📎 पत्र का स्क्रीनशॉट नीचे लगा है');
+        var subs=b.subs.slice();if(b.q)subs.push('“'+b.q+'”');if(b.img)subs.push('📎 पत्र का स्क्रीनशॉट अगली फोटो में');
         subs.forEach(function(s){wrapT(ctx,s,max-56).forEach(function(l){if(draw){ctx.fillStyle='rgba(38,34,15,.75)';ctx.fillText(l,tx,y)}y+=42})});
         if(b.tb.length)y=paintTb(ctx,b.tb,tx,y,max-56,draw);
         y+=8;
@@ -1416,43 +1416,33 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     });
     return y+50;
   }
-  function loadImg(id){return new Promise(function(res){var im=new Image();im.onload=function(){res(im)};im.onerror=function(){res(null)};im.src=blobURL(id)})}
   function makeBlob(mode,now,who){
-    var withImg=listOf(mode,who).filter(function(x){return x.img});
     return Promise.all([document.fonts.load('700 40px Kalam','आज'),document.fonts.load('400 40px Kalam','आज')]).catch(function(){}).then(function(){
-      return Promise.all(withImg.map(function(x){return loadImg(x.img)}));
-    }).then(function(imgs){
-      var W=1080,pad=64,B=model(mode,now,who),m=document.createElement('canvas').getContext('2d'),H=Math.max(paint(m,W,B,false),600);
-      m.font='700 34px Kalam, Hind, sans-serif';
-      var parts=[],extra=0;
-      imgs.forEach(function(im,i){
-        if(!im||!im.width)return;
-        var x=withImg[i],w=W-pad*2,h=Math.round(im.height*w/im.width);
-        var cap=wrapT(m,'📎 संदर्भ पत्र: '+(x.ref||x.t)+(x.w?' ('+x.w+')':''),w);
-        parts.push({im:im,w:w,h:h,cap:cap});extra+=cap.length*46+20+h+50;
-      });
-      var c=document.createElement('canvas');c.width=W;c.height=H+extra;
+      var W=1080,B=model(mode,now,who),m=document.createElement('canvas').getContext('2d'),H=Math.max(paint(m,W,B,false),600);
+      var c=document.createElement('canvas');c.width=W;c.height=H;
       var ctx=c.getContext('2d');
-      ctx.fillStyle=NOTE[S.color];ctx.fillRect(0,0,W,c.height);
+      ctx.fillStyle=NOTE[S.color];ctx.fillRect(0,0,W,H);
       ctx.fillStyle='rgba(0,0,0,.08)';ctx.fillRect(0,0,W,40);
       paint(ctx,W,B,true);
-      var y=H;
-      parts.forEach(function(p){
-        ctx.font='700 34px Kalam, Hind, sans-serif';ctx.fillStyle=INK;ctx.textAlign='left';
-        p.cap.forEach(function(l){y+=40;ctx.fillText(l,pad,y);y+=6});
-        y+=20;
-        ctx.fillStyle='#FFFFFF';ctx.fillRect(pad-6,y-6,p.w+12,p.h+12);
-        ctx.drawImage(p.im,pad,y,p.w,p.h);
-        y+=p.h+50;
-      });
       return new Promise(function(res,rej){c.toBlob(function(b){b?res(b):rej(new Error('blob'))},'image/png')});
     });
   }
+  // The letter screenshots go as separate photos after the note (staff tap one to see it full size),
+  // not stuck under the note. Only those on this phone.
+  function letterFiles(mode,who,now){
+    var withImg=listOf(mode,who).filter(function(x){return x.img&&blobURL(x.img)});
+    return Promise.all(withImg.map(function(x,i){
+      return fetch(blobURL(x.img)).then(function(r){return r.blob()}).then(function(b){
+        return {filename:'patra-'+(i+1)+'-'+fileStamp(now)+(/png/.test(b.type)?'.png':'.jpg'),data:b};
+      },function(){return null});
+    })).then(function(a){return a.filter(Boolean)});
+  }
+
   function savePhoto(mode,who,idx){
     if(!downloads)return;
     var now=new Date(),nm={tasks:'kaam',orders:'nirdesh',report:'report'}[mode]+(who!=null?'-staff'+(idx+1):'');
     toast('फोटो बन रही है…');
-    makeBlob(mode,now,who).then(function(b){return downloads.save({filename:nm+'-'+fileStamp(now)+'.png',data:b})}).then(function(){
+    Promise.all([makeBlob(mode,now,who),letterFiles(mode,who,now)]).then(function(r){return downloads.save({filename:nm+'-'+fileStamp(now)+'.png',data:r[0],more:r[1]})}).then(function(){
       toast('फोटो सेव हो गई');
       logIt('फोटो सेव की · '+(who!=null?who:VIEWLBL[mode]),who!=null?personalText(who,mode,now):buildText(mode,now),listOf(mode,who),mode,who);
     },function(e){if(e&&e.code==='declined')return;toast('फोटो नहीं बन सकी')});
@@ -1507,8 +1497,9 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.37',APP_NOTES=[
-    'नोट पर "📎 पत्र का स्क्रीनशॉट देखने के लिए दबाएँ": दबाने पर स्क्रीनशॉट खुलता है'
+  var APP_V='1.38',APP_NOTES=[
+    'नोट पर "📎 पत्र का स्क्रीनशॉट देखने के लिए दबाएँ": दबाने पर स्क्रीनशॉट खुलता है',
+    'पत्र का स्क्रीनशॉट अब नोट के नीचे नहीं जुड़ता: नोट के साथ अलग फोटो बनकर एक साथ शेयर होता है, WhatsApp पर दबाकर बड़ा देखें'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2035,17 +2026,21 @@ textarea.hold{position:fixed;left:-9999px;top:0}
       req.onerror=function(){res()};
     })}).catch(function(){});
   }
-  function shareOrSave(name,blob){
-    var file=null;try{file=new File([blob],name,{type:blob.type||'image/png'})}catch(e){}
-    if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
-      return navigator.share({files:[file],title:'प्राथमिकता नोट'}).then(function(){return {status:'saved'}},function(e){throw {code:e&&e.name==='AbortError'?'declined':'unavailable'}});
+  // Shares the file (and any `more` files with it, in one go) through the phone's share sheet, or downloads them.
+  function shareOrSave(name,blob,more){
+    var list=[{filename:name,data:blob}].concat(more||[]),files=[];
+    try{files=list.map(function(f){return new File([f.data],f.filename,{type:f.data.type||'image/png'})})}catch(e){files=[]}
+    if(files.length&&navigator.canShare&&navigator.canShare({files:files})){
+      return navigator.share({files:files,title:'प्राथमिकता नोट'}).then(function(){return {status:'saved'}},function(e){throw {code:e&&e.name==='AbortError'?'declined':'unavailable'}});
     }
-    var u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
-    setTimeout(function(){URL.revokeObjectURL(u)},4000);
+    list.forEach(function(f,i){setTimeout(function(){
+      var u=URL.createObjectURL(f.data),a=document.createElement('a');a.href=u;a.download=f.filename;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(u)},4000);
+    },i*400)});
     return Promise.resolve({status:'saved'});
   }
   assets={upload:function(b,o){return idbPut(b,o&&o.id)},delete:function(id){return idbDel(id)}};
-  downloads={save:function(o){return shareOrSave(o.filename,o.data)}};
+  downloads={save:function(o){return shareOrSave(o.filename,o.data,o.more)}};
   $('img').hidden=false;$('photoBtn').hidden=false;
   idbLoadAll().then(function(){renderAll()});
 })();

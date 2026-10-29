@@ -231,6 +231,13 @@ const imgLine = await page.$eval('#note', (n) => n.innerText);
 await page.click('#note .imgl');
 const imgOpens = await page.$eval('#lb', (l) => !l.hidden && document.getElementById('lbImg').src.startsWith('blob:'));
 await page.click('#lbClose');
+// Sharing: the note and the letter go as two separate files (here downloads), not one tall picture.
+const shared = [];
+const onDl = (d) => shared.push(d.suggestedFilename());
+page.on('download', onDl);
+await page.click('#img');
+for (let i = 0; i < 30 && shared.length < 2; i++) await page.waitForTimeout(200);
+page.off('download', onDl);
 
 // A phone with touch: tapping a box that already has the cursor (keyboard closed) must leave it focused,
 // after a quick blur so the phone opens the keyboard again.
@@ -248,6 +255,7 @@ await tctx.close();
 
 const waGone = !(await page.$('#wa'));
 const checks = {
+  'नोट और पत्र अलग-अलग फोटो में साथ शेयर': shared.length === 2 && shared.some((n) => n.startsWith('kaam-')) && shared.some((n) => n.startsWith('patra-1-')),
   'नोट पर "स्क्रीनशॉट देखने के लिए दबाएँ", दबाने पर खुले': imgLine.includes('पत्र का स्क्रीनशॉट देखने के लिए दबाएँ') && !imgLine.includes('नीचे लगा है') && imgOpens,
   '"मुख्यालय भरें" से पहला कॉलम स्टाफ़ के मुख्यालयों से': tbFilled.split('\n')[0] === 'मुख्यालय | वसूली %' && tbFilled.includes('नमूना गाँव |') && tbFilled.split('\n').length >= 2,
   'तालिका का पूर्वावलोकन': tbPrevRows === 3,
