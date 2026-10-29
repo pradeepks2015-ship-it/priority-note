@@ -273,7 +273,11 @@ const reTap = await tp.evaluate(() => ({ blurs: window.__blurs, focused: documen
 await tctx.close();
 
 const waGone = !(await page.$('#wa'));
+const numbered = await page.evaluate(() => [...document.querySelectorAll('#note .ni')].map((n) => (n.querySelector('.sn') || {}).textContent || ''));
+const waNum = await page.$$eval('#sendCard a.wa', (a) => a.map((x) => decodeURIComponent(x.href)).join('\n'));
 const checks = {
+  'काम के आगे बिंदु की जगह नंबर 1, 2, 3…': numbered.length > 2 && numbered.every((t, i) => t === (i + 1) + '.') && !(await page.$('#note .ni .dt')),
+  'स्टाफ़ के WhatsApp में भी नंबर': /\*1\.\* /.test(waNum) && waNum.includes('काम का नंबर लिखकर'),
   'एक काम के साथ 2 स्क्रीनशॉट, ‹ › से देखें': prevN === 2 && twoLine.includes('पत्र के 2 स्क्रीनशॉट देखने के लिए दबाएँ') && lb1 === '1 / 2' && lb2 === '2 / 2',
   'हर पत्र अलग फोटो (नोट + 3 पत्र)': shared2.length === 4 && ['patra-1-', 'patra-2-', 'patra-3-'].every((p) => shared2.some((n) => n.startsWith(p))),
   'नोट और पत्र अलग-अलग फोटो में साथ शेयर': shared.length === 2 && shared.some((n) => n.startsWith('kaam-')) && shared.some((n) => n.startsWith('patra-1-')),
