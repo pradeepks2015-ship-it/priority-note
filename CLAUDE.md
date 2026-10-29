@@ -41,7 +41,8 @@ and left out of reminders.
 
 ## Data model (state `S`)
 - `tasks[]` / `orders[]` items: `{id, t, p (1 तुरंत | 2 आज दिन में | 3 समय मिले तो), w (staff name),
-  st ('' | done | part | block), r (block reason), loc, due ("HH:MM"), ref, q (quoted line), img (image id), carry,
+  st ('' | done | part | block), r (block reason), loc, due ("HH:MM"), ref, q (quoted line), imgs (letter screenshot ids,
+  up to 10; older saves had one `img`, moved into `imgs` by `cleanItem`), carry,
   no (instruction serial number; 0 for tasks), at (created, ms — drives "⏳ N दिन से बाकी")}`
 - `tb`: an optional table with a task (v1.36), raw text: one row per line, cells split by tab (pasted from Excel) or
   `|`, first row the heading (`tbRows()`, max 30 rows × 8 columns). Shown on the note (`tbEl`), drawn on the PNG
@@ -74,8 +75,10 @@ and left out of reminders.
 - `buildText()` / `personalText()` build the WhatsApp messages (`wa.me` links).
 - `mine(name)`: one person's work for their own card/WhatsApp — their tasks, or the common (सभी / अन्य) tasks
   when none is in their name.
-- `makeBlob()` renders the note PNG; `letterFiles()` gives the attached letter screenshots, which are shared as separate
-  photos with it in one share (v1.38; before that they were stuck below the note). The note says "अगली फोटो में".
+- `makeBlob()` renders the note PNG; `letterFiles()` gives the letter screenshots, shared as separate photos with it in
+  one share (v1.38). `model()` numbers them in note order (photo 1 is the note; `b.from`–`b.to`), the note says
+  "पत्र: फोटो नं. 2 से 4 में", and `letterCard()` puts a strip with the photo number and task on each. In the app the
+  lightbox steps through a task's screenshots with ‹ › or a swipe (`openImg(ids, i)`).
 
 ## Conventions
 - All UI text is Hindi (Devanagari). Keep it plain, short and in office vocabulary.

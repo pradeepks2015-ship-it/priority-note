@@ -238,6 +238,25 @@ page.on('download', onDl);
 await page.click('#img');
 for (let i = 0; i < 30 && shared.length < 2; i++) await page.waitForTimeout(200);
 page.off('download', onDl);
+// Several screenshots with one task: numbered on the note, ‹ › between them, each its own labelled photo.
+const PNG2 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAEElEQVR4nGNQSDgARAwQCgAgjgUB59mTewAAAABJRU5ErkJggg==', 'base64');
+await page.setInputFiles('#photoInput', [{ name: 'a.png', mimeType: 'image/png', buffer: PNG1 }, { name: 'b.png', mimeType: 'image/png', buffer: PNG2 }]);
+await page.waitForFunction(() => document.querySelectorAll('#photoPrev .pv').length === 2, null, { timeout: 5000 }).catch(() => {});
+const prevN = await page.$$eval('#photoPrev .pv', (p) => p.length);
+await page.fill('#txt', 'दो पत्रों वाला नमूना काम');
+await page.press('#txt', 'Enter');
+const twoLine = await page.$eval('#note', (n) => n.innerText);
+await page.click('#note .imgl >> text=2 स्क्रीनशॉट');
+const lb1 = await page.$eval('#lbN', (n) => n.textContent);
+await page.click('#lbNext');
+const lb2 = await page.$eval('#lbN', (n) => n.textContent);
+await page.click('#lbClose');
+const shared2 = [];
+const onDl2 = (d) => shared2.push(d.suggestedFilename());
+page.on('download', onDl2);
+await page.click('#img');
+for (let i = 0; i < 40 && shared2.length < 4; i++) await page.waitForTimeout(200);
+page.off('download', onDl2);
 
 // A phone with touch: tapping a box that already has the cursor (keyboard closed) must leave it focused,
 // after a quick blur so the phone opens the keyboard again.
@@ -255,6 +274,8 @@ await tctx.close();
 
 const waGone = !(await page.$('#wa'));
 const checks = {
+  'एक काम के साथ 2 स्क्रीनशॉट, ‹ › से देखें': prevN === 2 && twoLine.includes('पत्र के 2 स्क्रीनशॉट देखने के लिए दबाएँ') && lb1 === '1 / 2' && lb2 === '2 / 2',
+  'हर पत्र अलग फोटो (नोट + 3 पत्र)': shared2.length === 4 && ['patra-1-', 'patra-2-', 'patra-3-'].every((p) => shared2.some((n) => n.startsWith(p))),
   'नोट और पत्र अलग-अलग फोटो में साथ शेयर': shared.length === 2 && shared.some((n) => n.startsWith('kaam-')) && shared.some((n) => n.startsWith('patra-1-')),
   'नोट पर "स्क्रीनशॉट देखने के लिए दबाएँ", दबाने पर खुले': imgLine.includes('पत्र का स्क्रीनशॉट देखने के लिए दबाएँ') && !imgLine.includes('नीचे लगा है') && imgOpens,
   '"मुख्यालय भरें" से पहला कॉलम स्टाफ़ के मुख्यालयों से': tbFilled.split('\n')[0] === 'मुख्यालय | वसूली %' && tbFilled.includes('नमूना गाँव |') && tbFilled.split('\n').length >= 2,
