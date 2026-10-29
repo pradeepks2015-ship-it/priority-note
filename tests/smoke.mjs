@@ -221,6 +221,16 @@ await page.evaluate(() => { window.__pngSize = 0; });
 await page.click('#img');
 await page.waitForFunction(() => window.__pngSize > 0, null, { timeout: 15000 }).catch(() => {});
 const tbPng = await page.evaluate(() => window.__pngSize);
+// A letter screenshot: the note line says "देखने के लिए दबाएँ" and a tap opens it.
+const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+await page.setInputFiles('#photoInput', { name: 'patra.png', mimeType: 'image/png', buffer: PNG1 });
+await page.waitForSelector('#photoPrev img', { timeout: 5000 }).catch(() => {});
+await page.fill('#txt', 'पत्र वाला नमूना काम');
+await page.press('#txt', 'Enter');
+const imgLine = await page.$eval('#note', (n) => n.innerText);
+await page.click('#note .imgl');
+const imgOpens = await page.$eval('#lb', (l) => !l.hidden && document.getElementById('lbImg').src.startsWith('blob:'));
+await page.click('#lbClose');
 
 // A phone with touch: tapping a box that already has the cursor (keyboard closed) must leave it focused,
 // after a quick blur so the phone opens the keyboard again.
@@ -238,6 +248,7 @@ await tctx.close();
 
 const waGone = !(await page.$('#wa'));
 const checks = {
+  'नोट पर "स्क्रीनशॉट देखने के लिए दबाएँ", दबाने पर खुले': imgLine.includes('पत्र का स्क्रीनशॉट देखने के लिए दबाएँ') && !imgLine.includes('नीचे लगा है') && imgOpens,
   '"मुख्यालय भरें" से पहला कॉलम स्टाफ़ के मुख्यालयों से': tbFilled.split('\n')[0] === 'मुख्यालय | वसूली %' && tbFilled.includes('नमूना गाँव |') && tbFilled.split('\n').length >= 2,
   'तालिका का पूर्वावलोकन': tbPrevRows === 3,
   'नोट पर तालिका': noteTb.length === 3 && noteTb[0] === 'मुख्यालय वसूली % बकाया' && noteTb[2] === 'नमूना ख 75 6.1',

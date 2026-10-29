@@ -190,6 +190,7 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .note .ni .dt{position:absolute;left:3px;top:.5em;width:12px;height:12px;border-radius:50%}
 .note .ni .ic{position:absolute;left:0;top:0;font-size:17px}
 .note .ni .sub{display:block;font-size:15px;opacity:.78;line-height:1.3}
+.note .ni .imgl{background:none;border:0;padding:4px 0;font:inherit;font-size:15px;color:inherit;text-decoration:underline;text-align:left;cursor:pointer;opacity:1}
 .ntb{border-collapse:collapse;width:100%;margin:6px 0 4px;font-size:15px;line-height:1.3}
 .ntb th,.ntb td{border:1px solid var(--note-ink);padding:3px 6px;text-align:left;vertical-align:top;overflow-wrap:break-word}
 .ntb th{background:color-mix(in srgb,var(--note-ink) 12%,transparent)}
@@ -618,8 +619,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   function itemBlock(x,mode,num){
     var subs=subsOf(x,true);
     if(x.ref)subs.push('संदर्भ: '+x.ref);
-    if(x.img)subs.push('📎 पत्र का स्क्रीनशॉट नीचे लगा है');
-    return {t:'i',x:x.t,num:num||0,st:x.st,c:PRI[x.p].c,dot:mode==='tasks'&&!x.st,glyph:(x.st!==''||mode==='report'),subs:subs,q:x.q,tb:tbRows(x.tb)};
+    return {t:'i',x:x.t,num:num||0,st:x.st,c:PRI[x.p].c,dot:mode==='tasks'&&!x.st,glyph:(x.st!==''||mode==='report'),subs:subs,q:x.q,tb:tbRows(x.tb),img:x.img};
   }
   // One person's work: their own tasks, or the common (सभी / अन्य) tasks when none is in their name.
   function mine(name){var own=S.tasks.filter(function(x){return x.w===name});return own.length?own:S.tasks.filter(function(x){return !x.w})}
@@ -663,6 +663,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
         it.appendChild(mk('span','mt',(b.num?'No. '+b.num+' · ':'')+b.x));
         b.subs.forEach(function(s){it.appendChild(mk('span','sub',s))});
         if(b.q)it.appendChild(mk('span','sub q','“'+b.q+'”'));
+        if(b.img){
+          if(blobURL(b.img)){var ib=mk('button','sub imgl','📎 पत्र का स्क्रीनशॉट देखने के लिए दबाएँ');ib.type='button';ib.onclick=(function(id){return function(){openImg(id)}})(b.img);it.appendChild(ib)}
+          else it.appendChild(mk('span','sub','📎 पत्र का स्क्रीनशॉट (इस फ़ोन में नहीं)'));
+        }
         if(b.tb.length)it.appendChild(tbEl(b.tb));
         n.appendChild(it);
       }
@@ -1402,7 +1406,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
           y+=54;
         });
         F(400,31);
-        var subs=b.subs.slice();if(b.q)subs.push('“'+b.q+'”');
+        var subs=b.subs.slice();if(b.q)subs.push('“'+b.q+'”');if(b.img)subs.push('📎 पत्र का स्क्रीनशॉट नीचे लगा है');
         subs.forEach(function(s){wrapT(ctx,s,max-56).forEach(function(l){if(draw){ctx.fillStyle='rgba(38,34,15,.75)';ctx.fillText(l,tx,y)}y+=42})});
         if(b.tb.length)y=paintTb(ctx,b.tb,tx,y,max-56,draw);
         y+=8;
@@ -1503,9 +1507,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.36',APP_NOTES=[
-    'काम के साथ 📊 तालिका: "और विवरण" में लिखें या Excel से चिपकाएँ; नोट की फोटो और WhatsApp में दिखेगी',
-    '"📍 मुख्यालय भरें" से स्टाफ़ के सारे मुख्यालय पहले कॉलम में अपने-आप'
+  var APP_V='1.37',APP_NOTES=[
+    'नोट पर "📎 पत्र का स्क्रीनशॉट देखने के लिए दबाएँ": दबाने पर स्क्रीनशॉट खुलता है'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
