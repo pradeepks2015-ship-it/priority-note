@@ -96,6 +96,14 @@ const find99 = await page.$eval('#plInfo', (n) => n.hidden);
 const sum2 = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
 const dtList2 = await page.$eval('#dtList', (n) => n.innerText);
 const poleDots = await page.evaluate(() => { let n = 0; window.__fdMap.eachLayer((l) => { if (l instanceof L.Path && !(l instanceof L.CircleMarker && l.options.fill === false)) n++; }); return n; });
+// Pole symbols with numbers only when zoomed in (big surveys stay quick); the DT has its transformer symbol.
+await page.evaluate(() => window.__fdMap.setView([22.5 + 5 * 0.00027, 79.2], 18));
+await page.waitForTimeout(400);
+const iconsNear = await page.$$eval('#fdMap .plico', (e) => e.map((x) => x.innerText.trim()).sort());
+await page.evaluate(() => window.__fdMap.setZoom(14));
+await page.waitForTimeout(400);
+const iconsFar = await page.$$eval('#fdMap .plico', (e) => e.length);
+const dtSymOk = await page.$$eval('#fdMap .dtico svg.dtsym .tk', (e) => e.length);
 const wa2 = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
 const kml2 = readFileSync(await dl2.path(), 'utf8');
@@ -149,6 +157,7 @@ const checks = {
   'कुल: 1 11kV, 2 LT खंभे, 10 उपभोक्ता': sum2.includes('11kV खंभे (सर्वे) 1') && sum2.includes('LT खंभे (सर्वे) 2') && sum2.includes('खंभों पर उपभोक्ता 10'),
   'DT के नीचे उसके LT खंभे और उपभोक्ता': dtList2.includes('LT खंभे 2 · खंभों पर 10 उपभोक्ता'),
   'नक्शे पर खंभे और लाइनें': poleDots >= 3 + 3 + 1,
+  'ज़ूम पर खंभों के निशान+नंबर, दूर से नहीं; DT पर ट्रांसफार्मर का निशान': iconsNear.join(',') === '1,2,3' && iconsFar === 0 && dtSymOk === 1,
   'WhatsApp सारांश में खंभे और सर्वे करने वाला': wa2.includes('11kV खंभे: 1 · 🔵 LT खंभे: 2 · खंभों पर उपभोक्ता: 10') && wa2.includes('सर्वे: नमूना लाइनमैन'),
   'KML में खंभे': kml2.includes('<name>खंभा 3</name>') && kml2.includes('#ll'),
   'सर्वे फ़ाइल: वही सर्वे बदला, नया जुड़ा, गलत फ़ाइल नहीं': afterSame === 1 && imported.length === 2 && imported.every((x) => x.endsWith(':3:नमूना लाइनमैन')) && listTxt2.includes('नमूना गाँव (लाइनमैन)'),

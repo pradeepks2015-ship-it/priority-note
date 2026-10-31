@@ -75,7 +75,9 @@ and left out of reminders.
 - Village / pole survey (v1.41) in the same feeder entry: `pl[]` poles `{id, no, k ('h' 11kV | 'l' LT), c (consumers on an
   LT pole), to (the pole or DT it hangs from), lat, lng, note, at}`, `dts[].to` (the 11kV pole a DT hangs from), `by`
   (surveyor). A new pole's number is the next one; it joins the last pole of its kind (LT: the last LT pole or DT, else
-  the nearest DT). Lines are drawn pole→`to` (11kV red, LT blue; the GPS track is a grey dashed line). Search by pole
+  the nearest DT). Lines are drawn pole→`to` (11kV red, LT blue; the GPS track is a grey dashed line).
+  Symbols (v1.44, small fixed SVG coloured by CSS tokens): `dtSym()` a transformer on its two-pole structure (always),
+  `poleSym(k)` a pole with cross-arm and insulators plus its number — only when zoomed in (≥17) and only for poles in view (max 300). Search by pole
   number (`findPole`, `showFind`): consumers, its DT via `poleDt()`, poles further down via `below()`. Deleting a pole
   joins its children to its parent. "📤 सर्वे फ़ाइल" is the feeder as JSON in a .txt (shareable on WhatsApp, photos left
   out); "📥 सर्वे फ़ाइल जोड़ें" adds it (same id: asks, then replaces, keeping this phone's DT photos).

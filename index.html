@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-SP4O1kCdopwElihSFQ1TbudOvy8u5NyyHvXoxz24F28=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-YV9Zq1BDM5sVAi9XAXUIa9ZB+z29Q/fMslbVJsxskbw=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -114,15 +114,22 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .fdi small{display:block;color:var(--muted);font-size:14px}
 .fdi .thumb{width:56px;height:56px}
 .dtform{border:1.5px solid var(--accent);border-radius:12px;padding:12px;margin:10px 0}
-.dtsym{flex:none;width:36px;height:24px}
-.dtsym circle,.dtico circle{fill:none;stroke:var(--p1);stroke-width:2.5}
-.dtico{background:none;border:0}
+.dtsym{flex:none;width:40px;height:34px}
+.dtsym .st{fill:var(--ink)}
+.dtsym .tk{fill:var(--accent)}
+.dtsym .fn{stroke:var(--surface);stroke-width:1.2}
+.dtsym .bo{fill:var(--p2)}
+.dtico,.plico{background:none;border:0}
+.psym{width:22px;height:30px;display:block;margin:0 auto}
+.psym .po{fill:var(--p1)}
+.psym.l .po{fill:var(--accent)}
+.psym .in{fill:var(--surface);stroke:var(--ink);stroke-width:.8}
+.plico span{position:absolute;left:50%;top:30px;transform:translateX(-50%);white-space:nowrap;font:700 11px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 3px;border-radius:4px;border:1px solid var(--line)}
 .plinfo{border:1.5px solid var(--accent);border-radius:12px;padding:10px 12px;margin-top:8px;line-height:1.5}
 .plinfo b{font-size:17px}
-.leaflet-tooltip.pltip{background:var(--surface);color:var(--ink);border:1px solid var(--line);font:700 12px var(--f-ui);padding:0 4px;box-shadow:none}
 .fdlegend .lg{font-weight:700}.fdlegend .lg.h{color:var(--p1)}.fdlegend .lg.l{color:var(--accent)}.fdlegend .lg.w{color:var(--muted)}
-.dtico svg{background:var(--surface);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
-.dtico span{position:absolute;left:50%;top:26px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
+.dtico svg{background:var(--surface);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.dtico span{position:absolute;left:50%;top:36px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
 .prev{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .pv{display:flex;flex-direction:column;align-items:center;gap:4px}
 .thumb{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block;background:var(--bg)}
@@ -462,7 +469,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost" type="button" id="fdKml" style="flex:1 1 150px">🌍 Google Earth फ़ाइल</button>
             <button class="btn ghost" type="button" id="fdExp" style="flex:1 1 150px">📤 सर्वे फ़ाइल भेजें</button>
           </div>
-          <p class="hint fdlegend">नक्शे पर: <b class="lg h">━ 11kV लाइन / ● खंभा</b> · <b class="lg l">━ LT लाइन / ● खंभा</b> · <b class="lg w">┅ चला गया रास्ता</b></p>
+          <p class="hint fdlegend">नक्शे पर: <b class="lg h">━ 11kV लाइन / खंभा</b> · <b class="lg l">━ LT लाइन / खंभा</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
           <details class="more" style="margin-top:12px">
             <summary>और विकल्प</summary>
             <div class="row" style="padding:10px 0">
@@ -1578,8 +1585,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.43',APP_NOTES=[
-    'सुरक्षा: ऐप सिर्फ़ तय पतों से script/डेटा ले-दे सकता है (CSP), और हर बदलाव पर lint, CSS, XSS की जाँच'
+  var APP_V='1.44',APP_NOTES=[
+    'नक्शे पर ट्रांसफार्मर (ढाँचे पर टंकी) और खंभों (क्रॉस-आर्म, 11kV लाल / LT नीला) के निशान; ज़ूम करने पर खंभे का नंबर'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1833,7 +1840,18 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   }
   function nextNo(f){var m=0;f.pl.forEach(function(p){var v=parseInt(p.no,10);if(v>m)m=v});return String(m+1)}
   function findPole(f,q){q=String(q||'').trim().toLowerCase();if(!q)return null;for(var i=0;i<f.pl.length;i++)if(f.pl[i].no.toLowerCase()===q)return f.pl[i];return null}
-  function dtSym(){return '<svg class="dtsym" viewBox="0 0 36 24" width="36" height="24" aria-hidden="true"><circle cx="13" cy="12" r="8"/><circle cx="23" cy="12" r="8"/></svg>'}
+  // Map symbols (small SVG, coloured from CSS tokens): a transformer on its two-pole structure, and a pole with its
+  // cross-arm and insulators (11kV red, LT blue). Fixed markup, no data in them.
+  function dtSym(){return '<svg class="dtsym" viewBox="0 0 40 34" width="40" height="34" aria-hidden="true">'+
+    '<rect class="st" x="4" y="2" width="2.4" height="31"/><rect class="st" x="33.6" y="2" width="2.4" height="31"/>'+
+    '<rect class="st" x="2" y="5" width="36" height="1.8"/><rect class="st" x="4" y="26" width="32" height="2.2"/>'+
+    '<rect class="st" x="14" y="7" width="2" height="5"/><rect class="st" x="19" y="7" width="2" height="5"/><rect class="st" x="24" y="7" width="2" height="5"/>'+
+    '<rect class="tk" x="11" y="11" width="18" height="15" rx="2"/>'+
+    '<path class="fn" d="M14 13v11M17 13v11M23 13v11M26 13v11"/>'+
+    '<path class="bo" d="M21.5 13.5l-4 6h3l-1.5 5 4.5-6.5h-3z"/></svg>'}
+  function poleSym(k){return '<svg class="psym '+(k==='h'?'h':'l')+'" viewBox="0 0 22 30" width="22" height="30" aria-hidden="true">'+
+    '<rect class="po" x="10" y="3" width="2.4" height="27"/><rect class="po" x="2" y="6" width="18" height="2.2"/>'+
+    '<circle class="in" cx="4" cy="4.5" r="1.8"/><circle class="in" cx="11.2" cy="1.9" r="1.8"/><circle class="in" cx="18" cy="4.5" r="1.8"/></svg>'}
   function dtLine(d){return [d.kva?d.kva+' kVA':'',d.c?d.c+' उपभोक्ता':'',d.lt?'LT '+fmtLen(d.lt):''].filter(Boolean).join(' · ')||'विवरण नहीं लिखा'}
 
   function renderFeeder(){
@@ -1949,7 +1967,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     });
     drawHl();
     f.dts.forEach(function(d){
-      var ic=L.divIcon({className:'dtico',html:dtSym()+'<span>'+xmlEsc(d.n||'DT')+'</span>',iconSize:[36,24],iconAnchor:[18,12]});
+      var ic=L.divIcon({className:'dtico',html:dtSym()+'<span>'+xmlEsc(d.n||'DT')+'</span>',iconSize:[40,34],iconAnchor:[20,30]});
       L.marker([d.lat,d.lng],{icon:ic,title:d.n||'DT'}).on('click',function(){openDt(d)}).addTo(FD.grp);
       all.push([d.lat,d.lng]);
     });
@@ -1960,13 +1978,14 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     else if(FD.fix)FD.map.setView([FD.fix.lat,FD.fix.lng],16);
     else FD.map.setView([22.5,79.2],8);
   }
-  // Pole numbers: only when zoomed in, and only for the poles in view (at most 300), so big surveys stay quick.
+  // Pole symbols with their numbers: only when zoomed in, and only for the poles in view (at most 300), so big surveys stay quick.
   function drawLabels(){
     var f=curF();if(!f||!FD.map||!FD.map._loaded)return;FD.lbl.clearLayers();  // not before the map has a view
     if(FD.map.getZoom()<17)return;
     var bd=FD.map.getBounds(),n=0;
     for(var i=0;i<f.pl.length&&n<300;i++){var p=f.pl[i];if(!bd.contains([p.lat,p.lng]))continue;n++;
-      L.tooltip({permanent:true,direction:'top',offset:[0,-6],className:'pltip'}).setLatLng([p.lat,p.lng]).setContent(xmlEsc(p.no||'?')).addTo(FD.lbl)}
+      (function(p){L.marker([p.lat,p.lng],{icon:L.divIcon({className:'plico',html:poleSym(p.k)+'<span>'+xmlEsc(p.no||'?')+'</span>',iconSize:[22,30],iconAnchor:[11,29]}),title:poleName(p)})
+        .on('click',function(){FD.find=p.id;$('plQ').value=p.no;showFind();drawHl()}).addTo(FD.lbl)})(p)}
   }
   // The searched pole gets a ring of its own layer, so searching does not redraw the whole map.
   function drawHl(){
