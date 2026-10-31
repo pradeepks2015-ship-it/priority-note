@@ -113,6 +113,8 @@ const wiresNear = await phases();
 const wireTop = () => page.evaluate(() => { const f = JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0]; const p = f.pl.find((x) => x.k !== 'h' && x.to); let w = null; window.__fdMap.eachLayer((l) => { if (l.options && l.options.phase === 'LT') w = l.getLatLngs()[0][0]; }); const z = window.__fdMap, a = z.latLngToContainerPoint([p.lat, p.lng]), b = z.latLngToContainerPoint(w); return Math.round(a.y - b.y); });
 const liftNear = await wireTop();
 // 11kV poles are steel-coloured, so they stand out from the red 11kV line (symbol, structure and the dot at the foot).
+// The plain 11kV PCC pole is drawn like the LT pole (same pole colour), keeping its pin insulators.
+const pccLikeLt = await page.evaluate(() => { const box = document.createElement('div'); box.innerHTML = '<svg class="psym h pcc"><rect class="po"/><circle class="in"/></svg><svg class="psym l"><rect class="po"/></svg><svg class="psym h str"><rect class="po"/></svg>'; document.body.appendChild(box); const f = (q) => getComputedStyle(box.querySelector(q)).fill; const r = { pcc: f('.pcc .po'), lt: f('.l .po'), str: f('.str .po'), pin: f('.pcc .in') }; box.remove(); return r.pcc === r.lt && r.str !== r.lt && r.pin !== r.pcc; });
 const hvColours = await page.evaluate(() => { const red = getComputedStyle(document.documentElement).getPropertyValue('--p1').trim(); const sym = [...document.querySelectorAll('#fdMap .plico svg.h .po')].map((e) => getComputedStyle(e).fill); const dots = []; window.__fdMap.eachLayer((l) => { if (l instanceof L.CircleMarker && l.options.fill !== false && l.options.k === 'h') dots.push(l.options.fillColor); }); const toRgb = (h) => { const n = parseInt(h.slice(1), 16); return 'rgb(' + (n >> 16) + ', ' + ((n >> 8) & 255) + ', ' + (n & 255) + ')'; }; return { n: sym.length, symRed: sym.some((c) => c === toRgb(red)), dots: dots.length, dotRed: dots.some((c) => c.toLowerCase() === red.toLowerCase()) }; });
 await page.evaluate(() => window.__fdMap.setZoom(14));
 await page.waitForTimeout(400);
@@ -207,6 +209,7 @@ const checks = {
   'SLD में /// तीन तार, LT केबल, DB बॉक्स': ['/// = तीन तार', 'LT केबल', 'DB 2'].every((x) => sldSvg.includes(x)),
   'LT खंभे पर केबल और हुक सिर्फ़ एक तरफ़': ltSide.length === 2 && ltSide.every((n) => n === 2),
   'पास से केबल खंभे के हुक पर (नीचे नहीं), दूर से बिंदु पर': liftNear === 20 && liftFar === 0,
+  '11kV PCC खंभा LT खंभे जैसा, पिन इंसुलेटर वही': pccLikeLt,
   '11kV खंभे का रंग लाल लाइन से अलग (स्टील)': hvColours.n > 0 && !hvColours.symRed && hvColours.dots > 0 && !hvColours.dotRed,
   'DP का निशान: ब्रेसिंग और डिस्क इंसुलेटर, गोल किनारा नहीं': dpSym.length === 1 && dpSym[0].br === 1 && dpSym[0].dsc === 3 && dpSym[0].radius === '0px',
   'SLD फोटो (PNG) बनी': /^sld-.*\.png$/.test(sldPng.name) && sldPng.size > 5000,
