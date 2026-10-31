@@ -103,6 +103,8 @@ await page.evaluate(() => window.__fdMap.setView([22.5 + 5 * 0.00027, 79.2], 18)
 await page.waitForTimeout(400);
 const iconsNear = await page.$$eval('#fdMap .plico', (e) => e.map((x) => x.innerText.trim()).sort());
 const dbIcons = await page.$$eval('#fdMap .plico svg .db', (e) => e.length);
+// LT pole: the cable on one hook, on one side only (the JE removed the left one).
+const ltSide = await page.$$eval('#fdMap .plico svg.l', (e) => e.map((x) => [x.querySelector('.cb').getAttribute('d'), x.querySelector('.hk').getAttribute('d')].join('').split('M').length - 1));
 // The DP structure symbol: bracing drawn, and no round border from the app's other '.st' style.
 const dpSym = await page.$$eval('#fdMap .plico svg.str', (e) => e.map((x) => ({ br: x.querySelectorAll('.br').length, dsc: x.querySelectorAll('.dsc').length, radius: getComputedStyle(x).borderTopLeftRadius })));
 const phases = () => page.evaluate(() => { const w = []; window.__fdMap.eachLayer((l) => { if (l.options && l.options.phase) w.push(l.options.phase); }); return w.sort().join(','); });
@@ -197,6 +199,7 @@ const checks = {
   'SLD प्रिंट (PDF): शीर्षक, DP, DT, LT का हिसाब, संकेत': ['एकल रेखा आरेख (SLD)', 'नमूना फीडर', '(DP)', 'DT-1', 'LT केबल: 2 खंभे', '10 उपभोक्ता', 'संकेत:', 'वितरण ट्रांसफार्मर', 'सर्वे पूरा'].every((t) => sldSvg.includes(t)),
   '11kV एक लाल लाइन (पास, दूर और दोबारा खोलने पर), LT केबल अलग': wiresNear === 'H,LT' && wiresFar === 'H,LT' && wiresReopen === 'H,LT',
   'SLD में /// तीन तार, LT केबल, DB बॉक्स': ['/// = तीन तार', 'LT केबल', 'DB 2'].every((x) => sldSvg.includes(x)),
+  'LT खंभे पर केबल और हुक सिर्फ़ एक तरफ़': ltSide.length === 2 && ltSide.every((n) => n === 2),
   'DP का निशान: ब्रेसिंग और डिस्क इंसुलेटर, गोल किनारा नहीं': dpSym.length === 1 && dpSym[0].br === 1 && dpSym[0].dsc === 3 && dpSym[0].radius === '0px',
   'SLD फोटो (PNG) बनी': /^sld-.*\.png$/.test(sldPng.name) && sldPng.size > 5000,
   'आड़ा स्क्रॉल नहीं': !hScroll,

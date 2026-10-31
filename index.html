@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-rBjmUAYbsjatLcGAqO7iV3xUiy3bk5vF3iqLrpwLBbY=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-o/Tqd7nkRBkkgoKPc4pPsYU46nMDAwRW4I0VZWTHZW4=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1620,10 +1620,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.49',APP_NOTES=[
-    '11kV लाइन अब नक्शे पर सिर्फ़ एक लाल लाइन (R Y B हटाए)',
-    'फीडर दोबारा खोलने पर 11kV की लाल लाइन न दिखने की कमी ठीक',
-    'LT खंभा आपके चित्र जैसा: ऊपर छोटी पट्टी, हुक पर लटकी केबल, खंभे पर DB बॉक्स और उससे निकलता तार'
+  var APP_V='1.50',APP_NOTES=[
+    'LT खंभे के निशान से बाईं तरफ़ का हुक और केबल हटाए (अब सिर्फ़ एक तरफ़)'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1920,7 +1918,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   function poleSym(k,st,db){
     if(k!=='h')return '<svg class="psym l" viewBox="0 0 22 30" width="22" height="30" aria-hidden="true">'+
       '<rect class="po" x="10" y="2" width="2.4" height="28"/><rect class="po" x="7" y="3.2" width="8.4" height="1.2"/>'+
-      '<path class="hk" d="M12.4 7h2.2v1.8M9.9 7.5h-2v1.6"/><path class="cb" d="M0 11Q4 12.5 7.9 9.1M14.6 8.8Q18 12.5 22 11.5"/>'+
+      '<path class="hk" d="M12.4 7h2.2v1.8"/><path class="cb" d="M14.6 8.8Q18 12.5 22 11.5"/>'+
       (db?'<path class="sw" d="M12.4 13.5h1.6M17.2 21.5v2.5Q18 27 22 27.5"/><rect class="db" x="13.6" y="12.8" width="7" height="8.7" rx="1"/>':'')+'</svg>';
     if(st==='dp'||st==='tp'||st==='4p')return strSym(st);
     return '<svg class="psym h" viewBox="0 0 22 30" width="22" height="30" aria-hidden="true">'+

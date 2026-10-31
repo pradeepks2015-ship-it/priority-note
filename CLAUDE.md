@@ -77,7 +77,7 @@ and left out of reminders.
   (surveyor). A new pole's number is the next one; it joins the last pole of its kind (LT: the last LT pole or DT, else
   the nearest DT). Lines are drawn pole→`to` (11kV red, LT dark cable; the GPS track is a grey dashed line).
   Symbols (v1.44, small fixed SVG coloured by CSS tokens): `dtSym()` a transformer on its two-pole structure (always),
-  `poleSym(k)` a pole with cross-arm and insulators plus its number; LT poles (v1.49, after the JE's drawing) show a short top arm, the cable on suspension hooks and, when `db`, a DB box
+  `poleSym(k)` a pole with cross-arm and insulators plus its number; LT poles (v1.49, after the JE's drawing) show a short top arm, the cable on one suspension hook, on one side only (v1.50), and, when `db`, a DB box
   with its service wire (no pin insulators). 11kV spans: `drawWires()` draws one red line (the JE asked for no R/Y/B,
   v1.49), one layer for all spans; LT is one dark cable layer. Poles have `db` (LT: DB box, checkbox in the form), counted in totals/SLD/WhatsApp — only when zoomed in (≥17) and only for poles in view (max 300). Search by pole
   number (`findPole`, `showFind`): consumers, its DT via `poleDt()`, poles further down via `below()`. Deleting a pole
