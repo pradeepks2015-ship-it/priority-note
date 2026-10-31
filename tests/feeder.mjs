@@ -100,6 +100,7 @@ const find3 = await page.$eval('#plInfo', (n) => n.innerText);
 const findIcons = await page.$eval('#plInfo', (n) => ({ dtr: n.querySelectorAll('svg.dtsym').length, db: n.querySelectorAll('svg .db').length, pole: n.querySelectorAll('b svg.psym').length }));
 await page.fill('#plQ', 'ckt 1 1');
 const find2 = await page.$eval('#plInfo', (n) => n.innerText);
+const belowPic = await page.$$eval('#plInfo svg.ltline .po[height="22"]', (e) => e.length);
 await page.fill('#plQ', '99');
 await page.click('#plFind button[type=submit]');
 const find99 = await page.$eval('#plInfo', (n) => n.hidden);
@@ -216,7 +217,8 @@ const checks = {
   'पुराना नाम DT-1 अब DTR-1; बटन व संकेत में DTR': oldDt === 'DTR-1' && uiDtr,
   '"🔢 नंबर फिर से लगाएँ" वही क्रम': renum === 'HT-1,Ckt-1-1,Ckt-1-2',
   'LT खंभा पहले DT से, फिर पिछले LT खंभे से जुड़े': lTo1.includes('DTR-1') && lTo2.includes('खंभा Ckt-1-1'),
-  'खंभा 3 खोजने पर: 4 उपभोक्ता, DTR-1, बीच में 1 खंभा, DB बॉक्स': find3.includes('DB बॉक्स: लगा है') && find3.includes('खंभा Ckt-1-2') && find3.includes('उपभोक्ता: 4') && find3.includes('DTR-1') && find3.includes('बीच में 1 खंभे'),
+  'खंभा Ckt-1-2 खोजने पर: 4 उपभोक्ता, DB बॉक्स, सिर्फ़ जुड़े DTR का नाम (सीधे/पिछला नहीं)': find3.includes('DB बॉक्स: लगा है') && find3.includes('खंभा Ckt-1-2') && find3.includes('उपभोक्ता: 4') && find3.includes('जुड़ा DTR: DTR-1') && !/पिछला|सीधे|बीच में/.test(find3) && find2.includes('जुड़ा DTR: DTR-1') && !/पिछला|सीधे/.test(find2),
+  '"आगे जुड़े खंभे" के साथ तीन खंभों की छोटी LT लाइन': belowPic === 3,
   'खंभा 2: आगे 1 खंभा (4 उपभोक्ता)': find2.includes('उपभोक्ता: 6') && find2.includes('आगे जुड़े खंभे: 1 (उन पर 4 उपभोक्ता)'),
   'न मिला नंबर: कुछ न दिखे': find99,
   'कुल: 1 11kV, 2 LT खंभे, 10 उपभोक्ता, 2 DB बॉक्स': sum2.includes('11kV खंभे (सर्वे) 1') && sum2.includes('LT खंभे (सर्वे) 2') && sum2.includes('खंभों पर उपभोक्ता 10') && sum2.includes('DB बॉक्स 2'),
@@ -236,7 +238,7 @@ const checks = {
   'पास से केबल खंभे के हुक पर (नीचे नहीं), दूर से बिंदु पर': liftNear === 20 && liftFar === 0,
   '11kV PCC खंभा LT खंभे जैसा, पिन इंसुलेटर वही': pccLikeLt,
   '11kV खंभे का रंग लाल लाइन से अलग (स्टील)': hvColours.n > 0 && !hvColours.symRed && hvColours.dots > 0 && !hvColours.dotRed,
-  'नक्शे पर DTR चित्र वाला (बाड़, डेढ़ गुना); बिजली वाला सिर्फ़ पेज पर': dtrPic.length === 1 && dtrPic[0].fe === 1 && dtrPic[0].bo === 0 && dtrPic[0].w === 66,
+  'नक्शे पर भी DTR का A वाला निशान (बिजली वाला, बिना बाड़)': dtrPic.length === 1 && dtrPic[0].bo === 1 && dtrPic[0].fe === 0 && dtrPic[0].w === 40,
   'खोज वाले डिब्बे में DTR, DB बॉक्स और खंभे के निशान': findIcons.dtr >= 1 && findIcons.db >= 1 && findIcons.pole >= 1,
   'DB बॉक्स चित्र जैसा (खिड़की वाला)': dbWin === 2,
   'DP का निशान: ब्रेसिंग और डिस्क इंसुलेटर, गोल किनारा नहीं': dpSym.length === 1 && dpSym[0].br === 1 && dpSym[0].dsc === 3 && dpSym[0].radius === '0px',
