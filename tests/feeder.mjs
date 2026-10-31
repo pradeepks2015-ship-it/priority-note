@@ -112,6 +112,8 @@ const wiresNear = await phases();
 // Zoomed in, the cable hangs at the top of the pole symbols (the hook), not along the pole's foot; far out it joins the points.
 const wireTop = () => page.evaluate(() => { const f = JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0]; const p = f.pl.find((x) => x.k !== 'h' && x.to); let w = null; window.__fdMap.eachLayer((l) => { if (l.options && l.options.phase === 'LT') w = l.getLatLngs()[0][0]; }); const z = window.__fdMap, a = z.latLngToContainerPoint([p.lat, p.lng]), b = z.latLngToContainerPoint(w); return Math.round(a.y - b.y); });
 const liftNear = await wireTop();
+// 11kV poles are steel-coloured, so they stand out from the red 11kV line (symbol, structure and the dot at the foot).
+const hvColours = await page.evaluate(() => { const red = getComputedStyle(document.documentElement).getPropertyValue('--p1').trim(); const sym = [...document.querySelectorAll('#fdMap .plico svg.h .po')].map((e) => getComputedStyle(e).fill); const dots = []; window.__fdMap.eachLayer((l) => { if (l instanceof L.CircleMarker && l.options.fill !== false && l.options.k === 'h') dots.push(l.options.fillColor); }); const toRgb = (h) => { const n = parseInt(h.slice(1), 16); return 'rgb(' + (n >> 16) + ', ' + ((n >> 8) & 255) + ', ' + (n & 255) + ')'; }; return { n: sym.length, symRed: sym.some((c) => c === toRgb(red)), dots: dots.length, dotRed: dots.some((c) => c.toLowerCase() === red.toLowerCase()) }; });
 await page.evaluate(() => window.__fdMap.setZoom(14));
 await page.waitForTimeout(400);
 const iconsFar = await page.$$eval('#fdMap .plico', (e) => e.length);
@@ -205,6 +207,7 @@ const checks = {
   'SLD में /// तीन तार, LT केबल, DB बॉक्स': ['/// = तीन तार', 'LT केबल', 'DB 2'].every((x) => sldSvg.includes(x)),
   'LT खंभे पर केबल और हुक सिर्फ़ एक तरफ़': ltSide.length === 2 && ltSide.every((n) => n === 2),
   'पास से केबल खंभे के हुक पर (नीचे नहीं), दूर से बिंदु पर': liftNear === 20 && liftFar === 0,
+  '11kV खंभे का रंग लाल लाइन से अलग (स्टील)': hvColours.n > 0 && !hvColours.symRed && hvColours.dots > 0 && !hvColours.dotRed,
   'DP का निशान: ब्रेसिंग और डिस्क इंसुलेटर, गोल किनारा नहीं': dpSym.length === 1 && dpSym[0].br === 1 && dpSym[0].dsc === 3 && dpSym[0].radius === '0px',
   'SLD फोटो (PNG) बनी': /^sld-.*\.png$/.test(sldPng.name) && sldPng.size > 5000,
   'आड़ा स्क्रॉल नहीं': !hScroll,

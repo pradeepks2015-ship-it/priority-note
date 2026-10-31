@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-nZdt7QEOwmAVUzooKt/dCpXJFWiUPMU2XNwpbbGV7tQ=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-7iDo/RVo6oZVAsIRu4lFpuyjWnBpk4pV5okvZhyrg6g=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -24,6 +24,7 @@
   --n-yellow:#FFD84D; --n-pink:#FF9DB5; --n-green:#8EDB9B; --n-blue:#8CC8FF; --n-orange:#FFB36B;
   --note-ink:#26220F; --banner:#FFF1C2; --banner-ink:#3B2F00; --upd:#FFE3C4; --upd-ink:#5C2B00; --upd-line:#E07B1F; --upd-btn-ink:#341700; --overlay:rgba(10,12,16,.88);
   --paper:#FFFFFF; --on-overlay:#FFFFFF; --tape:rgba(255,255,255,.55);  /* same in both themes */
+  --steel:#3E4A5C;  /* 11kV poles on the map: map tiles look the same in both themes */
   --f-ui:"Hind","Noto Sans Devanagari",system-ui,sans-serif;
   --f-head:"Baloo 2","Hind",system-ui,sans-serif;
   --f-note:"Kalam","Hind",cursive;
@@ -121,7 +122,7 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .dtsym .bo{fill:var(--p2)}
 .dtico,.plico{background:none;border:0}
 .psym{width:22px;height:30px;display:block;margin:0 auto}
-.psym .po{fill:var(--p1)}
+.psym .po{fill:var(--steel)}
 .psym.l .po{fill:var(--muted)}
 .psym .cb{fill:none;stroke:var(--ink);stroke-width:1.8}
 .psym .hk{fill:none;stroke:var(--ink);stroke-width:1.1}
@@ -131,8 +132,8 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .chk input{width:22px;height:22px}
 .psym .in{fill:var(--surface);stroke:var(--ink);stroke-width:.8}
 .psym.str{width:34px;height:34px}
-.psym .br{fill:none;stroke:var(--p1);stroke-width:.9}
-.psym .ch{fill:none;stroke:var(--p1);stroke-width:1.6}
+.psym .br{fill:none;stroke:var(--steel);stroke-width:.9}
+.psym .ch{fill:none;stroke:var(--steel);stroke-width:1.6}
 .psym .dsc{fill:var(--surface);stroke:var(--ink);stroke-width:.6}
 .fdend{font-weight:700;color:var(--wa)}
 .sldprint{background:var(--paper)}
@@ -1620,8 +1621,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.51',APP_NOTES=[
-    'पास से देखने पर केबल अब खंभे के हुक पर लटकी दिखती है (खंभे के नीचे नहीं); 11kV लाइन इंसुलेटर पर'
+  var APP_V='1.52',APP_NOTES=[
+    '11kV खंभे अब स्टील (गहरे स्लेटी) रंग में, ताकि लाल 11kV लाइन से अलग दिखें'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1879,7 +1880,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   function nextNo(f){var m=0;f.pl.forEach(function(p){var v=parseInt(p.no,10);if(v>m)m=v});return String(m+1)}
   function findPole(f,q){q=String(q||'').trim().toLowerCase();if(!q)return null;for(var i=0;i<f.pl.length;i++)if(f.pl[i].no.toLowerCase()===q)return f.pl[i];return null}
   // Map symbols (small SVG, coloured from CSS tokens): a transformer on its two-pole structure, and a pole with its
-  // cross-arm and insulators (11kV red, LT blue). Fixed markup, no data in them.
+  // cross-arm and insulators (11kV steel, LT grey). Fixed markup, no data in them.
   function dtSym(){return '<svg class="dtsym" viewBox="0 0 40 34" width="40" height="34" aria-hidden="true">'+
     '<rect class="st" x="4" y="2" width="2.4" height="31"/><rect class="st" x="33.6" y="2" width="2.4" height="31"/>'+
     '<rect class="st" x="2" y="5" width="36" height="1.8"/><rect class="st" x="4" y="26" width="32" height="2.2"/>'+
@@ -2035,9 +2036,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       var pl=L.polyline(sg,lineStyle()).addTo(FD.grp);all=all.concat(sg);
       if(FD.rec&&i===f.segs.length-1)FD.live=pl;  // the line being recorded grows in place
     });
-    var red=tok('--p1')||'red',blue=tok('--accent')||'blue',ring=tok('--surface')||'white';
+    var steel=tok('--steel')||'gray',blue=tok('--accent')||'blue',ring=tok('--surface')||'white';
     f.pl.forEach(function(p){
-      L.circleMarker([p.lat,p.lng],{radius:6,color:ring,weight:2,fillColor:p.k==='h'?red:blue,fillOpacity:1})
+      L.circleMarker([p.lat,p.lng],{radius:6,color:ring,weight:2,fillColor:p.k==='h'?steel:blue,fillOpacity:1,k:p.k})
         .on('click',function(){FD.find=p.id;$('plQ').value=p.no;showFind();drawHl()}).addTo(FD.grp);
       all.push([p.lat,p.lng]);
     });

@@ -75,7 +75,8 @@ and left out of reminders.
 - Village / pole survey (v1.41) in the same feeder entry: `pl[]` poles `{id, no, k ('h' 11kV | 'l' LT), c (consumers on an
   LT pole), to (the pole or DT it hangs from), lat, lng, note, at}`, `dts[].to` (the 11kV pole a DT hangs from), `by`
   (surveyor). A new pole's number is the next one; it joins the last pole of its kind (LT: the last LT pole or DT, else
-  the nearest DT). Lines are drawn pole→`to` (11kV red, LT dark cable; the GPS track is a grey dashed line).
+  the nearest DT). Lines are drawn pole→`to` (11kV red, LT dark cable; 11kV pole symbols and dots are `--steel` (v1.52), not red, so they
+  stand out from the line; the GPS track is a grey dashed line).
   Symbols (v1.44, small fixed SVG coloured by CSS tokens): `dtSym()` a transformer on its two-pole structure (always),
   `poleSym(k)` a pole with cross-arm and insulators plus its number; LT poles (v1.49, after the JE's drawing) show a short top arm, the cable on one suspension hook, on one side only (v1.50), and, when `db`, a DB box
   with its service wire (no pin insulators). 11kV spans: `drawWires()` draws one red line (the JE asked for no R/Y/B,
