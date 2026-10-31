@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-kQgyn0Rg/n4KrS61ejCfO3pAggjwPbaSqJpakEeBLFk=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-s8PbUkfS5vsAVZNw8EQ2cuNP2gcLOHiyFVDCoijy1yk=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -115,15 +115,11 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .fdi small{display:block;color:var(--muted);font-size:14px}
 .fdi .thumb{width:56px;height:56px}
 .dtform{border:1.5px solid var(--accent);border-radius:12px;padding:12px;margin:10px 0}
-.dtsym{flex:none;width:44px;height:40px}
-.dtsym .st{fill:var(--steel)}
-.dtsym .in,.dtsym .bu{fill:var(--paper);stroke:var(--ink);stroke-width:.5}
-.dtsym .dw{fill:none;stroke:var(--ink);stroke-width:.45}
-.dtsym .tk{fill:var(--accent);stroke:var(--ink);stroke-width:.5}
-.dtsym .fn{fill:none;stroke:var(--ink);stroke-width:.55}
-.dtsym .pl{fill:var(--muted)}
-.dtsym .fe{fill:var(--paper);stroke:var(--muted);stroke-width:.45}
-.dtsym .rl{stroke:var(--muted);stroke-width:.6}
+.dtsym{flex:none;width:40px;height:34px}
+.dtsym .st{fill:var(--ink)}
+.dtsym .tk{fill:var(--accent)}
+.dtsym .fn{stroke:var(--surface);stroke-width:1.2}
+.dtsym .bo{fill:var(--p2)}
 .dtico,.plico{background:none;border:0}
 .psym{width:22px;height:30px;display:block;margin:0 auto}
 .psym .po{fill:var(--steel)}
@@ -153,9 +149,12 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .plico span{position:absolute;left:50%;top:100%;transform:translateX(-50%);white-space:nowrap;font:700 11px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 3px;border-radius:4px;border:1px solid var(--line)}
 .plinfo{border:1.5px solid var(--accent);border-radius:12px;padding:10px 12px;margin-top:8px;line-height:1.5}
 .plinfo b{font-size:17px}
+.pli{display:flex;align-items:center;gap:8px;min-height:30px}
+.pli .pic,.pli .pe{flex:none;width:34px;display:flex;justify-content:center}
+.pli .pic svg{width:auto;height:28px;margin:0}
 .fdlegend .lg{font-weight:700}.fdlegend .lg.h,.fdlegend .r{color:var(--p1)}.fdlegend .y{color:var(--p2)}.fdlegend .b{color:var(--accent)}.fdlegend .lg.l{color:var(--ink)}.fdlegend .lg.w{color:var(--muted)}
-.dtico svg{width:66px;height:60px}  /* 1.5× on the map, so the picture stays clear */
-.dtico span{position:absolute;left:50%;top:61px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
+.dtico svg{background:var(--surface);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.dtico span{position:absolute;left:50%;top:36px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
 .prev{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .pv{display:flex;flex-direction:column;align-items:center;gap:4px}
 .thumb{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block;background:var(--bg)}
@@ -1629,9 +1628,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.56',APP_NOTES=[
-    'DTR का निशान आपके चित्र जैसा: दो खंभे, बुशिंग, चबूतरे पर ट्रांसफार्मर, बाड़; नक्शे पर डेढ़ गुना बड़ा',
-    'DB बॉक्स आपके चित्र जैसा: खंभे पर क्लैंप से कसा डिब्बा, खिड़की, ऊपर से केबल और नीचे सर्विस तार'
+  var APP_V='1.57',APP_NOTES=[
+    'नक्शे पर DTR का पहले वाला (बिजली के निशान वाला) चित्र; DB बॉक्स नया वाला',
+    'खंभे की खोज वाले डिब्बे में भी खंभे, DTR और DB बॉक्स के चित्र'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1941,20 +1940,14 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   function poleFull(f,p){var d=p.k==='l'&&net(f).dt[p.id];return poleName(p)+(d?' ('+(d.n||'DTR')+')':'')}
   // Map symbols (small SVG, coloured from CSS tokens): a transformer on its two-pole structure, and a pole with its
   // cross-arm and insulators (11kV steel, LT grey). Fixed markup, no data in them.
-  // DTR as in the JE's picture (v1.56): two poles with pin insulators, the 11kV drops to three bushings, the tank with
-  // its radiator fins on a plinth, and fencing on both sides. Fixed markup, no data in it.
-  function dtSym(){return '<svg class="dtsym" viewBox="0 0 44 40" width="44" height="40" aria-hidden="true">'+
-    '<rect class="st" x="5" y="2" width="2" height="36"/><rect class="st" x="37" y="2" width="2" height="36"/>'+
-    '<rect class="st" x="1" y="4.5" width="10" height="1.3"/><rect class="st" x="33" y="4.5" width="10" height="1.3"/>'+
-    '<circle class="in" cx="2.3" cy="3.6" r="1"/><circle class="in" cx="6" cy="3" r="1"/><circle class="in" cx="9.7" cy="3.6" r="1"/>'+
-    '<circle class="in" cx="34.3" cy="3.6" r="1"/><circle class="in" cx="38" cy="3" r="1"/><circle class="in" cx="41.7" cy="3.6" r="1"/>'+
-    '<path class="dw" d="M34.3 4Q27 6 18 11.5M38 3.5Q30 7 22 11.5M41.7 4Q34 8 26 11.5"/>'+
-    '<rect class="bu" x="17" y="11" width="2" height="4" rx=".6"/><rect class="bu" x="21" y="10.5" width="2" height="4.5" rx=".6"/><rect class="bu" x="25" y="11" width="2" height="4" rx=".6"/>'+
-    '<rect class="tk" x="15" y="15" width="14" height="12" rx="1.2"/>'+
-    '<path class="fn" d="M13 17.5h2M13 19.5h2M13 21.5h2M13 23.5h2M29 17.5h2M29 19.5h2M29 21.5h2M29 23.5h2M18 16.5v9.5M22 16.5v9.5M26 16.5v9.5"/>'+
-    '<rect class="pl" x="11" y="27" width="22" height="2.6"/>'+
-    '<path class="fe" d="M1 39v-6.5l1-1 1 1V39zM4 39v-6.5l1-1 1 1V39zM8 39v-6.5l1-1 1 1V39zM11 39v-6.5l1-1 1 1V39zM31 39v-6.5l1-1 1 1V39zM34 39v-6.5l1-1 1 1V39zM40 39v-6.5l1-1 1 1V39zM43 39v-6.5l.5-.5.5.5V39z"/>'+
-    '<path class="rl" d="M1 34.5h12M1 37.5h12M31 34.5h13M31 37.5h13"/></svg>'}
+  // DTR: the transformer on its two-pole frame, with the lightning mark (the JE chose this one, v1.57).
+  function dtSym(){return '<svg class="dtsym" viewBox="0 0 40 34" width="40" height="34" aria-hidden="true">'+
+    '<rect class="st" x="4" y="2" width="2.4" height="31"/><rect class="st" x="33.6" y="2" width="2.4" height="31"/>'+
+    '<rect class="st" x="2" y="5" width="36" height="1.8"/><rect class="st" x="4" y="26" width="32" height="2.2"/>'+
+    '<rect class="st" x="14" y="7" width="2" height="5"/><rect class="st" x="19" y="7" width="2" height="5"/><rect class="st" x="24" y="7" width="2" height="5"/>'+
+    '<rect class="tk" x="11" y="11" width="18" height="15" rx="2"/>'+
+    '<path class="fn" d="M14 13v11M17 13v11M23 13v11M26 13v11"/>'+
+    '<path class="bo" d="M21.5 13.5l-4 6h3l-1.5 5 4.5-6.5h-3z"/></svg>'}
   // 11kV structures as they stand (the DP drawing the JE sent): H-beam poles, guarding channel on top with disc
   // insulators, a second channel with pin insulators, belts and X-bracing between each pair of poles.
   // TP: three poles in a row; 4-pole: two pairs, the back pair a little higher. Fixed markup, no data.
@@ -1994,6 +1987,10 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       '<rect class="po" x="10" y="2" width="2.4" height="28"/><rect class="po" x="1" y="6" width="20" height="2.2"/>'+
       '<circle class="in" cx="4" cy="4.5" r="1.8"/><circle class="in" cx="11.2" cy="1.9" r="1.8"/><circle class="in" cx="18" cy="4.5" r="1.8"/></svg>';
   }
+  // A fixed symbol (dtSym / poleSym markup, no data in it) as an element for the info box.
+  function symEl(svg){var s=mk('span','pic');
+    // eslint-disable-next-line no-unsanitized/method -- fixed SVG markup from dtSym()/poleSym(), no data
+    s.insertAdjacentHTML('beforeend',svg);return s}
   function dtLine(d){return [d.kva?d.kva+' kVA':'',d.c?d.c+' उपभोक्ता':'',d.lt?'LT '+fmtLen(d.lt):''].filter(Boolean).join(' · ')||'विवरण नहीं लिखा'}
 
   function renderFeeder(){
@@ -2112,7 +2109,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     });
     drawHl();
     f.dts.forEach(function(d){
-      var ic=L.divIcon({className:'dtico',html:dtSym()+'<span>'+xmlEsc(d.n||'DTR')+'</span>',iconSize:[66,60],iconAnchor:[33,58]});
+      var ic=L.divIcon({className:'dtico',html:dtSym()+'<span>'+xmlEsc(d.n||'DTR')+'</span>',iconSize:[40,34],iconAnchor:[20,30]});
       L.marker([d.lat,d.lng],{icon:ic,title:d.n||'DTR'}).on('click',function(){openDt(d)}).addTo(FD.grp);
       all.push([d.lat,d.lng]);
     });
@@ -2128,17 +2125,13 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   // 11kV: one red line; LT: one dark cable (ABC on suspension hooks). One layer each for all spans, so thousands of
   // poles stay quick. From zoom 17 the pole symbols stand above their points, so each wire end is lifted (screen px) to
   // where it hangs on the symbol: LT hook 20, 11kV insulators 26, DP/TP/4-pole channel 28, DTR 22. Redrawn on zoom.
-  function wireLift(n){return n.d?27:n.p.k!=='h'?20:n.p.st&&n.p.st!=='pcc'?28:26}
+  function wireLift(n){return n.d?22:n.p.k!=='h'?20:n.p.st&&n.p.st!=='pcc'?28:26}
   function drawWires(){
     var f=curF();if(!f||!FD.map||!FD.map._loaded||!FD.hvg)return;FD.hvg.clearLayers();
     var m=FD.map,up=m.getZoom()>=17,hv=[],lt=[];
     function at(n){var ll=nodeLL(n);if(!up)return ll;var q=m.latLngToLayerPoint(ll);return m.layerPointToLatLng(L.point(q.x,q.y-wireLift(n)))}
     f.pl.forEach(function(p){var a=node(f,p.to);if(a)(p.k==='h'?hv:lt).push([at(node(f,p.id)),at(a)])});
-    // the 11kV tap ends on the insulators of the DTR pole on the side the line comes from (±24 px, 53 px up)
-    f.dts.forEach(function(d){var a=node(f,d.to);if(!a)return;var b=at(a);
-      if(!up){hv.push([[d.lat,d.lng],b]);return}
-      var q=m.latLngToLayerPoint([d.lat,d.lng]),r=m.latLngToLayerPoint(b);
-      hv.push([m.layerPointToLatLng(L.point(q.x+(r.x<q.x?-24:24),q.y-53)),b])});
+    f.dts.forEach(function(d){var a=node(f,d.to);if(a)hv.push([at(node(f,d.id)),at(a)])});
     if(lt.length)L.polyline(lt,{color:tok('--ink')||'black',weight:4,opacity:.9,interactive:false,phase:'LT'}).addTo(FD.hvg);
     if(hv.length)L.polyline(hv,{color:tok('--p1')||'red',weight:4,opacity:.95,interactive:false,phase:'H'}).addTo(FD.hvg);
   }
@@ -2408,7 +2401,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     var p=f&&FD.find?node(f,FD.find):null;p=p&&p.p;
     if(!p){box.hidden=true;return}
     box.hidden=false;
-    box.appendChild(mk('b','',(p.k==='h'?'🔴 ':'🔵 ')+poleFull(f,p)+' · '+(p.k==='h'?'11kV':'LT')));
+    var hd=mk('b','pli');hd.appendChild(symEl(poleSym(p.k,p.st,p.db)));hd.appendChild(document.createTextNode(poleFull(f,p)+' · '+(p.k==='h'?'11kV':'LT')));box.appendChild(hd);
     // the same LT number under other DTs: one tap to show that one
     var also=findPoles(f,p.no).filter(function(q){return q!==p});
     if(also.length){
@@ -2416,16 +2409,17 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       also.forEach(function(q){var b=mk('button','btn ghost sm',poleFull(f,q));b.type='button';b.onclick=function(){FD.find=q.id;showFind();drawHl();if(FD.map)FD.map.setView([q.lat,q.lng],Math.max(FD.map.getZoom(),18))};ar.appendChild(b)});
       box.appendChild(ar);
     }
-    var L=[];
+    // each line: [picture or emoji, text]; the pictures are the map's own DTR and DB-box symbols
+    var DTR=dtSym(),DB=poleSym('l','pcc',true),L=[];
     if(p.k==='l'){
-      L.push('👥 इस खंभे से जुड़े उपभोक्ता: '+p.c);L.push('📦 DB बॉक्स: '+(p.db?'लगा है':'नहीं'));
-      var u=poleDt(f,p);L.push(u?'⚡ ट्रांसफार्मर: '+(u.d.n||'DTR')+(u.hops?' (बीच में '+u.hops+' खंभे)':' (सीधे)'):'⚡ ट्रांसफार्मर: जुड़ा नहीं');
+      L.push(['👥','इस खंभे से जुड़े उपभोक्ता: '+p.c]);L.push([DB,'DB बॉक्स: '+(p.db?'लगा है':'नहीं')]);
+      var u=poleDt(f,p);L.push([DTR,u?'ट्रांसफार्मर: '+(u.d.n||'DTR')+(u.hops?' (बीच में '+u.hops+' खंभे)':' (सीधे)'):'ट्रांसफार्मर: जुड़ा नहीं']);
     }
-    var up=node(f,p.to);L.push('⬆️ पिछला: '+(up?(up.d?'⚡ '+(up.d.n||'DTR'):poleName(up.p)):'— (लाइन यहीं से शुरू)'));
-    var bl=below(f,p.id);if(bl.n)L.push('⬇️ आगे जुड़े खंभे: '+bl.n+(bl.c?' (उन पर '+bl.c+' उपभोक्ता)':''));
-    var hangs=f.dts.filter(function(d){return d.to===p.id});if(hangs.length)L.push('⚡ इस खंभे से: '+hangs.map(function(d){return d.n||'DTR'}).join(', '));
-    if(p.note)L.push('📝 '+p.note);
-    L.forEach(function(t){box.appendChild(mk('div','',t))});
+    var up=node(f,p.to);L.push(up&&up.d?[DTR,'पिछला: '+(up.d.n||'DTR')]:['⬆️','पिछला: '+(up?poleName(up.p):'— (लाइन यहीं से शुरू)')]);
+    var bl=below(f,p.id);if(bl.n)L.push(['⬇️','आगे जुड़े खंभे: '+bl.n+(bl.c?' (उन पर '+bl.c+' उपभोक्ता)':'')]);
+    var hangs=f.dts.filter(function(d){return d.to===p.id});if(hangs.length)L.push([DTR,'इस खंभे से: '+hangs.map(function(d){return d.n||'DTR'}).join(', ')]);
+    if(p.note)L.push(['📝',p.note]);
+    L.forEach(function(t){var r=mk('div','pli');r.appendChild(t[0].charAt(0)==='<'?symEl(t[0]):mk('span','pe',t[0]));r.appendChild(document.createTextNode(t[1]));box.appendChild(r)});
     var row=mk('div','row');row.style.marginTop='8px';
     var e=mk('button','btn ghost sm','बदलें');e.type='button';e.onclick=function(){openPl(p)};row.appendChild(e);
     var g=mk('a','btn ghost sm','🗺️ Google Maps');g.href=mapsLink(p.lat,p.lng);g.target='_blank';g.rel='noopener';row.appendChild(g);
