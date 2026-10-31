@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-o/Tqd7nkRBkkgoKPc4pPsYU46nMDAwRW4I0VZWTHZW4=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-nZdt7QEOwmAVUzooKt/dCpXJFWiUPMU2XNwpbbGV7tQ=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1620,8 +1620,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.50',APP_NOTES=[
-    'LT खंभे के निशान से बाईं तरफ़ का हुक और केबल हटाए (अब सिर्फ़ एक तरफ़)'
+  var APP_V='1.51',APP_NOTES=[
+    'पास से देखने पर केबल अब खंभे के हुक पर लटकी दिखती है (खंभे के नीचे नहीं); 11kV लाइन इंसुलेटर पर'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2015,7 +2015,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       FD.grp=L.layerGroup().addTo(FD.map);
       FD.map.on('dragstart',function(){FD.follow=false});
       // pole numbers only when zoomed in, so the map stays readable
-      FD.map.on('moveend',drawLabels);FD.lbl.addTo(FD.map);FD.hl.addTo(FD.map);
+      FD.map.on('moveend',drawLabels);FD.map.on('zoomend',drawWires);FD.lbl.addTo(FD.map);FD.hl.addTo(FD.map);
       FD.hvg=L.layerGroup().addTo(FD.map);
       setBase('map');
     }
@@ -2036,9 +2036,6 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       if(FD.rec&&i===f.segs.length-1)FD.live=pl;  // the line being recorded grows in place
     });
     var red=tok('--p1')||'red',blue=tok('--accent')||'blue',ring=tok('--surface')||'white';
-    // LT: one dark cable (ABC on suspension hooks), all spans in one layer
-    var lt=[];f.pl.forEach(function(p){var up=node(f,p.to);if(up&&p.k!=='h')lt.push([[p.lat,p.lng],nodeLL(up)])});
-    if(lt.length)L.polyline(lt,{color:tok('--ink')||'black',weight:4,opacity:.9,interactive:false,phase:'LT'}).addTo(FD.grp);
     f.pl.forEach(function(p){
       L.circleMarker([p.lat,p.lng],{radius:6,color:ring,weight:2,fillColor:p.k==='h'?red:blue,fillOpacity:1})
         .on('click',function(){FD.find=p.id;$('plQ').value=p.no;showFind();drawHl()}).addTo(FD.grp);
@@ -2059,14 +2056,18 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     }
     drawWires();  // after the view is set: a new map has none before, and the 11kV line would be missed
   }
-  // 11kV: one red line for all spans, in one layer, so thousands of poles stay quick.
+  // 11kV: one red line; LT: one dark cable (ABC on suspension hooks). One layer each for all spans, so thousands of
+  // poles stay quick. From zoom 17 the pole symbols stand above their points, so each wire end is lifted (screen px) to
+  // where it hangs on the symbol: LT hook 20, 11kV insulators 26, DP/TP/4-pole channel 28, DT 22. Redrawn on zoom.
+  function wireLift(n){return n.d?22:n.p.k!=='h'?20:n.p.st&&n.p.st!=='pcc'?28:26}
   function drawWires(){
     var f=curF();if(!f||!FD.map||!FD.map._loaded||!FD.hvg)return;FD.hvg.clearLayers();
-    var sp=[];
-    f.pl.forEach(function(p){var up=node(f,p.to);if(up&&p.k==='h')sp.push([[p.lat,p.lng],nodeLL(up)])});
-    f.dts.forEach(function(d){var up=node(f,d.to);if(up)sp.push([[d.lat,d.lng],nodeLL(up)])});
-    if(!sp.length)return;
-    L.polyline(sp,{color:tok('--p1')||'red',weight:4,opacity:.95,interactive:false,phase:'H'}).addTo(FD.hvg);
+    var m=FD.map,up=m.getZoom()>=17,hv=[],lt=[];
+    function at(n){var ll=nodeLL(n);if(!up)return ll;var q=m.latLngToLayerPoint(ll);return m.layerPointToLatLng(L.point(q.x,q.y-wireLift(n)))}
+    f.pl.forEach(function(p){var a=node(f,p.to);if(a)(p.k==='h'?hv:lt).push([at(node(f,p.id)),at(a)])});
+    f.dts.forEach(function(d){var a=node(f,d.to);if(a)hv.push([at(node(f,d.id)),at(a)])});
+    if(lt.length)L.polyline(lt,{color:tok('--ink')||'black',weight:4,opacity:.9,interactive:false,phase:'LT'}).addTo(FD.hvg);
+    if(hv.length)L.polyline(hv,{color:tok('--p1')||'red',weight:4,opacity:.95,interactive:false,phase:'H'}).addTo(FD.hvg);
   }
   // Pole symbols with their numbers: only when zoomed in, and only for the poles in view (at most 300), so big surveys stay quick.
   function drawLabels(){

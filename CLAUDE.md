@@ -79,7 +79,8 @@ and left out of reminders.
   Symbols (v1.44, small fixed SVG coloured by CSS tokens): `dtSym()` a transformer on its two-pole structure (always),
   `poleSym(k)` a pole with cross-arm and insulators plus its number; LT poles (v1.49, after the JE's drawing) show a short top arm, the cable on one suspension hook, on one side only (v1.50), and, when `db`, a DB box
   with its service wire (no pin insulators). 11kV spans: `drawWires()` draws one red line (the JE asked for no R/Y/B,
-  v1.49), one layer for all spans; LT is one dark cable layer. Poles have `db` (LT: DB box, checkbox in the form), counted in totals/SLD/WhatsApp — only when zoomed in (≥17) and only for poles in view (max 300). Search by pole
+  v1.49), one layer for all spans; LT is one dark cable layer. From zoom 17 (symbols shown) each wire end is lifted
+  on screen to where it hangs on its symbol (`wireLift()`: LT hook 20 px, 11kV 26, structures 28, DT 22; redrawn on zoom). Poles have `db` (LT: DB box, checkbox in the form), counted in totals/SLD/WhatsApp — only when zoomed in (≥17) and only for poles in view (max 300). Search by pole
   number (`findPole`, `showFind`): consumers, its DT via `poleDt()`, poles further down via `below()`. Deleting a pole
   joins its children to its parent. "📤 सर्वे फ़ाइल" is the feeder as JSON in a .txt (shareable on WhatsApp, photos left
   out); "📥 सर्वे फ़ाइल जोड़ें" adds it (same id: asks, then replaces, keeping this phone's DT photos).
