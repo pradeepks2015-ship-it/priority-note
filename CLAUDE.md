@@ -81,6 +81,14 @@ and left out of reminders.
   number (`findPole`, `showFind`): consumers, its DT via `poleDt()`, poles further down via `below()`. Deleting a pole
   joins its children to its parent. "📤 सर्वे फ़ाइल" is the feeder as JSON in a .txt (shareable on WhatsApp, photos left
   out); "📥 सर्वे फ़ाइल जोड़ें" adds it (same id: asks, then replaces, keeping this phone's DT photos).
+- Structures and SLD (v1.45): 11kV poles have `st` (pcc | dp | tp | 4p, `SLD_ST`), chosen in the pole form; map symbol
+  shows 1/2/3/4 poles. Survey flow: "↩️ DT से 11kV आगे" sets the next 11kV pole's parent to the tapping pole of the DT
+  last worked on; "🏁 सर्वे पूरा" sets `f.end` (field buttons hide; "↺ सर्वे फिर खोलें" reopens). `buildSld()` draws the
+  single line diagram as SVG with DOM calls (text via textContent): title block, source, 11kV line with structures and
+  "+N खंभे" for plain poles between (`sldLayout()`: shown = start, DT tap, structure, branch, end), DT taps (DO fuse +
+  two-circle transformer, kVA) with the LT sum, branch lanes, legend. Print colours `SLDC` are fixed (white paper in
+  dark mode too). "📐 SLD (PDF / प्रिंट)" prints only `#sldPrint` (A3 landscape → Save as PDF); "🖼️ SLD फोटो" draws it
+  on a canvas (≤ 8000 px wide) and shares a PNG.
 
 ## Key functions
 - `model(mode, now, who)` builds the note as blocks; `renderNote()` draws it as HTML and

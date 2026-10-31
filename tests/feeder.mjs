@@ -68,6 +68,8 @@ await page.press('#fdBy', 'Tab');
 await page.click('#fdPoleH');
 await page.waitForSelector('#plForm:not([hidden])');
 const hNo = await page.inputValue('#plNo');
+const stShown = await page.$eval('#plSt', (n) => !n.hidden);
+await page.click('#plSt [data-s="dp"]');
 await page.click('#plForm button[type=submit]');
 await page.click('#fdPoleL');
 await page.waitForSelector('#plForm:not([hidden])');
@@ -110,6 +112,22 @@ const kml2 = readFileSync(await dl2.path(), 'utf8');
 // Survey file out, and back in on the list page (same survey: asks, then replaces; a copy with a new id: added).
 const [dl3] = await Promise.all([page.waitForEvent('download'), page.click('#fdExp')]);
 const survey = readFileSync(await dl3.path(), 'utf8');
+// LT circuit done: "↩️ DT से 11kV आगे" makes the next 11kV pole continue from DT-1's tapping pole (pole 1).
+await page.click('#fdBackH');
+await page.click('#fdPoleH');
+await page.waitForSelector('#plForm:not([hidden])');
+const backTo = await page.$eval('#plTo', (s) => s.options[s.selectedIndex].text);
+await page.click('#plForm button[type=submit]');
+// End of the survey: field buttons go, status says so.
+await page.click('#fdEnd');
+const ended = await page.evaluate(() => ({ end: JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0].end, st: JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0].pl[0].st, poleBtn: document.getElementById('fdPoleH').hidden, stat: document.getElementById('fdStat').innerText, endBtn: document.getElementById('fdEnd').innerText }));
+// SLD: printed (PDF) and as a picture.
+await page.evaluate(() => { window.__printed = 0; window.print = () => { window.__printed++; window.__sld = document.getElementById('sldPrint').innerHTML; }; });
+await page.click('#fdSldPdf');
+await page.waitForFunction(() => window.__printed > 0, null, { timeout: 3000 }).catch(() => {});
+const sldSvg = await page.evaluate(() => window.__sld || '');
+const [dl4] = await Promise.all([page.waitForEvent('download'), page.click('#fdSldPng')]);
+const sldPng = { name: dl4.suggestedFilename(), size: readFileSync(await dl4.path()).length };
 const hScroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 
 // Saved: after reopening, the feeder is in the list with its length and transformer.
@@ -157,10 +175,15 @@ const checks = {
   'कुल: 1 11kV, 2 LT खंभे, 10 उपभोक्ता': sum2.includes('11kV खंभे (सर्वे) 1') && sum2.includes('LT खंभे (सर्वे) 2') && sum2.includes('खंभों पर उपभोक्ता 10'),
   'DT के नीचे उसके LT खंभे और उपभोक्ता': dtList2.includes('LT खंभे 2 · खंभों पर 10 उपभोक्ता'),
   'नक्शे पर खंभे और लाइनें': poleDots >= 3 + 3 + 1,
-  'ज़ूम पर खंभों के निशान+नंबर, दूर से नहीं; DT पर ट्रांसफार्मर का निशान': iconsNear.join(',') === '1,2,3' && iconsFar === 0 && dtSymOk === 1,
+  'ज़ूम पर खंभों के निशान+नंबर, दूर से नहीं; DT पर ट्रांसफार्मर का निशान': iconsNear.join(',') === '1 DP,2,3' && iconsFar === 0 && dtSymOk === 1,
   'WhatsApp सारांश में खंभे और सर्वे करने वाला': wa2.includes('11kV खंभे: 1 · 🔵 LT खंभे: 2 · खंभों पर उपभोक्ता: 10') && wa2.includes('सर्वे: नमूना लाइनमैन'),
   'KML में खंभे': kml2.includes('<name>खंभा 3</name>') && kml2.includes('#ll'),
   'सर्वे फ़ाइल: वही सर्वे बदला, नया जुड़ा, गलत फ़ाइल नहीं': afterSame === 1 && imported.length === 2 && imported.every((x) => x.endsWith(':3:नमूना लाइनमैन')) && listTxt2.includes('नमूना गाँव (लाइनमैन)'),
+  'खंभे की बनावट (DP) चुनी और सेव': stShown && ended.st === 'dp',
+  '"↩️ DT से 11kV आगे": अगला 11kV खंभा DT के टैप खंभे (1) से': backTo.includes('खंभा 1'),
+  '"🏁 सर्वे पूरा": खंभे वाले बटन छिपे, स्थिति में पूरा': ended.end > 0 && ended.poleBtn && ended.stat.includes('सर्वे पूरा') && ended.endBtn.includes('फिर खोलें'),
+  'SLD प्रिंट (PDF): शीर्षक, DP, DT, LT का हिसाब, संकेत': ['एकल रेखा आरेख (SLD)', 'नमूना फीडर', '(DP)', 'DT-1', 'LT: 2 खंभे', '10 उपभोक्ता', 'संकेत:', 'वितरण ट्रांसफार्मर', 'सर्वे पूरा'].every((t) => sldSvg.includes(t)),
+  'SLD फोटो (PNG) बनी': /^sld-.*\.png$/.test(sldPng.name) && sldPng.size > 5000,
   'आड़ा स्क्रॉल नहीं': !hScroll,
   'दोबारा खोलने पर फीडर सूची में': listTxt.includes('नमूना फीडर') && listTxt.includes('1 ट्रांसफार्मर') && reopened === 1,
   'फीडर हटाना (पूछकर)': gone,

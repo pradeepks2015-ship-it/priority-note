@@ -43,6 +43,11 @@ await step('फीडर नक्शा', async () => {
   await page.evaluate(() => window.__fdMap && window.__fdMap.setView([22.5002, 79.2], 18));
   await page.waitForTimeout(300);
 });
+await step('SLD', async () => {
+  await page.evaluate(() => { window.print = () => {}; });
+  await page.click('#fdSldPdf'); await page.waitForTimeout(200);
+  await Promise.all([page.waitForEvent('download', { timeout: 8000 }).catch(() => null), page.click('#fdSldPng')]);
+});
 await step('खंभा खोज', async () => { await page.fill('#plQ', '7'); await page.click('#plFind button[type=submit]'); });
 await step('खंभा फ़ॉर्म', async () => { await page.click('#plInfo button'); await page.waitForTimeout(100); await page.click('#plCancel'); });
 await step('DT फ़ॉर्म', async () => { await page.click('#dtList button:has-text("बदलें")'); await page.click('#dtCancel'); });
