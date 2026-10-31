@@ -74,7 +74,13 @@ and left out of reminders.
   Shares a WhatsApp summary with `maps.google.com/?q=` links and a KML file (Google Earth / My Maps).
 - Village / pole survey (v1.41) in the same feeder entry: `pl[]` poles `{id, no, k ('h' 11kV | 'l' LT), c (consumers on an
   LT pole), to (the pole or DT it hangs from), lat, lng, note, at}`, `dts[].to` (the 11kV pole a DT hangs from), `by`
-  (surveyor). A new pole's number is the next one; it joins the last pole of its kind (LT: the last LT pole or DT, else
+  (surveyor). Pole numbers (v1.54, the JE's scheme): 11kV `HT-1, HT-2 …`; LT `Ckt-<circuit>-<pole>` — each line leaving a DT
+  is a circuit (numbered per DT), its poles 1, 2 … in survey order, so an LT number is unique only within its DT
+  (`ltKey()`; search shows the same number under other DTs, names carry the DT via `poleFull()`). `nextNo(f,k,to)`
+  suggests the number from the kind and "किससे जुड़ा" (a pole straight from a DT starts the next circuit) and follows the
+  form until typed by hand; `canonNo()` tidies typed numbers ("ckt 1 1" → Ckt-1-1, "5" for 11kV → HT-5). `renumber()`
+  numbers a whole feeder in survey order: run once for surveys whose numbers are all plain digits (`cleanFeeder`), and by
+  "🔢 नंबर फिर से लगाएँ" (और विकल्प). A new pole joins the last pole of its kind (LT: the last LT pole or DT, else
   the nearest DT). Lines are drawn pole→`to` (11kV red, LT dark cable; 11kV pole symbols and dots are `--steel` (v1.52), not red (the plain PCC pole, class `pcc`, is
   coloured like the LT pole, v1.53, keeping its pin insulators), so they
   stand out from the line; the GPS track is a grey dashed line).
