@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WApWJtSRLaxctT8sC3Y43/avYIDmb44EnuUyjgmuNUw=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-7ccYfymoZ38ZPjXvIBKB8cVT8E6a/83ieGeXes3GLWA=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -493,7 +493,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost" type="button" id="fdSldPdf" style="flex:1 1 150px">📐 SLD (PDF / प्रिंट)</button>
             <button class="btn ghost" type="button" id="fdSldPng" style="flex:1 1 150px">🖼️ SLD फोटो</button>
           </div>
-          <p class="hint fdlegend">नक्शे पर: <b class="lg h">━ 11kV लाइन / खंभा</b> · <b class="lg l">━ LT लाइन / खंभा</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
+          <p class="hint fdlegend">नक्शे पर: <b class="lg h">☰ 11kV लाइन (3 तार) / खंभा</b> · <b class="lg l">━ LT लाइन / खंभा</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
           <details class="more" style="margin-top:12px">
             <summary>और विकल्प</summary>
             <div class="row" style="padding:10px 0">
@@ -1610,10 +1610,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.45',APP_NOTES=[
-    '🗺️ सर्वे: 11kV खंभे की बनावट (PCC पोल / DP / TP / 4-पोल) चुनें',
-    'LT खत्म होने पर "↩️ DT से 11kV आगे", आख़िर में "🏁 सर्वे पूरा"',
-    'सर्वे का SLD (एकल रेखा आरेख) मानक रूप में: PDF (प्रिंट) और फोटो'
+  var APP_V='1.46',APP_NOTES=[
+    'नक्शे पर 11kV लाइन तीन तारों जैसी; SLD में 11kV पर /// (3 तार) का निशान'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1996,8 +1994,10 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       if(FD.rec&&i===f.segs.length-1)FD.live=pl;  // the line being recorded grows in place
     });
     var red=tok('--p1')||'red',blue=tok('--accent')||'blue',ring=tok('--surface')||'white';
-    f.pl.forEach(function(p){var up=node(f,p.to);if(up)L.polyline([[p.lat,p.lng],nodeLL(up)],{color:p.k==='h'?red:blue,weight:p.k==='h'?4:3,opacity:.95}).addTo(FD.grp)});
-    f.dts.forEach(function(d){var up=node(f,d.to);if(up)L.polyline([[d.lat,d.lng],nodeLL(up)],{color:red,weight:4,opacity:.95}).addTo(FD.grp)});
+    // 11kV shows its three wires: a wide red line, a paper-coloured core, then a thin red middle line (cheap on canvas)
+    var hv=function(a,b){[[10,red],[6,ring],[2,red]].forEach(function(w){L.polyline([a,b],{color:w[1],weight:w[0],opacity:1,interactive:false}).addTo(FD.grp)})};
+    f.pl.forEach(function(p){var up=node(f,p.to);if(!up)return;if(p.k==='h')hv([p.lat,p.lng],nodeLL(up));else L.polyline([[p.lat,p.lng],nodeLL(up)],{color:blue,weight:3,opacity:.95}).addTo(FD.grp)});
+    f.dts.forEach(function(d){var up=node(f,d.to);if(up)hv([d.lat,d.lng],nodeLL(up))});
     f.pl.forEach(function(p){
       L.circleMarker([p.lat,p.lng],{radius:6,color:ring,weight:2,fillColor:p.k==='h'?red:blue,fillOpacity:1})
         .on('click',function(){FD.find=p.id;$('plQ').value=p.no;showFind();drawHl()}).addTo(FD.grp);
@@ -2351,9 +2351,11 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     if(loose.length){lane++;loose.forEach(function(d){col++;nodes.push({x:col,y:lane,dts:[d],loose:true})})}
     return {nodes:nodes,edges:edges,cols:Math.max(col,1),lanes:lane+1,roots:roots.length};
   }
+  // Three short slashes across a line: the usual SLD mark for three conductors (3-phase, 3 wires).
+  function sldTicks(el,x,y){for(var i=-1;i<=1;i++)el('line',{x1:x+i*7-5,y1:y+8,x2:x+i*7+5,y2:y-8,stroke:SLDC.hv,'stroke-width':2})}
   function buildSld(f){
     var NS='http://www.w3.org/2000/svg',lay=sldLayout(f),t=fdTotals(f);
-    var CW=120,LH=230,ML=150,MT=190,W=Math.max(ML+lay.cols*CW+150,900),H=MT+lay.lanes*LH+150;
+    var CW=120,LH=230,ML=150,MT=190,W=Math.max(ML+lay.cols*CW+150,900),H=MT+lay.lanes*LH+190;
     var svg=document.createElementNS(NS,'svg');
     svg.setAttribute('xmlns',NS);svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('width',W);svg.setAttribute('height',H);
     svg.setAttribute('font-family','Hind, Noto Sans Devanagari, sans-serif');
@@ -2373,7 +2375,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       var sy=Y(first);
       el('rect',{x:24,y:sy-30,width:96,height:60,fill:SLDC.paper,stroke:SLDC.ink,'stroke-width':2});
       text(72,sy-6,'उपकेंद्र /',{size:12,bold:true});text(72,sy+12,'फीडर',{size:12,bold:true});
-      el('line',{x1:120,y1:sy,x2:X(first),y2:sy,stroke:SLDC.hv,'stroke-width':4});
+      el('line',{x1:120,y1:sy,x2:X(first),y2:sy,stroke:SLDC.hv,'stroke-width':4});sldTicks(el,150,sy);
       text((120+X(first))/2,sy+22,'11 kV',{size:12,bold:true,fill:SLDC.hv});
     }
     // 11kV spans (elbow down to a branch lane), with the plain poles counted on them
@@ -2381,6 +2383,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       var x1=X(e.a),y1=Y(e.a),x2=X(e.b),y2=Y(e.b);
       el('path',{d:'M'+x1+' '+y1+(y2!==y1?' V'+y2:'')+' H'+x2,fill:'none',stroke:SLDC.hv,'stroke-width':4});
       if(e.run)text((Math.max(x1,x2-CW)+x2)/2,y2-12,'+'+e.run+' खंभे',{size:12,fill:SLDC.mute});
+      sldTicks(el,x2-CW*.28,y2);
     });
     // structures and DT taps
     lay.nodes.forEach(function(n){
@@ -2410,17 +2413,21 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       if(n.loose)text(x,y-30,'(11kV खंभा नहीं चुना)',{size:11,fill:SLDC.mute});
     });
     if(!lay.nodes.length)text(W/2,MT+60,'सर्वे में अभी 11kV खंभे या ट्रांसफार्मर नहीं हैं।',{size:16,fill:SLDC.mute});
-    // legend
-    var ly=H-90,lx=40;el('line',{x1:20,y1:ly-30,x2:W-20,y2:ly-30,stroke:SLDC.ink,'stroke-width':1});
+    // legend: items flow left to right and wrap to a second row when the drawing is narrow
+    var ly=H-110,lx=40,row=0;el('line',{x1:20,y1:ly-30,x2:W-20,y2:ly-30,stroke:SLDC.ink,'stroke-width':1});
     text(lx,ly,'संकेत:',{size:14,bold:true,anchor:'start'});lx+=70;
-    el('line',{x1:lx,y1:ly-5,x2:lx+40,y2:ly-5,stroke:SLDC.hv,'stroke-width':4});text(lx+46,ly,'11 kV लाइन',{size:13,anchor:'start'});lx+=150;
-    el('line',{x1:lx,y1:ly-5,x2:lx+40,y2:ly-5,stroke:SLDC.lt,'stroke-width':3});text(lx+46,ly,'LT लाइन',{size:13,anchor:'start'});lx+=130;
-    el('circle',{cx:lx+6,cy:ly-5,r:5,fill:SLDC.ink});text(lx+18,ly,'PCC पोल',{size:13,anchor:'start'});lx+=110;
-    el('circle',{cx:lx,cy:ly-5,r:6,fill:'none',stroke:SLDC.ink,'stroke-width':2});el('circle',{cx:lx+12,cy:ly-5,r:6,fill:'none',stroke:SLDC.ink,'stroke-width':2});text(lx+24,ly,'DP',{size:13,anchor:'start'});lx+=70;
-    el('path',{d:'M'+(lx+8)+' '+(ly-15)+' L'+(lx+18)+' '+(ly+3)+' L'+(lx-2)+' '+(ly+3)+' Z',fill:'none',stroke:SLDC.ink,'stroke-width':2});text(lx+26,ly,'TP',{size:13,anchor:'start'});lx+=70;
-    el('rect',{x:lx,y:ly-14,width:18,height:18,fill:'none',stroke:SLDC.ink,'stroke-width':2});text(lx+26,ly,'4-पोल',{size:13,anchor:'start'});lx+=100;
-    el('circle',{cx:lx+8,cy:ly-14,r:8,fill:'none',stroke:SLDC.ink,'stroke-width':2});el('circle',{cx:lx+8,cy:ly,r:8,fill:'none',stroke:SLDC.ink,'stroke-width':2});text(lx+24,ly,'वितरण ट्रांसफार्मर',{size:13,anchor:'start'});lx+=170;
-    el('rect',{x:lx,y:ly-15,width:10,height:16,fill:'none',stroke:SLDC.ink,'stroke-width':1.5});text(lx+16,ly,'DO फ्यूज़',{size:13,anchor:'start'});
+    [[230,function(x,y){el('line',{x1:x,y1:y-5,x2:x+40,y2:y-5,stroke:SLDC.hv,'stroke-width':4});sldTicks(el,x+20,y-5)},'11 kV लाइन (/// = 3 तार)'],
+     [130,function(x,y){el('line',{x1:x,y1:y-5,x2:x+40,y2:y-5,stroke:SLDC.lt,'stroke-width':3})},'LT लाइन'],
+     [110,function(x,y){el('circle',{cx:x+6,cy:y-5,r:5,fill:SLDC.ink})},'PCC पोल',18],
+     [70,function(x,y){el('circle',{cx:x+6,cy:y-5,r:6,fill:'none',stroke:SLDC.ink,'stroke-width':2});el('circle',{cx:x+18,cy:y-5,r:6,fill:'none',stroke:SLDC.ink,'stroke-width':2})},'DP',30],
+     [70,function(x,y){el('path',{d:'M'+(x+10)+' '+(y-15)+' L'+(x+20)+' '+(y+3)+' L'+x+' '+(y+3)+' Z',fill:'none',stroke:SLDC.ink,'stroke-width':2})},'TP',28],
+     [100,function(x,y){el('rect',{x:x,y:y-14,width:18,height:18,fill:'none',stroke:SLDC.ink,'stroke-width':2})},'4-पोल',26],
+     [170,function(x,y){el('circle',{cx:x+8,cy:y-14,r:8,fill:'none',stroke:SLDC.ink,'stroke-width':2});el('circle',{cx:x+8,cy:y,r:8,fill:'none',stroke:SLDC.ink,'stroke-width':2})},'वितरण ट्रांसफार्मर',24],
+     [110,function(x,y){el('rect',{x:x,y:y-15,width:10,height:16,fill:'none',stroke:SLDC.ink,'stroke-width':1.5})},'DO फ्यूज़',16]
+    ].forEach(function(it){
+      if(lx+it[0]>W-30){row++;lx=110}
+      var y=ly+row*36;it[1](lx,y);text(lx+(it[3]||46),y,it[2],{size:13,anchor:'start'});lx+=it[0];
+    });
     text(W-30,H-40,'प्राथमिकता नोट · बिना पैमाने का आरेख (not to scale)',{size:11,fill:SLDC.mute,anchor:'end'});
     return svg;
   }

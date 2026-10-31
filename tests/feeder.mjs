@@ -102,6 +102,7 @@ const poleDots = await page.evaluate(() => { let n = 0; window.__fdMap.eachLayer
 await page.evaluate(() => window.__fdMap.setView([22.5 + 5 * 0.00027, 79.2], 18));
 await page.waitForTimeout(400);
 const iconsNear = await page.$$eval('#fdMap .plico', (e) => e.map((x) => x.innerText.trim()).sort());
+const wires = await page.evaluate(() => { const w = {}; window.__fdMap.eachLayer((l) => { if (l instanceof L.Polyline && !(l instanceof L.Polygon) && l.options.interactive === false) w[l.options.weight] = (w[l.options.weight] || 0) + 1; }); return w; });
 await page.evaluate(() => window.__fdMap.setZoom(14));
 await page.waitForTimeout(400);
 const iconsFar = await page.$$eval('#fdMap .plico', (e) => e.length);
@@ -183,6 +184,8 @@ const checks = {
   '"↩️ DT से 11kV आगे": अगला 11kV खंभा DT के टैप खंभे (1) से': backTo.includes('खंभा 1'),
   '"🏁 सर्वे पूरा": खंभे वाले बटन छिपे, स्थिति में पूरा': ended.end > 0 && ended.poleBtn && ended.stat.includes('सर्वे पूरा') && ended.endBtn.includes('फिर खोलें'),
   'SLD प्रिंट (PDF): शीर्षक, DP, DT, LT का हिसाब, संकेत': ['एकल रेखा आरेख (SLD)', 'नमूना फीडर', '(DP)', 'DT-1', 'LT: 2 खंभे', '10 उपभोक्ता', 'संकेत:', 'वितरण ट्रांसफार्मर', 'सर्वे पूरा'].every((t) => sldSvg.includes(t)),
+  '11kV लाइन नक्शे पर तीन तारों में (हर कड़ी 3 परत)': wires[10] >= 1 && wires[10] === wires[6] && wires[6] === wires[2],
+  'SLD में 11kV पर /// (3 तार) का निशान': sldSvg.includes('3 तार'),
   'SLD फोटो (PNG) बनी': /^sld-.*\.png$/.test(sldPng.name) && sldPng.size > 5000,
   'आड़ा स्क्रॉल नहीं': !hScroll,
   'दोबारा खोलने पर फीडर सूची में': listTxt.includes('नमूना फीडर') && listTxt.includes('1 ट्रांसफार्मर') && reopened === 1,

@@ -77,7 +77,7 @@ and left out of reminders.
   (surveyor). A new pole's number is the next one; it joins the last pole of its kind (LT: the last LT pole or DT, else
   the nearest DT). Lines are drawn pole→`to` (11kV red, LT blue; the GPS track is a grey dashed line).
   Symbols (v1.44, small fixed SVG coloured by CSS tokens): `dtSym()` a transformer on its two-pole structure (always),
-  `poleSym(k)` a pole with cross-arm and insulators plus its number — only when zoomed in (≥17) and only for poles in view (max 300). Search by pole
+  `poleSym(k)` a pole with cross-arm and insulators plus its number; 11kV spans are drawn as three wires (red 10 px, paper 6 px, red 2 px, non-interactive) — only when zoomed in (≥17) and only for poles in view (max 300). Search by pole
   number (`findPole`, `showFind`): consumers, its DT via `poleDt()`, poles further down via `below()`. Deleting a pole
   joins its children to its parent. "📤 सर्वे फ़ाइल" is the feeder as JSON in a .txt (shareable on WhatsApp, photos left
   out); "📥 सर्वे फ़ाइल जोड़ें" adds it (same id: asks, then replaces, keeping this phone's DT photos).
@@ -86,7 +86,7 @@ and left out of reminders.
   last worked on; "🏁 सर्वे पूरा" sets `f.end` (field buttons hide; "↺ सर्वे फिर खोलें" reopens). `buildSld()` draws the
   single line diagram as SVG with DOM calls (text via textContent): title block, source, 11kV line with structures and
   "+N खंभे" for plain poles between (`sldLayout()`: shown = start, DT tap, structure, branch, end), DT taps (DO fuse +
-  two-circle transformer, kVA) with the LT sum, branch lanes, legend. Print colours `SLDC` are fixed (white paper in
+  two-circle transformer, kVA) with the LT sum, branch lanes, `///` on each 11kV span (3 wires, `sldTicks`), legend (wraps). Print colours `SLDC` are fixed (white paper in
   dark mode too). "📐 SLD (PDF / प्रिंट)" prints only `#sldPrint` (A3 landscape → Save as PDF); "🖼️ SLD फोटो" draws it
   on a canvas (≤ 8000 px wide) and shares a PNG.
 
