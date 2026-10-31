@@ -37,7 +37,7 @@ const len = await page.evaluate(() => {
   f.segs.forEach((s) => { for (let i = 1; i < s.length; i++) { const a = s[i - 1], b = s[i]; const h = Math.sin((b[0] - a[0]) * r / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin((b[1] - a[1]) * r / 2) ** 2; m += 2 * R * Math.asin(Math.sqrt(h)); } });
   return { m, pts: f.segs.flat().length };
 });
-const lineDrawn = await page.$$eval('#fdMap path.leaflet-interactive', (p) => p.length);
+const lineDrawn = await page.evaluate(() => { let n = 0; window.__fdMap.eachLayer((l) => { if (l instanceof L.Path && !(l instanceof L.CircleMarker && l.options.fill === false)) n++; }); return n; });
 
 // Mark a transformer here, with details and a photo.
 await page.click('#fdDt');
@@ -93,7 +93,7 @@ await page.click('#plFind button[type=submit]');
 const find99 = await page.$eval('#plInfo', (n) => n.hidden);
 const sum2 = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
 const dtList2 = await page.$eval('#dtList', (n) => n.innerText);
-const poleDots = await page.$$eval('#fdMap path.leaflet-interactive', (p) => p.length);
+const poleDots = await page.evaluate(() => { let n = 0; window.__fdMap.eachLayer((l) => { if (l instanceof L.Path && !(l instanceof L.CircleMarker && l.options.fill === false)) n++; }); return n; });
 const wa2 = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
 const kml2 = readFileSync(await dl2.path(), 'utf8');

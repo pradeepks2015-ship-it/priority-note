@@ -119,7 +119,6 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .plinfo{border:1.5px solid var(--accent);border-radius:12px;padding:10px 12px;margin-top:8px;line-height:1.5}
 .plinfo b{font-size:17px}
 .leaflet-tooltip.pltip{background:var(--surface);color:var(--ink);border:1px solid var(--line);font:700 12px var(--f-ui);padding:0 4px;box-shadow:none}
-.fdfar .pltip{display:none}
 .fdlegend .lg{font-weight:700}.fdlegend .lg.h{color:var(--p1)}.fdlegend .lg.l{color:var(--accent)}.fdlegend .lg.w{color:var(--muted)}
 .dtico svg{background:var(--surface);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
 .dtico span{position:absolute;left:50%;top:26px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
@@ -1585,10 +1584,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.41',APP_NOTES=[
-    '🗺️ फीडर / गाँव सर्वे: मौके पर "🔴 11kV खंभा" या "🔵 LT खंभा" दबाएँ; नंबर अपने-आप, लाइन पिछले खंभे से जुड़ती जाती है',
-    'LT खंभे पर जुड़े उपभोक्ता लिखें; खंभा नंबर से खोजें: उपभोक्ता, किस ट्रांसफार्मर से, आगे कितने खंभे',
-    'लाइनमैन अपने फ़ोन से "📤 सर्वे फ़ाइल" भेजे, आप "📥 सर्वे फ़ाइल जोड़ें" से लें'
+  var APP_V='1.42',APP_NOTES=[
+    'बड़े सर्वे (हज़ारों खंभे) में भी नक्शा और खंभा-खोज तेज़'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1808,32 +1805,36 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     t.poles=f.poles||poleEst(f);t.est=!f.poles;return t;
   }
   /* the network: each pole hangs from a pole or a DT (p.to); a DT hangs from an 11kV pole (d.to) */
-  function node(f,id){
-    if(!id)return null;
-    for(var i=0;i<f.pl.length;i++)if(f.pl[i].id===id)return {p:f.pl[i]};
-    for(var j=0;j<f.dts.length;j++)if(f.dts[j].id===id)return {d:f.dts[j]};
-    return null;
+  // One pass over the survey: id → pole/DT, the poles hanging from each, and each LT pole's DT and distance from it.
+  // Rebuilt only when the survey changes (every change is saved, which moves S._t), so thousands of poles stay quick.
+  function net(f){
+    var v=S._t+'|'+f.pl.length+'|'+f.dts.length;
+    if(FD.net&&FD.net.f===f&&FD.net.v===v)return FD.net;
+    var X={f:f,v:v,by:{},kids:{},dt:{},hops:{}};
+    f.dts.forEach(function(d){X.by[d.id]={d:d}});
+    f.pl.forEach(function(p){X.by[p.id]={p:p};(X.kids[p.to]=X.kids[p.to]||[]).push(p)});
+    f.dts.forEach(function(d){
+      var q=(X.kids[d.id]||[]).filter(function(p){return p.k==='l'}).map(function(p){return [p,0]});
+      while(q.length){var e=q.shift(),p=e[0];if(X.dt[p.id])continue;X.dt[p.id]=d;X.hops[p.id]=e[1];
+        (X.kids[p.id]||[]).forEach(function(c){if(c.k==='l'&&!X.dt[c.id])q.push([c,e[1]+1])})}
+    });
+    return (FD.net=X);
   }
+  function node(f,id){return id?net(f).by[id]||null:null}
   function nodeLL(n){var o=n.p||n.d;return [o.lat,o.lng]}
   function poleName(p){return 'खंभा '+(p.no||'?')}
-  // The DT an LT pole is fed from, and how many poles lie between (walking up the line).
-  function poleDt(f,p){
-    var seen={},hops=0,cur=p;
-    while(cur&&!seen[cur.id]&&hops<500){
-      seen[cur.id]=1;var up=node(f,cur.to);if(!up)return null;
-      if(up.d)return {d:up.d,hops:hops};
-      if(up.p.k==='h')return null;
-      cur=up.p;hops++;
-    }
-    return null;
-  }
+  // The DT an LT pole is fed from, and how many poles lie between.
+  function poleDt(f,p){var X=net(f),d=X.dt[p.id];return d?{d:d,hops:X.hops[p.id]}:null}
   // Poles further down the line from a pole or DT, with their consumers.
   function below(f,id){
-    var r={n:0,c:0},seen={};seen[id]=1;
-    (function walk(pid){f.pl.forEach(function(q){if(q.to===pid&&!seen[q.id]){seen[q.id]=1;r.n++;r.c+=q.k==='l'?q.c:0;walk(q.id)}})})(id);
+    var X=net(f),r={n:0,c:0},seen={},st=[id];seen[id]=1;
+    while(st.length){(X.kids[st.pop()]||[]).forEach(function(q){if(!seen[q.id]){seen[q.id]=1;r.n++;r.c+=q.k==='l'?q.c:0;st.push(q.id)}})}
     return r;
   }
-  function dtPoles(f,d){var n=0,c=0;f.pl.forEach(function(p){if(p.k!=='l')return;var u=poleDt(f,p);if(u&&u.d===d){n++;c+=p.c}});return {n:n,c:c}}
+  function dtPoles(f,d){
+    var X=net(f);if(!X.per){X.per={};f.pl.forEach(function(p){var x=X.dt[p.id];if(x){var a=X.per[x.id]=X.per[x.id]||{n:0,c:0};a.n++;a.c+=p.c}})}
+    return X.per[d.id]||{n:0,c:0};
+  }
   function nextNo(f){var m=0;f.pl.forEach(function(p){var v=parseInt(p.no,10);if(v>m)m=v});return String(m+1)}
   function findPole(f,q){q=String(q||'').trim().toLowerCase();if(!q)return null;for(var i=0;i<f.pl.length;i++)if(f.pl[i].no.toLowerCase()===q)return f.pl[i];return null}
   function dtSym(){return '<svg class="dtsym" viewBox="0 0 36 24" width="36" height="24" aria-hidden="true"><circle cx="13" cy="12" r="8"/><circle cx="23" cy="12" r="8"/></svg>'}
@@ -1914,13 +1915,15 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   function drawMap(){
     var f=curF();if(!f||!window.L)return;
     if(!FD.map){
-      FD.map=L.map('fdMap',{zoomControl:true,attributionControl:true});
+      FD.map=L.map('fdMap',{zoomControl:true,attributionControl:true,preferCanvas:true});
+      FD.lbl=L.layerGroup();FD.hl=L.layerGroup();
+      window.__fdMap=FD.map;  // lets tests count what is drawn on the canvas
       FD.tiles.map=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
       FD.tiles.sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'});
       FD.grp=L.layerGroup().addTo(FD.map);
       FD.map.on('dragstart',function(){FD.follow=false});
       // pole numbers only when zoomed in, so the map stays readable
-      var far=function(){FD.map.getContainer().classList.toggle('fdfar',FD.map.getZoom()<17)};FD.map.on('zoomend',far);FD.map.whenReady(far);
+      FD.map.on('moveend',drawLabels);FD.lbl.addTo(FD.map);FD.hl.addTo(FD.map);
       setBase('map');
     }
     setTimeout(function(){FD.map.invalidateSize()},50);
@@ -1943,23 +1946,35 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     f.pl.forEach(function(p){var up=node(f,p.to);if(up)L.polyline([[p.lat,p.lng],nodeLL(up)],{color:p.k==='h'?red:blue,weight:p.k==='h'?4:3,opacity:.95}).addTo(FD.grp)});
     f.dts.forEach(function(d){var up=node(f,d.to);if(up)L.polyline([[d.lat,d.lng],nodeLL(up)],{color:red,weight:4,opacity:.95}).addTo(FD.grp)});
     f.pl.forEach(function(p){
-      var hit=FD.find===p.id;
-      L.circleMarker([p.lat,p.lng],{radius:hit?10:6,color:hit?INK:ring,weight:hit?3:2,fillColor:p.k==='h'?red:blue,fillOpacity:1})
-        .bindTooltip(p.no||'?',{permanent:true,direction:'top',offset:[0,-6],className:'pltip'})
-        .on('click',function(){FD.find=p.id;$('plQ').value=p.no;showFind();drawLayers(false)}).addTo(FD.grp);
+      L.circleMarker([p.lat,p.lng],{radius:6,color:ring,weight:2,fillColor:p.k==='h'?red:blue,fillOpacity:1})
+        .on('click',function(){FD.find=p.id;$('plQ').value=p.no;showFind();drawHl()}).addTo(FD.grp);
       all.push([p.lat,p.lng]);
     });
+    drawHl();
     f.dts.forEach(function(d){
       var ic=L.divIcon({className:'dtico',html:dtSym()+'<span>'+xmlEsc(d.n||'DT')+'</span>',iconSize:[36,24],iconAnchor:[18,12]});
       L.marker([d.lat,d.lng],{icon:ic,title:d.n||'DT'}).on('click',function(){openDt(d)}).addTo(FD.grp);
       all.push([d.lat,d.lng]);
     });
-    drawMe();
+    drawMe();drawLabels();
     if(!fit)return;
     if(all.length>1)FD.map.fitBounds(all,{padding:[30,30],maxZoom:17});
     else if(all.length)FD.map.setView(all[0],16);
     else if(FD.fix)FD.map.setView([FD.fix.lat,FD.fix.lng],16);
     else FD.map.setView([22.5,79.2],8);
+  }
+  // Pole numbers: only when zoomed in, and only for the poles in view (at most 300), so big surveys stay quick.
+  function drawLabels(){
+    var f=curF();if(!f||!FD.map||!FD.map._loaded)return;FD.lbl.clearLayers();  // not before the map has a view
+    if(FD.map.getZoom()<17)return;
+    var bd=FD.map.getBounds(),n=0;
+    for(var i=0;i<f.pl.length&&n<300;i++){var p=f.pl[i];if(!bd.contains([p.lat,p.lng]))continue;n++;
+      L.tooltip({permanent:true,direction:'top',offset:[0,-6],className:'pltip'}).setLatLng([p.lat,p.lng]).setContent(xmlEsc(p.no||'?')).addTo(FD.lbl)}
+  }
+  // The searched pole gets a ring of its own layer, so searching does not redraw the whole map.
+  function drawHl(){
+    if(!FD.map)return;FD.hl.clearLayers();var f=curF(),p=f&&FD.find?node(f,FD.find):null;
+    if(p&&p.p)L.circleMarker([p.p.lat,p.p.lng],{radius:12,color:INK,weight:3,fill:false}).addTo(FD.hl);
   }
   function drawMe(){
     if(!FD.map||!FD.fix)return;
@@ -2198,7 +2213,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   }
   function doFind(fly){
     var f=curF();if(!f)return;var q=$('plQ').value.trim(),p=findPole(f,q);
-    FD.find=p?p.id:'';showFind();drawLayers(false);
+    FD.find=p?p.id:'';showFind();drawHl();
     if(p&&fly&&FD.map){FD.follow=false;FD.map.setView([p.lat,p.lng],Math.max(FD.map.getZoom(),18))}
     if(!p&&fly&&q)toast('खंभा '+q+' नहीं मिला');
   }

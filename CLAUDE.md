@@ -88,6 +88,13 @@ and left out of reminders.
   lightbox steps through a task's screenshots with ‹ › or a swipe (`openImg(ids, i)`).
 
 ## Conventions
+- **Free and fast, always (user's standing rule, esp. the survey).** No paid service, no API key, nothing billed per use:
+  free map tiles (OpenStreetMap / Esri) with attribution, Leaflet kept in `lib/`, Firebase only within its free quota.
+  Check speed with a big survey (thousands of poles) before shipping map work: the map uses the canvas renderer
+  (`preferCanvas`), pole numbers are drawn only for poles in view when zoomed in (`drawLabels`, max 300), the network is
+  indexed once per change (`net()`), and search only moves the highlight ring (`drawHl`), not the whole map.
+  (v1.42: 1500 poles open in ~0.2 s, search ~0.04 s; 5000 poles ~0.4 s.) The whole state is one Firestore document
+  (1 MB limit): about 5000 poles is ~420 KB, so very large surveys may need their own documents later.
 - All UI text is Hindi (Devanagari). Keep it plain, short and in office vocabulary.
 - Phone-first: test at 400px width; no horizontal scroll.
 - Colours are CSS tokens on `:root` with dark-mode overrides; don't hard-code colours in components.
