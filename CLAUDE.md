@@ -84,7 +84,10 @@ and left out of reminders.
   joins its children to its parent. "📤 सर्वे फ़ाइल" is the feeder as JSON in a .txt (shareable on WhatsApp, photos left
   out); "📥 सर्वे फ़ाइल जोड़ें" adds it (same id: asks, then replaces, keeping this phone's DT photos).
 - Structures and SLD (v1.45): 11kV poles have `st` (pcc | dp | tp | 4p, `SLD_ST`), chosen in the pole form; map symbol
-  shows 1/2/3/4 poles. Survey flow: "↩️ DT से 11kV आगे" sets the next 11kV pole's parent to the tapping pole of the DT
+  (`strSym()`, v1.48, after the JE's DP drawing): H-beam poles, guarding channel with disc insulators, a second channel with
+  pin insulators, belts and X-bracing (4-pole two pairs). TP (`tpSym()`, after the JE's photo) is three poles in an L that
+  turns the line through 90°: two channels at a right angle, each with disc insulators and its own face of bracing. Its CSS class is `str` — `.st` is the app's round
+  status-button style. Survey flow: "↩️ DT से 11kV आगे" sets the next 11kV pole's parent to the tapping pole of the DT
   last worked on; "🏁 सर्वे पूरा" sets `f.end` (field buttons hide; "↺ सर्वे फिर खोलें" reopens). `buildSld()` draws the
   single line diagram as SVG with DOM calls (text via textContent): title block, source, 11kV line with structures and
   "+N खंभे" for plain poles between (`sldLayout()`: shown = start, DT tap, structure, branch, end), DT taps (DO fuse +
