@@ -60,18 +60,68 @@ const sum = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
 const wa = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
 const kml = readFileSync(await dl.path(), 'utf8');
+// Village survey: an 11kV pole, then two LT poles fed from the DT; the line joins up by itself.
+await page.fill('#fdBy', 'नमूना लाइनमैन');
+await page.press('#fdBy', 'Tab');
+await page.click('#fdPoleH');
+await page.waitForSelector('#plForm:not([hidden])');
+const hNo = await page.inputValue('#plNo');
+await page.click('#plForm button[type=submit]');
+await page.click('#fdPoleL');
+await page.waitForSelector('#plForm:not([hidden])');
+const lTo1 = await page.$eval('#plTo', (s) => s.options[s.selectedIndex].text);
+await page.fill('#plC', '6');
+await page.click('#plForm button[type=submit]');
+await page.click('#fdPoleL');
+await page.waitForSelector('#plForm:not([hidden])');
+const lNo2 = await page.inputValue('#plNo');
+const lTo2 = await page.$eval('#plTo', (s) => s.options[s.selectedIndex].text);
+await page.fill('#plC', '4');
+await page.click('#plForm button[type=submit]');
+// The DT hangs from the 11kV pole.
+await page.click('#dtList [aria-label="बदलें: DT-1"]');
+await page.selectOption('#dtTo', { label: '🔴 खंभा 1' });
+await page.click('#dtForm button[type=submit]');
+// Pole number search.
+await page.fill('#plQ', '3');
+await page.click('#plFind button[type=submit]');
+const find3 = await page.$eval('#plInfo', (n) => n.innerText);
+await page.fill('#plQ', '2');
+const find2 = await page.$eval('#plInfo', (n) => n.innerText);
+await page.fill('#plQ', '99');
+await page.click('#plFind button[type=submit]');
+const find99 = await page.$eval('#plInfo', (n) => n.hidden);
+const sum2 = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
+const dtList2 = await page.$eval('#dtList', (n) => n.innerText);
+const poleDots = await page.$$eval('#fdMap path.leaflet-interactive', (p) => p.length);
+const wa2 = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
+const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
+const kml2 = readFileSync(await dl2.path(), 'utf8');
+// Survey file out, and back in on the list page (same survey: asks, then replaces; a copy with a new id: added).
+const [dl3] = await Promise.all([page.waitForEvent('download'), page.click('#fdExp')]);
+const survey = readFileSync(await dl3.path(), 'utf8');
 const hScroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 
 // Saved: after reopening, the feeder is in the list with its length and transformer.
 await page.reload();
 await page.click('#tab-feeder');
 const listTxt = await page.$eval('#fdItems', (n) => n.innerText);
+await page.setInputFiles('#fdImp', { name: 'survey.txt', mimeType: 'text/plain', buffer: Buffer.from(survey) });
+await page.waitForTimeout(300);
+const afterSame = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.length);
+const other = JSON.parse(survey); other.f.id = 'copy1'; other.f.n = 'नमूना गाँव (लाइनमैन)';
+await page.setInputFiles('#fdImp', { name: 'survey2.txt', mimeType: 'text/plain', buffer: Buffer.from(JSON.stringify(other)) });
+await page.waitForTimeout(300);
+const imported = await page.evaluate(() => { const F = JSON.parse(localStorage.getItem('priority-note-v2')).feeders; return F.map((f) => f.n + ':' + f.pl.length + ':' + f.by); });
+await page.setInputFiles('#fdImp', { name: 'bad.txt', mimeType: 'text/plain', buffer: Buffer.from('hello') });
+await page.waitForTimeout(200);
+const listTxt2 = await page.$eval('#fdItems', (n) => n.innerText);
 await page.click('#fdItems [aria-label="खोलें: नमूना फीडर"]');
 await page.waitForSelector('#fdMap .dtico', { timeout: 8000 }).catch(() => {});
 const reopened = await page.$$eval('#fdMap .dtico', (m) => m.length);
 await page.click('text=और विकल्प');
 await page.click('#fdDelete');
-const gone = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.length === 0);
+const gone = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.length === 1);
 
 await browser.close();
 const checks = {
@@ -86,9 +136,20 @@ const checks = {
   'ट्रांसफार्मर की फोटो': dtThumb === 1,
   'नक्शे पर ट्रांसफार्मर का निशान': dtMarker.length === 1 && dtMarker[0].includes('DT-1'),
   'खंभों का अनुमान (150 मी. → लगभग 3)': poleHint === 'लगभग 3',
-  'सारांश में लिखे खंभे और कुल': sum.includes('खंभे 7') && sum.includes('उपभोक्ता 45') && sum.includes('63 kVA'),
-  'WhatsApp सारांश में लंबाई और नक्शे का लिंक': wa.includes('फीडर: नमूना फीडर') && /लंबाई \(GPS से\): 1[45]\d मी\./.test(wa) && wa.includes('https://maps.google.com/?q=22.50') && wa.includes('खंभे: 7'),
+  'सारांश में लिखे खंभे और कुल': sum.includes('खंभे 7') && sum.includes('उपभोक्ता (DT पर लिखे) 45') && sum.includes('63 kVA'),
+  'WhatsApp सारांश में लंबाई और नक्शे का लिंक': wa.includes('*नमूना फीडर*') && /लंबाई \(GPS से\): 1[45]\d मी\./.test(wa) && wa.includes('https://maps.google.com/?q=22.50') && wa.includes('खंभे: 7'),
   'KML फ़ाइल में रास्ता और DT': kml.includes('<LineString>') && kml.includes('<name>DT-1</name>') && kml.includes('79.2,22.5'),
+  'खंभा नंबर अपने-आप 1, 2, 3': hNo === '1' && lNo2 === '3',
+  'LT खंभा पहले DT से, फिर पिछले LT खंभे से जुड़े': lTo1.includes('DT-1') && lTo2.includes('खंभा 2'),
+  'खंभा 3 खोजने पर: 4 उपभोक्ता, DT-1, बीच में 1 खंभा': find3.includes('खंभा 3') && find3.includes('उपभोक्ता: 4') && find3.includes('DT-1') && find3.includes('बीच में 1 खंभे'),
+  'खंभा 2: आगे 1 खंभा (4 उपभोक्ता)': find2.includes('उपभोक्ता: 6') && find2.includes('आगे जुड़े खंभे: 1 (उन पर 4 उपभोक्ता)'),
+  'न मिला नंबर: कुछ न दिखे': find99,
+  'कुल: 1 11kV, 2 LT खंभे, 10 उपभोक्ता': sum2.includes('11kV खंभे (सर्वे) 1') && sum2.includes('LT खंभे (सर्वे) 2') && sum2.includes('खंभों पर उपभोक्ता 10'),
+  'DT के नीचे उसके LT खंभे और उपभोक्ता': dtList2.includes('LT खंभे 2 · खंभों पर 10 उपभोक्ता'),
+  'नक्शे पर खंभे और लाइनें': poleDots >= 3 + 3 + 1,
+  'WhatsApp सारांश में खंभे और सर्वे करने वाला': wa2.includes('11kV खंभे: 1 · 🔵 LT खंभे: 2 · खंभों पर उपभोक्ता: 10') && wa2.includes('सर्वे: नमूना लाइनमैन'),
+  'KML में खंभे': kml2.includes('<name>खंभा 3</name>') && kml2.includes('#ll'),
+  'सर्वे फ़ाइल: वही सर्वे बदला, नया जुड़ा, गलत फ़ाइल नहीं': afterSame === 1 && imported.length === 2 && imported.every((x) => x.endsWith(':3:नमूना लाइनमैन')) && listTxt2.includes('नमूना गाँव (लाइनमैन)'),
   'आड़ा स्क्रॉल नहीं': !hScroll,
   'दोबारा खोलने पर फीडर सूची में': listTxt.includes('नमूना फीडर') && listTxt.includes('1 ट्रांसफार्मर') && reopened === 1,
   'फीडर हटाना (पूछकर)': gone,

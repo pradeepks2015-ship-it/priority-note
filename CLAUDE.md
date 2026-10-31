@@ -68,6 +68,13 @@ and left out of reminders.
   GPS (`watchPosition`) adds a point only if accuracy ≤ 35 m, ≥ 8 m from the last and < 45 m/s (bike-speed jumps are
   noise). Screen wake lock while recording; a web page cannot record with the phone locked. DT photos stay on the phone.
   Shares a WhatsApp summary with `maps.google.com/?q=` links and a KML file (Google Earth / My Maps).
+- Village / pole survey (v1.41) in the same feeder entry: `pl[]` poles `{id, no, k ('h' 11kV | 'l' LT), c (consumers on an
+  LT pole), to (the pole or DT it hangs from), lat, lng, note, at}`, `dts[].to` (the 11kV pole a DT hangs from), `by`
+  (surveyor). A new pole's number is the next one; it joins the last pole of its kind (LT: the last LT pole or DT, else
+  the nearest DT). Lines are drawn pole→`to` (11kV red, LT blue; the GPS track is a grey dashed line). Search by pole
+  number (`findPole`, `showFind`): consumers, its DT via `poleDt()`, poles further down via `below()`. Deleting a pole
+  joins its children to its parent. "📤 सर्वे फ़ाइल" is the feeder as JSON in a .txt (shareable on WhatsApp, photos left
+  out); "📥 सर्वे फ़ाइल जोड़ें" adds it (same id: asks, then replaces, keeping this phone's DT photos).
 
 ## Key functions
 - `model(mode, now, who)` builds the note as blocks; `renderNote()` draws it as HTML and
@@ -105,7 +112,7 @@ every push (`.github/workflows/smoke.yml`). Locally: `python3 -m http.server 808
 `node tests/smoke.mjs` (set `CHROMIUM_PATH` to use an installed Chromium). `tests/cloud.mjs` checks the
 online backup and push tokens across several "phones" with a stand-in Firebase (no real login needed);
 `tests/notify.mjs` checks the reminder text and the 9–6 window. `tests/feeder.mjs` walks a stand-in GPS along a feeder
-(length, skipped bad fixes, DT with photo, summary, KML). Update its checks when
+(length, skipped bad fixes, DT with photo, summary, KML, poles and pole search, survey file in/out). Update its checks when
 the note text changes.
 
 ## Planned next steps
