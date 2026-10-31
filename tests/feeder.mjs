@@ -102,10 +102,13 @@ const poleDots = await page.evaluate(() => { let n = 0; window.__fdMap.eachLayer
 await page.evaluate(() => window.__fdMap.setView([22.5 + 5 * 0.00027, 79.2], 18));
 await page.waitForTimeout(400);
 const iconsNear = await page.$$eval('#fdMap .plico', (e) => e.map((x) => x.innerText.trim()).sort());
-const wires = await page.evaluate(() => { const w = {}; window.__fdMap.eachLayer((l) => { if (l instanceof L.Polyline && !(l instanceof L.Polygon) && l.options.interactive === false) w[l.options.weight] = (w[l.options.weight] || 0) + 1; }); return w; });
+const dbIcons = await page.$$eval('#fdMap .plico svg .db', (e) => e.length);
+const phases = () => page.evaluate(() => { const w = []; window.__fdMap.eachLayer((l) => { if (l.options && l.options.phase) w.push(l.options.phase); }); return w.sort().join(','); });
+const wiresNear = await phases();
 await page.evaluate(() => window.__fdMap.setZoom(14));
 await page.waitForTimeout(400);
 const iconsFar = await page.$$eval('#fdMap .plico', (e) => e.length);
+const wiresFar = await phases();
 const dtSymOk = await page.$$eval('#fdMap .dtico svg.dtsym .tk', (e) => e.length);
 const wa2 = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
@@ -170,22 +173,22 @@ const checks = {
   'KML फ़ाइल में रास्ता और DT': kml.includes('<LineString>') && kml.includes('<name>DT-1</name>') && kml.includes('79.2,22.5'),
   'खंभा नंबर अपने-आप 1, 2, 3': hNo === '1' && lNo2 === '3',
   'LT खंभा पहले DT से, फिर पिछले LT खंभे से जुड़े': lTo1.includes('DT-1') && lTo2.includes('खंभा 2'),
-  'खंभा 3 खोजने पर: 4 उपभोक्ता, DT-1, बीच में 1 खंभा': find3.includes('खंभा 3') && find3.includes('उपभोक्ता: 4') && find3.includes('DT-1') && find3.includes('बीच में 1 खंभे'),
+  'खंभा 3 खोजने पर: 4 उपभोक्ता, DT-1, बीच में 1 खंभा, DB बॉक्स': find3.includes('DB बॉक्स: लगा है') && find3.includes('खंभा 3') && find3.includes('उपभोक्ता: 4') && find3.includes('DT-1') && find3.includes('बीच में 1 खंभे'),
   'खंभा 2: आगे 1 खंभा (4 उपभोक्ता)': find2.includes('उपभोक्ता: 6') && find2.includes('आगे जुड़े खंभे: 1 (उन पर 4 उपभोक्ता)'),
   'न मिला नंबर: कुछ न दिखे': find99,
-  'कुल: 1 11kV, 2 LT खंभे, 10 उपभोक्ता': sum2.includes('11kV खंभे (सर्वे) 1') && sum2.includes('LT खंभे (सर्वे) 2') && sum2.includes('खंभों पर उपभोक्ता 10'),
+  'कुल: 1 11kV, 2 LT खंभे, 10 उपभोक्ता, 2 DB बॉक्स': sum2.includes('11kV खंभे (सर्वे) 1') && sum2.includes('LT खंभे (सर्वे) 2') && sum2.includes('खंभों पर उपभोक्ता 10') && sum2.includes('DB बॉक्स 2'),
   'DT के नीचे उसके LT खंभे और उपभोक्ता': dtList2.includes('LT खंभे 2 · खंभों पर 10 उपभोक्ता'),
   'नक्शे पर खंभे और लाइनें': poleDots >= 3 + 3 + 1,
-  'ज़ूम पर खंभों के निशान+नंबर, दूर से नहीं; DT पर ट्रांसफार्मर का निशान': iconsNear.join(',') === '1 DP,2,3' && iconsFar === 0 && dtSymOk === 1,
+  'ज़ूम पर खंभों के निशान+नंबर, दूर से नहीं; DT पर ट्रांसफार्मर का निशान; LT खंभे पर DB बॉक्स': iconsNear.join(',') === '1 DP,2,3' && iconsFar === 0 && dtSymOk === 1 && dbIcons === 2,
   'WhatsApp सारांश में खंभे और सर्वे करने वाला': wa2.includes('11kV खंभे: 1 · 🔵 LT खंभे: 2 · खंभों पर उपभोक्ता: 10') && wa2.includes('सर्वे: नमूना लाइनमैन'),
   'KML में खंभे': kml2.includes('<name>खंभा 3</name>') && kml2.includes('#ll'),
   'सर्वे फ़ाइल: वही सर्वे बदला, नया जुड़ा, गलत फ़ाइल नहीं': afterSame === 1 && imported.length === 2 && imported.every((x) => x.endsWith(':3:नमूना लाइनमैन')) && listTxt2.includes('नमूना गाँव (लाइनमैन)'),
   'खंभे की बनावट (DP) चुनी और सेव': stShown && ended.st === 'dp',
   '"↩️ DT से 11kV आगे": अगला 11kV खंभा DT के टैप खंभे (1) से': backTo.includes('खंभा 1'),
   '"🏁 सर्वे पूरा": खंभे वाले बटन छिपे, स्थिति में पूरा': ended.end > 0 && ended.poleBtn && ended.stat.includes('सर्वे पूरा') && ended.endBtn.includes('फिर खोलें'),
-  'SLD प्रिंट (PDF): शीर्षक, DP, DT, LT का हिसाब, संकेत': ['एकल रेखा आरेख (SLD)', 'नमूना फीडर', '(DP)', 'DT-1', 'LT: 2 खंभे', '10 उपभोक्ता', 'संकेत:', 'वितरण ट्रांसफार्मर', 'सर्वे पूरा'].every((t) => sldSvg.includes(t)),
-  '11kV लाइन नक्शे पर तीन तारों में (हर कड़ी 3 परत)': wires[10] >= 1 && wires[10] === wires[6] && wires[6] === wires[2],
-  'SLD में 11kV पर /// (3 तार) का निशान': sldSvg.includes('3 तार'),
+  'SLD प्रिंट (PDF): शीर्षक, DP, DT, LT का हिसाब, संकेत': ['एकल रेखा आरेख (SLD)', 'नमूना फीडर', '(DP)', 'DT-1', 'LT केबल: 2 खंभे', '10 उपभोक्ता', 'संकेत:', 'वितरण ट्रांसफार्मर', 'सर्वे पूरा'].every((t) => sldSvg.includes(t)),
+  '11kV के तीन तार R Y B (ज़ूम पर), दूर से एक लाल; LT केबल अलग': wiresNear === 'B,LT,R,Y' && wiresFar === 'H,LT',
+  'SLD में R Y B तीन तार, LT केबल, DB बॉक्स': ['R Y B तीन तार', 'LT केबल', 'DB 2'].every((x) => sldSvg.includes(x)),
   'SLD फोटो (PNG) बनी': /^sld-.*\.png$/.test(sldPng.name) && sldPng.size > 5000,
   'आड़ा स्क्रॉल नहीं': !hScroll,
   'दोबारा खोलने पर फीडर सूची में': listTxt.includes('नमूना फीडर') && listTxt.includes('1 ट्रांसफार्मर') && reopened === 1,
