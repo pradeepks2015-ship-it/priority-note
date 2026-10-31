@@ -110,6 +110,7 @@ await page.evaluate(() => window.__fdMap.setView([22.5 + 5 * 0.00027, 79.2], 18)
 await page.waitForTimeout(400);
 const iconsNear = await page.$$eval('#fdMap .plico', (e) => e.map((x) => x.innerText.trim()).sort());
 const dbIcons = await page.$$eval('#fdMap .plico svg .db', (e) => e.length);
+const dbWin = await page.$$eval('#fdMap .plico svg .dbw', (e) => e.length);
 // LT pole: the cable on one hook, on one side only (the JE removed the left one).
 const ltSide = await page.$$eval('#fdMap .plico svg.l', (e) => e.map((x) => [x.querySelector('.cb').getAttribute('d'), x.querySelector('.hk').getAttribute('d')].join('').split('M').length - 1));
 // The DP structure symbol: bracing drawn, and no round border from the app's other '.st' style.
@@ -129,6 +130,8 @@ const iconsFar = await page.$$eval('#fdMap .plico', (e) => e.length);
 const wiresFar = await phases();
 const liftFar = await wireTop();
 const dtSymOk = await page.$$eval('#fdMap .dtico svg.dtsym .tk', (e) => e.length);
+// DTR as in the JE's picture: two poles, bushings, tank on a plinth, fencing; 1.5× size on the map.
+const dtrPic = await page.$$eval('#fdMap .dtico svg.dtsym', (e) => e.map((x) => ({ bu: x.querySelectorAll('.bu').length, fe: x.querySelectorAll('.fe').length, w: Math.round(x.getBoundingClientRect().width) })));
 const wa2 = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
 const kml2 = readFileSync(await dl2.path(), 'utf8');
@@ -232,6 +235,8 @@ const checks = {
   'पास से केबल खंभे के हुक पर (नीचे नहीं), दूर से बिंदु पर': liftNear === 20 && liftFar === 0,
   '11kV PCC खंभा LT खंभे जैसा, पिन इंसुलेटर वही': pccLikeLt,
   '11kV खंभे का रंग लाल लाइन से अलग (स्टील)': hvColours.n > 0 && !hvColours.symRed && hvColours.dots > 0 && !hvColours.dotRed,
+  'DTR का निशान चित्र जैसा (बुशिंग, बाड़), नक्शे पर डेढ़ गुना': dtrPic.length === 1 && dtrPic[0].bu === 3 && dtrPic[0].fe === 1 && dtrPic[0].w === 66,
+  'DB बॉक्स चित्र जैसा (खिड़की वाला)': dbWin === 2,
   'DP का निशान: ब्रेसिंग और डिस्क इंसुलेटर, गोल किनारा नहीं': dpSym.length === 1 && dpSym[0].br === 1 && dpSym[0].dsc === 3 && dpSym[0].radius === '0px',
   'SLD फोटो (PNG) बनी': /^sld-.*\.png$/.test(sldPng.name) && sldPng.size > 5000,
   'आड़ा स्क्रॉल नहीं': !hScroll,
