@@ -84,7 +84,10 @@ and left out of reminders.
   the nearest DT). Lines are drawn pole→`to` (11kV red, LT dark cable; 11kV pole symbols and dots are `--steel` (v1.52), not red (the plain PCC pole, class `pcc`, is
   coloured like the LT pole, v1.53, keeping its pin insulators), so they
   stand out from the line; the GPS track is a grey dashed line).
-  Symbols (v1.44, small fixed SVG coloured by CSS tokens): `dtSym()` the DTR: transformer on its two-pole frame with a lightning mark (the JE chose it over a fenced picture, v1.57),
+  Symbols (v1.44, small fixed SVG coloured by CSS tokens): on the map `dtrMap()` the DTR after the JE's picture (two poles with insulators, 11kV drops to three bushings, tank with
+  fins on a plinth, fencing; 1.5× = 66×60 px; the 11kV tap ends on the insulators of the DTR pole facing the line, ±24 px
+  and 53 px up; LT leaves the tank, 27 px up); on the page only (search box, DTR list) the simple `dtSym()` with the
+  lightning mark (the JE, v1.58: not on the map),
   `poleSym(k)` a pole with cross-arm and insulators plus its number; LT poles (v1.49, after the JE's drawing) show a short top arm, the cable on one suspension hook, on one side only (v1.50), and, when `db`, a DB box
   (v1.56, after the JE's picture: clamped grey box with a window, cable in at the top) with its service wire (no pin insulators). 11kV spans: `drawWires()` draws one red line (the JE asked for no R/Y/B,
   v1.49), one layer for all spans; LT is one dark cable layer. From zoom 17 (symbols shown) each wire end is lifted

@@ -130,9 +130,9 @@ await page.waitForTimeout(400);
 const iconsFar = await page.$$eval('#fdMap .plico', (e) => e.length);
 const wiresFar = await phases();
 const liftFar = await wireTop();
-const dtSymOk = await page.$$eval('#fdMap .dtico svg.dtsym .tk', (e) => e.length);
+const dtSymOk = await page.$$eval('#fdMap .dtico svg .tk', (e) => e.length);
 // DTR as in the JE's picture: two poles, bushings, tank on a plinth, fencing; 1.5× size on the map.
-const dtrPic = await page.$$eval('#fdMap .dtico svg.dtsym', (e) => e.map((x) => ({ bo: x.querySelectorAll('.bo').length, fe: x.querySelectorAll('.fe').length, w: Math.round(x.getBoundingClientRect().width) })));
+const dtrPic = await page.$$eval('#fdMap .dtico svg', (e) => e.map((x) => ({ bo: x.querySelectorAll('.bo').length, fe: x.querySelectorAll('.fe').length, w: Math.round(x.getBoundingClientRect().width) })));
 const wa2 = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
 const kml2 = readFileSync(await dl2.path(), 'utf8');
@@ -236,7 +236,7 @@ const checks = {
   'पास से केबल खंभे के हुक पर (नीचे नहीं), दूर से बिंदु पर': liftNear === 20 && liftFar === 0,
   '11kV PCC खंभा LT खंभे जैसा, पिन इंसुलेटर वही': pccLikeLt,
   '11kV खंभे का रंग लाल लाइन से अलग (स्टील)': hvColours.n > 0 && !hvColours.symRed && hvColours.dots > 0 && !hvColours.dotRed,
-  'DTR का निशान JE का चुना हुआ (बिजली वाला, बिना बाड़)': dtrPic.length === 1 && dtrPic[0].bo === 1 && dtrPic[0].fe === 0 && dtrPic[0].w === 40,
+  'नक्शे पर DTR चित्र वाला (बाड़, डेढ़ गुना); बिजली वाला सिर्फ़ पेज पर': dtrPic.length === 1 && dtrPic[0].fe === 1 && dtrPic[0].bo === 0 && dtrPic[0].w === 66,
   'खोज वाले डिब्बे में DTR, DB बॉक्स और खंभे के निशान': findIcons.dtr >= 1 && findIcons.db >= 1 && findIcons.pole >= 1,
   'DB बॉक्स चित्र जैसा (खिड़की वाला)': dbWin === 2,
   'DP का निशान: ब्रेसिंग और डिस्क इंसुलेटर, गोल किनारा नहीं': dpSym.length === 1 && dpSym[0].br === 1 && dpSym[0].dsc === 3 && dpSym[0].radius === '0px',

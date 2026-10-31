@@ -22,7 +22,7 @@ lines.forEach((l, i) => {
   }
   for (const m of l.matchAll(/html:([^,}]+)/g)) {
     const parts = m[1].split('+').map((x) => x.trim()).filter(Boolean);
-    const bad = parts.filter((p) => !/^'[^']*'$/.test(p) && !/^xmlEsc\(/.test(p) && !/^dtSym\(\)$/.test(p) && !/^(pdSym|poleSym)\(/.test(p));
+    const bad = parts.filter((p) => !/^'[^']*'$/.test(p) && !/^xmlEsc\(/.test(p) && !/^(dtSym|dtrMap)\(\)$/.test(p) && !/^(pdSym|poleSym)\(/.test(p));
     if (bad.length) problems.push(`पंक्ति ${n}: divIcon html में बिना xmlEsc() का हिस्सा: ${bad.join(' + ').slice(0, 80)}`);
   }
 });
