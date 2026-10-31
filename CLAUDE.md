@@ -116,6 +116,8 @@ and left out of reminders.
   lightbox steps through a task's screenshots with ‹ › or a swipe (`openImg(ids, i)`).
 
 ## Conventions
+- The JE's word for a distribution transformer is **DTR** (v1.55): every screen text, default name (`DTR-1`), SLD, KML and
+  WhatsApp text say DTR, never DT; saved names starting with "DT" become "DTR" in `cleanFeeder`. (Code names like `dts`, `dtSym` stay.)
 - **Free and fast, always (user's standing rule, esp. the survey).** No paid service, no API key, nothing billed per use:
   free map tiles (OpenStreetMap / Esri) with attribution, Leaflet kept in `lib/`, Firebase only within its free quota.
   Check speed with a big survey (thousands of poles) before shipping map work: the map uses the canvas renderer

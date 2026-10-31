@@ -86,11 +86,11 @@ await page.click('#plForm button[type=submit]');
 // A pole straight from the DT starts the next LT circuit: the number follows the chosen "किससे जुड़ा".
 await page.click('#fdPoleL');
 await page.waitForSelector('#plForm:not([hidden])');
-await page.selectOption('#plTo', { label: '⚡ DT-1' });
+await page.selectOption('#plTo', { label: '⚡ DTR-1' });
 const lNoCkt2 = await page.inputValue('#plNo');
 await page.click('#plCancel');
 // The DT hangs from the 11kV pole.
-await page.click('#dtList [aria-label="बदलें: DT-1"]');
+await page.click('#dtList [aria-label="बदलें: DTR-1"]');
 await page.selectOption('#dtTo', { label: '🔴 खंभा HT-1' });
 await page.click('#dtForm button[type=submit]');
 // Pole number search.
@@ -135,7 +135,7 @@ const kml2 = readFileSync(await dl2.path(), 'utf8');
 // Survey file out, and back in on the list page (same survey: asks, then replaces; a copy with a new id: added).
 const [dl3] = await Promise.all([page.waitForEvent('download'), page.click('#fdExp')]);
 const survey = readFileSync(await dl3.path(), 'utf8');
-// LT circuit done: "↩️ DT से 11kV आगे" makes the next 11kV pole continue from DT-1's tapping pole (pole 1).
+// LT circuit done: "↩️ DT से 11kV आगे" makes the next 11kV pole continue from DTR-1's tapping pole (pole 1).
 await page.click('#fdBackH');
 await page.click('#fdPoleH');
 await page.waitForSelector('#plForm:not([hidden])');
@@ -152,6 +152,7 @@ await page.waitForFunction(() => window.__printed > 0, null, { timeout: 3000 }).
 const sldSvg = await page.evaluate(() => window.__sld || '');
 const [dl4] = await Promise.all([page.waitForEvent('download'), page.click('#fdSldPng')]);
 const sldPng = { name: dl4.suggestedFilename(), size: readFileSync(await dl4.path()).length };
+const uiDtr = await page.evaluate(() => { const t = document.getElementById('feederCard').innerText + document.getElementById('dtN').placeholder; return t.includes('↩️ DTR से 11kV आगे') && !/\bDT\b/.test(t); });
 const hScroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 
 // Saved: after reopening, the feeder is in the list with its length and transformer.
@@ -163,9 +164,11 @@ await page.waitForTimeout(300);
 const afterSame = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.length);
 const other = JSON.parse(survey); other.f.id = 'copy1'; other.f.n = 'नमूना गाँव (लाइनमैन)';
 other.f.pl.forEach((p, i) => { p.no = String(i + 1); });  // a file from before the HT / Ckt numbering
+other.f.dts.forEach((d) => { d.n = 'DT-1'; });  // and from before DT was called DTR
 await page.setInputFiles('#fdImp', { name: 'survey2.txt', mimeType: 'text/plain', buffer: Buffer.from(JSON.stringify(other)) });
 await page.waitForTimeout(300);
 const imported = await page.evaluate(() => { const F = JSON.parse(localStorage.getItem('priority-note-v2')).feeders; return F.map((f) => f.n + ':' + f.pl.length + ':' + f.by); });
+const oldDt = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.find((f) => f.id === 'copy1').dts.map((d) => d.n).join(','));
 const oldNos = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.find((f) => f.id === 'copy1').pl.map((p) => p.no).sort().join(','));
 // After a reload the map is new: the 11kV line must be there as soon as the saved feeder opens.
 await page.click('#fdItems [aria-label="खोलें: नमूना फीडर"]');
@@ -196,19 +199,20 @@ const checks = {
   'चलते समय "नाप रहे हैं"': recStat.includes('नाप रहे हैं'),
   'लंबाई ~150 मी. (कमज़ोर GPS और 1 km की छलाँग छोड़ी)': len.m > 140 && len.m < 160 && len.pts === 6,
   'नक्शे पर रास्ता बना': lineDrawn >= 1,
-  'ट्रांसफार्मर का नाम अपने-आप DT-1': dtName === 'DT-1',
-  'ट्रांसफार्मर सूची में kVA, उपभोक्ता, LT': dtList.includes('DT-1') && dtList.includes('63 kVA') && dtList.includes('45 उपभोक्ता') && dtList.includes('LT 820 मी.'),
+  'ट्रांसफार्मर का नाम अपने-आप DTR-1': dtName === 'DTR-1',
+  'ट्रांसफार्मर सूची में kVA, उपभोक्ता, LT': dtList.includes('DTR-1') && dtList.includes('63 kVA') && dtList.includes('45 उपभोक्ता') && dtList.includes('LT 820 मी.'),
   'ट्रांसफार्मर की फोटो': dtThumb === 1,
-  'नक्शे पर ट्रांसफार्मर का निशान': dtMarker.length === 1 && dtMarker[0].includes('DT-1'),
+  'नक्शे पर ट्रांसफार्मर का निशान': dtMarker.length === 1 && dtMarker[0].includes('DTR-1'),
   'खंभों का अनुमान (150 मी. → लगभग 3)': poleHint === 'लगभग 3',
-  'सारांश में लिखे खंभे और कुल': sum.includes('खंभे 7') && sum.includes('उपभोक्ता (DT पर लिखे) 45') && sum.includes('63 kVA'),
+  'सारांश में लिखे खंभे और कुल': sum.includes('खंभे 7') && sum.includes('उपभोक्ता (DTR पर लिखे) 45') && sum.includes('63 kVA'),
   'WhatsApp सारांश में लंबाई और नक्शे का लिंक': wa.includes('*नमूना फीडर*') && /लंबाई \(GPS से\): 1[45]\d मी\./.test(wa) && wa.includes('https://maps.google.com/?q=22.50') && wa.includes('खंभे: 7'),
-  'KML फ़ाइल में रास्ता और DT': kml.includes('<LineString>') && kml.includes('<name>DT-1</name>') && kml.includes('79.2,22.5'),
+  'KML फ़ाइल में रास्ता और DT': kml.includes('<LineString>') && kml.includes('<name>DTR-1</name>') && kml.includes('79.2,22.5'),
   'खंभा नंबर अपने-आप: 11kV HT-1, HT-2; LT Ckt-1-1, Ckt-1-2; DT से नया सर्किट Ckt-2-1': hNo === 'HT-1' && hNo2 === 'HT-2' && lNo1 === 'Ckt-1-1' && lNo2 === 'Ckt-1-2' && lNoCkt2 === 'Ckt-2-1',
   'पुरानी फ़ाइल के 1, 2, 3 नंबर नए ढंग में': oldNos === 'Ckt-1-1,Ckt-1-2,HT-1',
+  'पुराना नाम DT-1 अब DTR-1; बटन व संकेत में DTR': oldDt === 'DTR-1' && uiDtr,
   '"🔢 नंबर फिर से लगाएँ" वही क्रम': renum === 'HT-1,Ckt-1-1,Ckt-1-2',
-  'LT खंभा पहले DT से, फिर पिछले LT खंभे से जुड़े': lTo1.includes('DT-1') && lTo2.includes('खंभा Ckt-1-1'),
-  'खंभा 3 खोजने पर: 4 उपभोक्ता, DT-1, बीच में 1 खंभा, DB बॉक्स': find3.includes('DB बॉक्स: लगा है') && find3.includes('खंभा Ckt-1-2') && find3.includes('उपभोक्ता: 4') && find3.includes('DT-1') && find3.includes('बीच में 1 खंभे'),
+  'LT खंभा पहले DT से, फिर पिछले LT खंभे से जुड़े': lTo1.includes('DTR-1') && lTo2.includes('खंभा Ckt-1-1'),
+  'खंभा 3 खोजने पर: 4 उपभोक्ता, DTR-1, बीच में 1 खंभा, DB बॉक्स': find3.includes('DB बॉक्स: लगा है') && find3.includes('खंभा Ckt-1-2') && find3.includes('उपभोक्ता: 4') && find3.includes('DTR-1') && find3.includes('बीच में 1 खंभे'),
   'खंभा 2: आगे 1 खंभा (4 उपभोक्ता)': find2.includes('उपभोक्ता: 6') && find2.includes('आगे जुड़े खंभे: 1 (उन पर 4 उपभोक्ता)'),
   'न मिला नंबर: कुछ न दिखे': find99,
   'कुल: 1 11kV, 2 LT खंभे, 10 उपभोक्ता, 2 DB बॉक्स': sum2.includes('11kV खंभे (सर्वे) 1') && sum2.includes('LT खंभे (सर्वे) 2') && sum2.includes('खंभों पर उपभोक्ता 10') && sum2.includes('DB बॉक्स 2'),
@@ -216,12 +220,12 @@ const checks = {
   'नक्शे पर खंभे और लाइनें': poleDots >= 3 + 3 + 1,
   'ज़ूम पर खंभों के निशान+नंबर, दूर से नहीं; DT पर ट्रांसफार्मर का निशान; LT खंभे पर DB बॉक्स': iconsNear.join(',') === 'Ckt-1-1,Ckt-1-2,HT-1 DP' && iconsFar === 0 && dtSymOk === 1 && dbIcons === 2,
   'WhatsApp सारांश में खंभे और सर्वे करने वाला': wa2.includes('11kV खंभे: 1 · 🔵 LT खंभे: 2 · खंभों पर उपभोक्ता: 10') && wa2.includes('सर्वे: नमूना लाइनमैन'),
-  'KML में खंभे': kml2.includes('<name>खंभा Ckt-1-2 (DT-1)</name>') && kml2.includes('#ll'),
+  'KML में खंभे': kml2.includes('<name>खंभा Ckt-1-2 (DTR-1)</name>') && kml2.includes('#ll'),
   'सर्वे फ़ाइल: वही सर्वे बदला, नया जुड़ा, गलत फ़ाइल नहीं': afterSame === 1 && imported.length === 2 && imported.every((x) => x.endsWith(':3:नमूना लाइनमैन')) && listTxt2.includes('नमूना गाँव (लाइनमैन)'),
   'खंभे की बनावट (DP) चुनी और सेव': stShown && ended.st === 'dp',
   '"↩️ DT से 11kV आगे": अगला 11kV खंभा DT के टैप खंभे (1) से': backTo.includes('खंभा HT-1'),
   '"🏁 सर्वे पूरा": खंभे वाले बटन छिपे, स्थिति में पूरा': ended.end > 0 && ended.poleBtn && ended.stat.includes('सर्वे पूरा') && ended.endBtn.includes('फिर खोलें'),
-  'SLD प्रिंट (PDF): शीर्षक, DP, DT, LT का हिसाब, संकेत': ['एकल रेखा आरेख (SLD)', 'नमूना फीडर', '(DP)', 'DT-1', 'LT केबल: 2 खंभे', '10 उपभोक्ता', 'संकेत:', 'वितरण ट्रांसफार्मर', 'सर्वे पूरा'].every((t) => sldSvg.includes(t)),
+  'SLD प्रिंट (PDF): शीर्षक, DP, DT, LT का हिसाब, संकेत': ['एकल रेखा आरेख (SLD)', 'नमूना फीडर', '(DP)', 'DTR-1', 'LT केबल: 2 खंभे', '10 उपभोक्ता', 'संकेत:', 'वितरण ट्रांसफार्मर', 'सर्वे पूरा'].every((t) => sldSvg.includes(t)),
   '11kV एक लाल लाइन (पास, दूर और दोबारा खोलने पर), LT केबल अलग': wiresNear === 'H,LT' && wiresFar === 'H,LT' && wiresReopen === 'H,LT',
   'SLD में /// तीन तार, LT केबल, DB बॉक्स': ['/// = तीन तार', 'LT केबल', 'DB 2'].every((x) => sldSvg.includes(x)),
   'LT खंभे पर केबल और हुक सिर्फ़ एक तरफ़': ltSide.length === 2 && ltSide.every((n) => n === 2),

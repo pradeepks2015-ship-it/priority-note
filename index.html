@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-G2IvJkebiJvSCnbGuy9INT8O6V3yoJdixaeQhLOfzTk=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-6BYnXBBMmcr1V15Hv4StErSHS93nHMAuH2MOtKpQLls=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -323,7 +323,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
           <details class="more">
             <summary>और विवरण: स्थान, समय-सीमा, संदर्भ, फोटो, तालिका</summary>
             <div class="fields">
-              <input type="text" id="loc" list="placeList" placeholder="स्थान: फीडर / DT / गाँव" aria-label="स्थान">
+              <input type="text" id="loc" list="placeList" placeholder="स्थान: फीडर / DTR / गाँव" aria-label="स्थान">
               <datalist id="placeList"></datalist>
               <label class="lbl" for="due">समय-सीमा (इस समय तक)</label>
               <input type="time" id="due">
@@ -389,7 +389,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       </section>
 
       <details class="card" id="listsCard">
-        <summary id="placesSum">📍 फीडर / DT / गाँव की सूची</summary>
+        <summary id="placesSum">📍 फीडर / DTR / गाँव की सूची</summary>
         <p class="hint" style="margin-top:8px">स्थान एक बार लिखने पर अपने-आप सेव हो जाता है और अगली बार चुनने के लिए आता है। Excel फ़ाइल के पहले कॉलम से भी जोड़ सकते हैं।</p>
         <button class="btn ghost sm" type="button" id="placeFileBtn" style="margin-top:8px">📊 Excel से गाँव जोड़ें (.xlsx / .csv)</button>
         <input type="file" id="placeFile" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden>
@@ -431,10 +431,10 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost" type="button" id="fdPoleL" style="flex:1 1 130px">🔵 LT खंभा</button>
           </div>
           <div class="row" style="margin-top:8px">
-            <button class="btn ghost" type="button" id="fdBackH" style="flex:1 1 150px">↩️ DT से 11kV आगे</button>
+            <button class="btn ghost" type="button" id="fdBackH" style="flex:1 1 150px">↩️ DTR से 11kV आगे</button>
             <button class="btn ghost" type="button" id="fdEnd" style="flex:1 1 150px">🏁 सर्वे पूरा</button>
           </div>
-          <p class="hint fdflow" style="margin-top:6px">क्रम: 🔴 11kV खंभे → ⚡ DT → 🔵 उसकी LT लाइन → LT खत्म होने पर "↩️ DT से 11kV आगे" → अगला DT … आख़िरी LT खंभे के बाद "🏁 सर्वे पूरा"।</p>
+          <p class="hint fdflow" style="margin-top:6px">क्रम: 🔴 11kV खंभे → ⚡ DTR → 🔵 उसकी LT लाइन → LT खत्म होने पर "↩️ DTR से 11kV आगे" → अगला DTR … आख़िरी LT खंभे के बाद "🏁 सर्वे पूरा"।</p>
           <p class="hint" style="margin-top:6px">चलते समय स्क्रीन चालू और यह ऐप खुला रखें; फ़ोन लॉक होने पर GPS रुक जाती है। खुले में GPS 5–15 मीटर तक सही रहती है।</p>
           <form id="plForm" class="fields dtform" hidden autocomplete="off">
             <p class="sec-title" id="plFormT">नया खंभा</p>
@@ -465,7 +465,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
           </form>
           <form id="dtForm" class="fields dtform" hidden autocomplete="off">
             <p class="sec-title" id="dtFormT">नया ट्रांसफार्मर</p>
-            <input type="text" id="dtN" placeholder="DT का नाम / नंबर" aria-label="DT का नाम / नंबर">
+            <input type="text" id="dtN" placeholder="DTR का नाम / नंबर" aria-label="DTR का नाम / नंबर">
             <label class="lbl" for="dtKva">क्षमता (kVA)</label>
             <select id="dtKva"><option value="">क्षमता चुनें</option><option>10</option><option>16</option><option>25</option><option>63</option><option>100</option><option>160</option><option>200</option><option>250</option><option>315</option><option>500</option></select>
             <input type="number" id="dtC" inputmode="numeric" min="0" placeholder="उपभोक्ता संख्या" aria-label="उपभोक्ता संख्या">
@@ -1012,7 +1012,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   function addExamples(mode){
     var ex=mode==='orders'
       ?[['सरकारी बकाये की सूची आज भेजें',1,'','','','पत्र क्र. 1234 / 15-10 / बिंदु 3'],['साप्ताहिक वसूली रिपोर्ट शुक्रवार तक',2,'','','','पत्र क्र. 1234 / 15-10 / बिंदु 5'],['लंबित शिकायतों का निराकरण',3,'','','','']]
-      :[['11kV फीडर ट्रिपिंग की जाँच',1,'रामू','फीडर 11kV आदेगाँव','12:00',''],['खराब DT बदलना',2,'श्याम','DT गोपालपुर','16:00',''],['बकाया वसूली विज़िट',2,'रामू','वार्ड 3','17:00',''],['मीटर रीडिंग की फोटो जाँच',3,'','','','']];
+      :[['11kV फीडर ट्रिपिंग की जाँच',1,'रामू','फीडर 11kV आदेगाँव','12:00',''],['खराब DTR बदलना',2,'श्याम','DTR गोपालपुर','16:00',''],['बकाया वसूली विज़िट',2,'रामू','वार्ड 3','17:00',''],['मीटर रीडिंग की फोटो जाँच',3,'','','','']];
     ex.forEach(function(e){S[mode].push({id:uid(),t:e[0],p:e[1],w:e[2],st:'',r:'',loc:e[3],due:e[4],ref:e[5],q:'',imgs:[],tb:'',carry:false,no:mode==='orders'?++S.ordNo:0,at:Date.now()})});
     save();renderAll();
   }
@@ -1182,7 +1182,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     });
   }
   function renderLists(){
-    $('placesSum').textContent='📍 फीडर / DT / गाँव की सूची ('+S.places.length+')';
+    $('placesSum').textContent='📍 फीडर / DTR / गाँव की सूची ('+S.places.length+')';
     removableRows($('placeChips'),S.places,'अभी कोई स्थान सेव नहीं।',function(){save();renderAll()});
   }
   function monthText(k){var p=k.split('-');return MONTHS[+p[1]-1]+' '+p[0]}
@@ -1622,10 +1622,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.54',APP_NOTES=[
-    'खंभों के नंबर नए ढंग से: 11kV HT-1, HT-2 …; LT हर DT के सर्किट से Ckt-1-1, Ckt-1-2, Ckt-2-1 …',
-    'DT से सीधा जुड़ा LT खंभा नया सर्किट शुरू करता है; "किससे जुड़ा" बदलने पर नंबर अपने-आप बदलता है',
-    'पुराने सर्वे के 1, 2, 3 नंबर अपने-आप नए ढंग में; "और विकल्प" में "🔢 नंबर फिर से लगाएँ"'
+  var APP_V='1.55',APP_NOTES=[
+    'हर जगह DT की जगह अब DTR लिखा आता है (पुराने नाम DT-1 भी DTR-1 हो गए)'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1814,7 +1812,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   // S.feeders[] (a feeder or a village): {id, n, by (surveyor), poles (0 = not written, use the estimate),
   //   segs [[[lat,lng],…],…] (one per recording), dts[], pl[], at}
   // dts[]: {id, n, kva, c (consumers), lt (LT line, m), lat, lng, img (photo id, this phone only), note, to (11kV pole id), at}
-  // pl[] poles: {id, no (pole number), k ('h' 11kV | 'l' LT), st (11kV structure: pcc | dp | tp | 4p), db (LT: DB box on it), c (consumers on it), to (the pole or DT it hangs from), lat, lng, note, at}
+  // pl[] poles: {id, no (pole number), k ('h' 11kV | 'l' LT), st (11kV structure: pcc | dp | tp | 4p), db (LT: DB box on it), c (consumers on it), to (the pole or DTR it hangs from), lat, lng, note, at}
   // 11kV pole structures: single PCC pole, double-pole (DP), three-pole (TP), four-pole structure
   var SLD_ST={pcc:'PCC पोल',dp:'DP',tp:'TP','4p':'4-पोल'};
   var SPAN=65,GPS_ACC=35,GPS_STEP=8,GPS_MAXV=45;  // metres per pole (estimate), worst accepted accuracy, min step, max m/s
@@ -1824,7 +1822,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     var num=function(v){v=+v;return isFinite(v)&&v>0?v:0};
     var segs=(Array.isArray(f.segs)?f.segs:[]).map(function(sg){return Array.isArray(sg)?sg.filter(function(p){return Array.isArray(p)&&isFinite(p[0])&&isFinite(p[1])}).map(function(p){return [+p[0],+p[1]]}):[]}).filter(function(sg){return sg.length});
     var dts=(Array.isArray(f.dts)?f.dts:[]).filter(function(d){return d&&isFinite(d.lat)&&isFinite(d.lng)}).map(function(d){
-      return {id:str(d.id)||uid(),n:str(d.n),kva:num(d.kva),c:Math.floor(num(d.c)),lt:Math.round(num(d.lt)),lat:+d.lat,lng:+d.lng,img:str(d.img),note:str(d.note),to:str(d.to),at:num(d.at)||Date.now()};
+      return {id:str(d.id)||uid(),n:str(d.n).replace(/^DT(?=[\s\-\d]|$)/,'DTR'),kva:num(d.kva),c:Math.floor(num(d.c)),lt:Math.round(num(d.lt)),lat:+d.lat,lng:+d.lng,img:str(d.img),note:str(d.note),to:str(d.to),at:num(d.at)||Date.now()};
     });
     var pl=(Array.isArray(f.pl)?f.pl:[]).filter(function(p){return p&&isFinite(p.lat)&&isFinite(p.lng)}).map(function(p){
       return {id:str(p.id)||uid(),no:str(p.no).trim(),k:p.k==='l'?'l':'h',st:SLD_ST[p.st]?p.st:'pcc',db:p.k==='l'&&!!p.db,c:Math.floor(num(p.c)),to:str(p.to),lat:+p.lat,lng:+p.lng,note:str(p.note),at:num(p.at)||Date.now()};
@@ -1852,8 +1850,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     f.pl.forEach(function(p){if(p.k==='h'){t.hp++;if(t.st[p.st]!=null)t.st[p.st]++}else{t.lp++;t.pc+=p.c;if(p.db)t.db++}});
     t.poles=f.poles||poleEst(f);t.est=!f.poles;return t;
   }
-  /* the network: each pole hangs from a pole or a DT (p.to); a DT hangs from an 11kV pole (d.to) */
-  // One pass over the survey: id → pole/DT, the poles hanging from each, and each LT pole's DT and distance from it.
+  /* the network: each pole hangs from a pole or a DTR (p.to); a DTR hangs from an 11kV pole (d.to) */
+  // One pass over the survey: id → pole/DTR, the poles hanging from each, and each LT pole's DTR and distance from it.
   // Rebuilt only when the survey changes (every change is saved, which moves S._t), so thousands of poles stay quick.
   function net(f){
     var v=S._t+'|'+f.pl.length+'|'+f.dts.length;
@@ -1871,9 +1869,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   function node(f,id){return id?net(f).by[id]||null:null}
   function nodeLL(n){var o=n.p||n.d;return [o.lat,o.lng]}
   function poleName(p){return 'खंभा '+(p.no||'?')}
-  // The DT an LT pole is fed from, and how many poles lie between.
+  // The DTR an LT pole is fed from, and how many poles lie between.
   function poleDt(f,p){var X=net(f),d=X.dt[p.id];return d?{d:d,hops:X.hops[p.id]}:null}
-  // Poles further down the line from a pole or DT, with their consumers.
+  // Poles further down the line from a pole or DTR, with their consumers.
   function below(f,id){
     var X=net(f),r={n:0,c:0},seen={},st=[id];seen[id]=1;
     while(st.length){(X.kids[st.pop()]||[]).forEach(function(q){if(!seen[q.id]){seen[q.id]=1;r.n++;r.c+=q.k==='l'?q.c:0;st.push(q.id)}})}
@@ -1884,8 +1882,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     return X.per[d.id]||{n:0,c:0,db:0};
   }
   /* Pole numbers (v1.54, the JE's scheme): 11kV poles HT-1, HT-2 …; LT poles Ckt-<circuit>-<pole>, where each line
-     leaving a DT is a circuit (Ckt-1, Ckt-2 … per DT) and its poles count 1, 2, 3 … in survey order. An LT number is
-     unique within its DT, so the same Ckt-1-1 can stand under two DTs. */
+     leaving a DTR is a circuit (Ckt-1, Ckt-2 … per DTR) and its poles count 1, 2, 3 … in survey order. An LT number is
+     unique within its DTR, so the same Ckt-1-1 can stand under two DTRs. */
   var HT_RE=/^HT-(\d+)$/,CKT_RE=/^Ckt-(\d+)-(\d+)$/;
   // "ht 5", "HT5", "5" (11kV) → HT-5; "ckt 1 1", "CKT-1-1" → Ckt-1-1; anything else is kept as typed.
   function canonNo(v,k){
@@ -1895,7 +1893,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     return v;
   }
   function ltKey(f,p){var d=net(f).dt[p.id];return d?d.id:''}
-  // The DT a new pole hanging from n would belong to ('' for none).
+  // The DTR a new pole hanging from n would belong to ('' for none).
   function upKey(f,n){return !n?'':n.d?n.d.id:n.p.k==='l'?ltKey(f,n.p):''}
   function nextNo(f,k,to){
     var m=0;
@@ -1907,7 +1905,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     });
     return cur?'Ckt-'+(+cur[1])+'-'+(m+1):'Ckt-'+(m+1)+'-1';
   }
-  // Numbers the whole feeder afresh in survey order (at): HT-1 …, and per DT its circuits and their poles.
+  // Numbers the whole feeder afresh in survey order (at): HT-1 …, and per DTR its circuits and their poles.
   function renumber(f){
     var kids={},by={},done={},ord=function(a,b){return a.at-b.at};
     f.pl.forEach(function(p){by[p.id]=p;(kids[p.to]=kids[p.to]||[]).push(p)});
@@ -1918,21 +1916,21 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       out.sort(ord).forEach(function(p,i){p.no='Ckt-'+c+'-'+(i+1)});
     }
     f.dts.forEach(function(d){var c=0;(kids[d.id]||[]).filter(function(p){return p.k==='l'}).sort(ord).forEach(function(r){if(!done[r.id])circuit(r,++c)})});
-    // LT poles not fed from any DT: circuits of their own
+    // LT poles not fed from any DTR: circuits of their own
     var c=0;
     f.pl.filter(function(p){return p.k==='l'&&!done[p.id]&&!(by[p.to]&&by[p.to].k==='l')}).sort(ord).forEach(function(r){circuit(r,++c)});
     f.pl.filter(function(p){return p.k==='l'&&!done[p.id]}).sort(ord).forEach(function(r){circuit(r,++c)});
     return f;
   }
-  // All poles with this number (an LT number can stand under more than one DT).
+  // All poles with this number (an LT number can stand under more than one DTR).
   function findPoles(f,q){
     q=String(q||'').trim();if(!q)return [];
     var a=canonNo(q,'').toLowerCase(),b=canonNo(q,'h').toLowerCase();
     return f.pl.filter(function(p){var n=p.no.toLowerCase();return n===a||n===b});
   }
   function findPole(f,q){return findPoles(f,q)[0]||null}
-  // Pole name with its DT for an LT pole, where the same number may stand under another DT.
-  function poleFull(f,p){var d=p.k==='l'&&net(f).dt[p.id];return poleName(p)+(d?' ('+(d.n||'DT')+')':'')}
+  // Pole name with its DTR for an LT pole, where the same number may stand under another DTR.
+  function poleFull(f,p){var d=p.k==='l'&&net(f).dt[p.id];return poleName(p)+(d?' ('+(d.n||'DTR')+')':'')}
   // Map symbols (small SVG, coloured from CSS tokens): a transformer on its two-pole structure, and a pole with its
   // cross-arm and insulators (11kV steel, LT grey). Fixed markup, no data in them.
   function dtSym(){return '<svg class="dtsym" viewBox="0 0 40 34" width="40" height="34" aria-hidden="true">'+
@@ -2007,7 +2005,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   function renderFdInfo(){
     var f=curF();if(!f)return;
     var t=fdTotals(f),sum=$('fdSum');sum.textContent='';
-    var boxes=[['फीडर की लंबाई (GPS)',fmtLen(t.len)],['खंभे'+(t.est?' (अनुमान)':''),t.poles?String(t.poles):'—'],['ट्रांसफार्मर',t.dt+(t.kva?' · '+t.kva+' kVA':'')],['उपभोक्ता (DT पर लिखे)',String(t.c)],['LT लाइन कुल',fmtLen(t.lt)]];
+    var boxes=[['फीडर की लंबाई (GPS)',fmtLen(t.len)],['खंभे'+(t.est?' (अनुमान)':''),t.poles?String(t.poles):'—'],['ट्रांसफार्मर',t.dt+(t.kva?' · '+t.kva+' kVA':'')],['उपभोक्ता (DTR पर लिखे)',String(t.c)],['LT लाइन कुल',fmtLen(t.lt)]];
     if(f.pl.length)boxes.push(['🔴 11kV खंभे (सर्वे)',String(t.hp)],['🔵 LT खंभे (सर्वे)',String(t.lp)],['खंभों पर उपभोक्ता',String(t.pc)],['📦 DB बॉक्स',String(t.db)]);
     boxes.forEach(function(p){
       var d=mk('div');d.appendChild(mk('small','',p[0]));d.appendChild(mk('b','',p[1]));sum.appendChild(d);
@@ -2021,13 +2019,13 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     f.dts.forEach(function(d,i){
       // eslint-disable-next-line no-unsanitized/method -- dtSym() is fixed SVG markup, no data
       var row=mk('div','fdi');row.insertAdjacentHTML('beforeend',dtSym());
-      var who=mk('div','who');who.appendChild(mk('b','',(i+1)+'. '+(d.n||'DT')));who.appendChild(mk('small','',dtLine(d)));
+      var who=mk('div','who');who.appendChild(mk('b','',(i+1)+'. '+(d.n||'DTR')));who.appendChild(mk('small','',dtLine(d)));
       var dp=dtPoles(f,d);if(dp.n)who.appendChild(mk('small','','🔵 LT खंभे '+dp.n+' · खंभों पर '+dp.c+' उपभोक्ता'+(dp.db?' · 📦 DB '+dp.db:'')));
       if(d.note)who.appendChild(mk('small','',d.note));
       row.appendChild(who);
-      if(d.img&&blobURL(d.img)){var im=mk('img','thumb');im.src=blobURL(d.img);im.alt=(d.n||'DT')+' की फोटो';im.onclick=function(){$('lbImg').src=blobURL(d.img);$('lb').hidden=false};row.appendChild(im)}
-      var g=mk('a','btn ghost sm','🗺️');g.href=mapsLink(d.lat,d.lng);g.target='_blank';g.rel='noopener';g.setAttribute('aria-label',(d.n||'DT')+' Google Maps में');row.appendChild(g);
-      var e=mk('button','btn ghost sm','बदलें');e.type='button';e.setAttribute('aria-label','बदलें: '+(d.n||'DT'));e.onclick=function(){openDt(d)};row.appendChild(e);
+      if(d.img&&blobURL(d.img)){var im=mk('img','thumb');im.src=blobURL(d.img);im.alt=(d.n||'DTR')+' की फोटो';im.onclick=function(){$('lbImg').src=blobURL(d.img);$('lb').hidden=false};row.appendChild(im)}
+      var g=mk('a','btn ghost sm','🗺️');g.href=mapsLink(d.lat,d.lng);g.target='_blank';g.rel='noopener';g.setAttribute('aria-label',(d.n||'DTR')+' Google Maps में');row.appendChild(g);
+      var e=mk('button','btn ghost sm','बदलें');e.type='button';e.setAttribute('aria-label','बदलें: '+(d.n||'DTR'));e.onclick=function(){openDt(d)};row.appendChild(e);
       list.appendChild(row);
     });
     $('fdWa').href='https://wa.me/?text='+encodeURIComponent(fdText(f));
@@ -2098,8 +2096,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     });
     drawHl();
     f.dts.forEach(function(d){
-      var ic=L.divIcon({className:'dtico',html:dtSym()+'<span>'+xmlEsc(d.n||'DT')+'</span>',iconSize:[40,34],iconAnchor:[20,30]});
-      L.marker([d.lat,d.lng],{icon:ic,title:d.n||'DT'}).on('click',function(){openDt(d)}).addTo(FD.grp);
+      var ic=L.divIcon({className:'dtico',html:dtSym()+'<span>'+xmlEsc(d.n||'DTR')+'</span>',iconSize:[40,34],iconAnchor:[20,30]});
+      L.marker([d.lat,d.lng],{icon:ic,title:d.n||'DTR'}).on('click',function(){openDt(d)}).addTo(FD.grp);
       all.push([d.lat,d.lng]);
     });
     drawMe();drawLabels();
@@ -2113,7 +2111,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   }
   // 11kV: one red line; LT: one dark cable (ABC on suspension hooks). One layer each for all spans, so thousands of
   // poles stay quick. From zoom 17 the pole symbols stand above their points, so each wire end is lifted (screen px) to
-  // where it hangs on the symbol: LT hook 20, 11kV insulators 26, DP/TP/4-pole channel 28, DT 22. Redrawn on zoom.
+  // where it hangs on the symbol: LT hook 20, 11kV insulators 26, DP/TP/4-pole channel 28, DTR 22. Redrawn on zoom.
   function wireLift(n){return n.d?22:n.p.k!=='h'?20:n.p.st&&n.p.st!=='pcc'?28:26}
   function drawWires(){
     var f=curF();if(!f||!FD.map||!FD.map._loaded||!FD.hvg)return;FD.hvg.clearLayers();
@@ -2227,7 +2225,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     closeDt(true);
     FD.dt=d?d.id:'';FD.dtPos=d?{lat:d.lat,lng:d.lng,acc:0}:FD.dtPos;FD.dtImg=d?d.img:'';FD.dtNewImg=[];
     $('dtFormT').textContent=d?'ट्रांसफार्मर बदलें':'नया ट्रांसफार्मर';
-    $('dtN').value=d?d.n:'DT-'+(f.dts.length+1);$('dtKva').value=d&&d.kva?String(d.kva):'';
+    $('dtN').value=d?d.n:'DTR-'+(f.dts.length+1);$('dtKva').value=d&&d.kva?String(d.kva):'';
     $('dtC').value=d&&d.c?d.c:'';$('dtLt').value=d&&d.lt?d.lt:'';$('dtNote').value=d?d.note:'';
     var hs=f.pl.filter(function(p){return p.k==='h'}),def=d?d.to:(FD.lastH&&node(f,FD.lastH)?FD.lastH:nearest(f,hs,FD.dtPos));
     fillTo($('dtTo'),[['','— किसी खंभे से नहीं —']].concat(hs.map(function(p){return [p.id,'🔴 '+poleName(p)]})),def||'');
@@ -2263,7 +2261,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     d.note=$('dtNote').value.trim();d.lat=r5(FD.dtPos.lat);d.lng=r5(FD.dtPos.lng);d.img=FD.dtImg;d.to=$('dtTo').value;FD.last=d.id;
     // photos added and then replaced in this form, and the old photo if it was changed, go
     FD.dtNewImg.concat(old?[old]:[]).forEach(function(id){if(id!==d.img&&assets)assets.delete(id).catch(function(){})});
-    closeDt(true);save();renderFdInfo();drawLayers(false);toast('सेव हुआ: '+(d.n||'DT'));
+    closeDt(true);save();renderFdInfo();drawLayers(false);toast('सेव हुआ: '+(d.n||'DTR'));
   });
   $('dtDel').onclick=function(){
     var f=curF();if(!f||!FD.dt)return;
@@ -2285,7 +2283,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     S.feeders=S.feeders.filter(function(x){return x!==f});closeDt(true);FD.open='';save();renderFeeder();
   };
 
-  /* poles: mark each pole where it stands; it joins the line to the pole (or DT) it hangs from */
+  /* poles: mark each pole where it stands; it joins the line to the pole (or DTR) it hangs from */
   function nearest(f,list,pos){
     if(!pos)return '';var best='',bd=1e9;
     list.forEach(function(o){var d=hav([pos.lat,pos.lng],[o.lat,o.lng]);if(d<bd){bd=d;best=o.id}});return best;
@@ -2295,7 +2293,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   function toOptions(f,p){
     var no={};if(p){no[p.id]=1;(function walk(id){f.pl.forEach(function(q){if(q.to===id&&!no[q.id]){no[q.id]=1;walk(q.id)}})})(p.id)}
     return [['','— किसी से नहीं (नई लाइन शुरू) —']]
-      .concat(f.dts.map(function(d){return [d.id,'⚡ '+(d.n||'DT')]}))
+      .concat(f.dts.map(function(d){return [d.id,'⚡ '+(d.n||'DTR')]}))
       .concat(f.pl.filter(function(q){return !no[q.id]}).slice().reverse().map(function(q){return [q.id,(q.k==='h'?'🔴 ':'🔵 ')+poleFull(f,q)]}));
   }
   function setPlSt(st){FD.plSt=SLD_ST[st]?st:'pcc';$('plSt').querySelectorAll('.chip').forEach(function(c){c.setAttribute('aria-pressed',String(c.dataset.s===FD.plSt))})}
@@ -2314,7 +2312,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     $('plFormT').textContent=p?poleName(p)+' बदलें':(k==='h'?'नया 11kV खंभा':'नया LT खंभा');
     $('plC').value=p&&p.c?p.c:'';$('plDb').checked=p?!!p.db:FD.lastDb!==false;$('plNote').value=p?p.note:'';
     setKind(k);setPlSt(p?p.st:'pcc');
-    // a new pole joins the last one marked of the same line: an 11kV pole the last 11kV pole, an LT pole the last LT pole or DT
+    // a new pole joins the last one marked of the same line: an 11kV pole the last 11kV pole, an LT pole the last LT pole or DTR
     var last=node(f,FD.last),def;
     if(p)def=p.to;
     else if(k==='h')def=FD.lastH&&node(f,FD.lastH)?FD.lastH:nearest(f,f.pl.filter(function(q){return q.k==='h'}),FD.plPos);
@@ -2326,16 +2324,16 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   }
   function closePl(){FD.pl='';$('plForm').hidden=true}
   function newPole(k){startWatch();herePos().then(function(pos){FD.plPos=pos;openPl(null,k)},function(){})}
-  // After an LT circuit ends: the next 11kV pole continues from the 11kV pole the DT is tapped from.
+  // After an LT circuit ends: the next 11kV pole continues from the 11kV pole the DTR is tapped from.
   $('fdBackH').onclick=function(){
     var f=curF();if(!f)return;
     var last=node(f,FD.last),d=last&&last.d?last.d:last&&last.p&&last.p.k==='l'&&poleDt(f,last.p)?poleDt(f,last.p).d:null;
     if(!d&&f.dts.length){var id=nearest(f,f.dts,FD.fix);d=id?node(f,id).d:null}
     if(!d){toast('पहले ⚡ ट्रांसफार्मर जोड़ें');return}
     var tap=node(f,d.to);
-    if(!tap||!tap.p){toast((d.n||'DT')+' में "किस 11kV खंभे से जुड़ा" चुनें, फिर दबाएँ');openDt(d);return}
+    if(!tap||!tap.p){toast((d.n||'DTR')+' में "किस 11kV खंभे से जुड़ा" चुनें, फिर दबाएँ');openDt(d);return}
     FD.lastH=tap.p.id;FD.last=tap.p.id;
-    toast('अगला 🔴 11kV खंभा '+poleName(tap.p)+' से आगे जुड़ेगा ('+(d.n||'DT')+' का टैप)');
+    toast('अगला 🔴 11kV खंभा '+poleName(tap.p)+' से आगे जुड़ेगा ('+(d.n||'DTR')+' का टैप)');
   };
   $('fdEnd').onclick=function(){
     var f=curF();if(!f)return;
@@ -2343,11 +2341,11 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     if(!confirm('"'+f.n+'" का सर्वे पूरा करें? बाद में "सर्वे फिर खोलें" से जोड़ सकते हैं।'))return;
     if(FD.rec)stopRec();
     stopWatch();closePl();closeDt(true);f.end=Date.now();save();renderFdInfo();drawLayers(false);
-    toast('✅ सर्वे पूरा: '+fdTotals(f).hp+' 11kV खंभे, '+f.dts.length+' DT, '+fdTotals(f).lp+' LT खंभे');
+    toast('✅ सर्वे पूरा: '+fdTotals(f).hp+' 11kV खंभे, '+f.dts.length+' DTR, '+fdTotals(f).lp+' LT खंभे');
   };
   $('fdRenum').onclick=function(){
     var f=curF();if(!f||!f.pl.length)return;
-    if(!confirm('सभी खंभों के नंबर सर्वे के क्रम से फिर से लगाएँ? 11kV: HT-1, HT-2 …; LT: हर DT के सर्किट Ckt-1-1, Ckt-1-2 …'))return;
+    if(!confirm('सभी खंभों के नंबर सर्वे के क्रम से फिर से लगाएँ? 11kV: HT-1, HT-2 …; LT: हर DTR के सर्किट Ckt-1-1, Ckt-1-2 …'))return;
     renumber(f);FD.find='';$('plQ').value='';save();renderFdInfo();drawLayers(false);showFind();toast('🔢 नंबर फिर से लगे');
   };
   $('fdPoleH').onclick=function(){newPole('h')};
@@ -2362,7 +2360,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     var f=curF();if(!f)return;
     if(!FD.plPos){toast('पहले "📍 जगह फिर से लें" दबाएँ');return}
     var no=canonNo($('plNo').value,FD.plKind);if(!no){$('plNo').focus();return}
-    // an LT number may repeat only under another DT
+    // an LT number may repeat only under another DTR
     var key=FD.plKind==='l'?upKey(f,node(f,$('plTo').value)):'',lc=no.toLowerCase();
     var same=f.pl.filter(function(q){return q.id!==FD.pl&&q.no.toLowerCase()===lc&&!(q.k==='l'&&FD.plKind==='l'&&ltKey(f,q)!==key)})[0];
     if(same){toast(poleFull(f,same)+' पहले से है, दूसरा नंबर लिखें');$('plNo').focus();return}
@@ -2394,18 +2392,18 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     // the same LT number under other DTs: one tap to show that one
     var also=findPoles(f,p.no).filter(function(q){return q!==p});
     if(also.length){
-      var ar=mk('div','row');ar.appendChild(mk('small','','यही नंबर दूसरे DT में भी:'));
+      var ar=mk('div','row');ar.appendChild(mk('small','','यही नंबर दूसरे DTR में भी:'));
       also.forEach(function(q){var b=mk('button','btn ghost sm',poleFull(f,q));b.type='button';b.onclick=function(){FD.find=q.id;showFind();drawHl();if(FD.map)FD.map.setView([q.lat,q.lng],Math.max(FD.map.getZoom(),18))};ar.appendChild(b)});
       box.appendChild(ar);
     }
     var L=[];
     if(p.k==='l'){
       L.push('👥 इस खंभे से जुड़े उपभोक्ता: '+p.c);L.push('📦 DB बॉक्स: '+(p.db?'लगा है':'नहीं'));
-      var u=poleDt(f,p);L.push(u?'⚡ ट्रांसफार्मर: '+(u.d.n||'DT')+(u.hops?' (बीच में '+u.hops+' खंभे)':' (सीधे)'):'⚡ ट्रांसफार्मर: जुड़ा नहीं');
+      var u=poleDt(f,p);L.push(u?'⚡ ट्रांसफार्मर: '+(u.d.n||'DTR')+(u.hops?' (बीच में '+u.hops+' खंभे)':' (सीधे)'):'⚡ ट्रांसफार्मर: जुड़ा नहीं');
     }
-    var up=node(f,p.to);L.push('⬆️ पिछला: '+(up?(up.d?'⚡ '+(up.d.n||'DT'):poleName(up.p)):'— (लाइन यहीं से शुरू)'));
+    var up=node(f,p.to);L.push('⬆️ पिछला: '+(up?(up.d?'⚡ '+(up.d.n||'DTR'):poleName(up.p)):'— (लाइन यहीं से शुरू)'));
     var bl=below(f,p.id);if(bl.n)L.push('⬇️ आगे जुड़े खंभे: '+bl.n+(bl.c?' (उन पर '+bl.c+' उपभोक्ता)':''));
-    var hangs=f.dts.filter(function(d){return d.to===p.id});if(hangs.length)L.push('⚡ इस खंभे से: '+hangs.map(function(d){return d.n||'DT'}).join(', '));
+    var hangs=f.dts.filter(function(d){return d.to===p.id});if(hangs.length)L.push('⚡ इस खंभे से: '+hangs.map(function(d){return d.n||'DTR'}).join(', '));
     if(p.note)L.push('📝 '+p.note);
     L.forEach(function(t){box.appendChild(mk('div','',t))});
     var row=mk('div','row');row.style.marginTop='8px';
@@ -2439,7 +2437,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       var old=S.feeders.filter(function(x){return x.id===f.id})[0];
       if(old){
         if(!confirm('"'+old.n+'" पहले से है। नई फ़ाइल से बदलें?'))return;
-        // keep this phone's DT photos where the DT is the same
+        // keep this phone's DTR photos where the DTR is the same
         f.dts.forEach(function(d){var od=old.dts.filter(function(x){return x.id===d.id})[0];if(od)d.img=od.img});
         S.feeders[S.feeders.indexOf(old)]=f;
       }else S.feeders.unshift(f);
@@ -2448,7 +2446,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   };
 
   /* SLD (single line diagram) of a survey, in the usual form: title block, the 11kV line from the source with its
-     structures (PCC pole / DP / TP / 4-pole), each DT tapped off it (transformer = two circles) with its LT circuit summed
+     structures (PCC pole / DP / TP / 4-pole), each DTR tapped off it (transformer = two circles) with its LT circuit summed
      up below, and a legend. Plain PCC poles between the points that matter are counted on the span ("+12 खंभे").
      Built with DOM calls (text only through textContent), printed to PDF or saved as a PNG. */
   var SLDC={ink:'#1E2430',hv:'#C62828',lt:'#37474F',mute:'#5B6575',paper:'#FFFFFF',band:'#EEF2F7'};  // print colours, same in dark mode
@@ -2512,7 +2510,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       if(e.run)text((Math.max(x1,x2-CW)+x2)/2,y2-12,'+'+e.run+' खंभे',{size:12,fill:SLDC.mute});
       sldTicks(el,x2-CW*.28,y2);
     });
-    // structures and DT taps
+    // structures and DTR taps
     lay.nodes.forEach(function(n){
       var x=X(n),y=Y(n);
       if(n.p){
@@ -2530,7 +2528,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
         el('rect',{x:dx-6,y:y+20,width:12,height:20,fill:SLDC.paper,stroke:SLDC.ink,'stroke-width':1.5});
         el('circle',{cx:dx,cy:y+64,r:16,fill:'none',stroke:SLDC.ink,'stroke-width':2.5});
         el('circle',{cx:dx,cy:y+88,r:16,fill:'none',stroke:SLDC.ink,'stroke-width':2.5});
-        text(dx+24,y+64,d.n||'DT',{size:13,bold:true,anchor:'start'});
+        text(dx+24,y+64,d.n||'DTR',{size:13,bold:true,anchor:'start'});
         text(dx+24,y+82,d.kva?d.kva+' kVA':'— kVA',{size:12,anchor:'start'});
         el('line',{x1:dx,y1:y+104,x2:dx,y2:y+140,stroke:SLDC.lt,'stroke-width':3});
         text(dx,y+158,'LT केबल: '+(dp.n?dp.n+' खंभे':'—'),{size:12,fill:SLDC.lt,bold:true});
@@ -2595,7 +2593,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     if(f.end)L.push('✅ सर्वे पूरा: '+full(new Date(f.end)));
     if(f.by)L.push('👷 सर्वे: '+f.by);
     f.dts.forEach(function(d,i){
-      L.push('');L.push((i+1)+'. '+(d.n||'DT')+' — '+dtLine(d)+(d.note?' — '+d.note:''));
+      L.push('');L.push((i+1)+'. '+(d.n||'DTR')+' — '+dtLine(d)+(d.note?' — '+d.note:''));
       var dp=dtPoles(f,d);if(dp.n)L.push('   🔵 LT खंभे '+dp.n+', उन पर '+dp.c+' उपभोक्ता');
       L.push('   📍 '+mapsLink(d.lat,d.lng));
     });
@@ -2619,7 +2617,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     f.pl.forEach(function(p){var up=node(f,p.to);if(up)link([p.lat,p.lng],nodeLL(up),p.k==='h'?'hl':'ll')});
     f.dts.forEach(function(d){var up=node(f,d.to);if(up)link([d.lat,d.lng],nodeLL(up),'hl')});
     f.pl.forEach(function(p){k.push('<Placemark><name>'+xmlEsc(poleFull(f,p))+'</name><description>'+xmlEsc((p.k==='h'?'11kV':'LT · '+p.c+' उपभोक्ता')+(p.note?' — '+p.note:''))+'</description><styleUrl>#'+(p.k==='h'?'hp':'lp')+'</styleUrl><Point><coordinates>'+p.lng+','+p.lat+',0</coordinates></Point></Placemark>')});
-    f.dts.forEach(function(d){k.push('<Placemark><name>'+xmlEsc(d.n||'DT')+'</name><description>'+xmlEsc(dtLine(d)+(d.note?' — '+d.note:''))+'</description><styleUrl>#dt</styleUrl><Point><coordinates>'+d.lng+','+d.lat+',0</coordinates></Point></Placemark>')});
+    f.dts.forEach(function(d){k.push('<Placemark><name>'+xmlEsc(d.n||'DTR')+'</name><description>'+xmlEsc(dtLine(d)+(d.note?' — '+d.note:''))+'</description><styleUrl>#dt</styleUrl><Point><coordinates>'+d.lng+','+d.lat+',0</coordinates></Point></Placemark>')});
     k.push('</Document></kml>');
     return k.join('\n');
   }
