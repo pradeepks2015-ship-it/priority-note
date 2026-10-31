@@ -6,6 +6,10 @@ and the app turns them into a colourful sticky-note image (with date and time; t
 attached letter screenshot goes as a separate photo with it) to post in the staff WhatsApp group or send to each
 staff member. Staff never use the app; they only receive the note.
 
+## Goal (JE, 31/10)
+A village-wise and feeder-wise map of the whole distribution centre (11kV line, DTs, LT lines, poles, consumers per pole),
+built by the linemen's field surveys (🗺️ फीडर). Free and fast, always (see Conventions).
+
 ## Scope
 JE-level only: two tabs, "आज के काम" and "स्टाफ़", and beside them a separate "🗺️ फीडर" button (feeder survey map, v1.28; own button since v1.29). The "निर्देश" (orders) and
 "शाम की रिपोर्ट" tabs were removed at the user's request (v1.15); their code and saved data remain but are unreachable
@@ -99,6 +103,25 @@ and left out of reminders.
 - Phone-first: test at 400px width; no horizontal scroll.
 - Colours are CSS tokens on `:root` with dark-mode overrides; don't hard-code colours in components.
 - Never put staff phone numbers, letters or real data in the repo.
+
+## Every change (the ADEGAON repo's process — follow strictly)
+1. Test first where it fits (a failing test that shows the bug or the new behaviour), then the code, then green.
+   Look at each change with a security eye: XSS (data only through `textContent`/`mk()`, or `xmlEsc()` into HTML),
+   new outside addresses (CSP), personal data in logs/files, Firebase rules.
+2. Before every push all of these must pass (`npm ci` once; the server: `python3 -m http.server 8080`):
+   ```
+   npm run fix-csp        # after any index.html change: refresh the inline-script hash in the CSP
+   npm run checks         # lint (ESLint + no-unsanitized), lint:css (stylelint), check-css (colours only from tokens,
+                          # every var() defined), check-xss (no inline on…=, map HTML through xmlEsc), check-csp,
+                          # check-actions (workflow actions pinned to a commit SHA), npm audit --audit-level=high
+   APP_URL=http://127.0.0.1:8080/ npm test   # notify, smoke, cloud, feeder, xss (live XSS attack on every input)
+   ```
+   CI (`.github/workflows/smoke.yml`) runs the same in two jobs, `lint` and `smoke`; both must be green.
+3. Raise the version (below), commit, push to the branch and `main`, then check CI on GitHub and tell the JE.
+4. CSP (`tests/csp.mjs`): the app may only load/connect to the listed addresses; inline script is allowed by its
+   sha256 hash, not 'unsafe-inline'. A new outside address (script, fetch, picture, iframe) goes into `POLICY` there.
+   Tests fail on any "Content Security Policy" console message.
+5. New dev tool versions: at least two weeks old (supply-chain safety), exact versions in `package.json`.
 
 ## Run
 Open `index.html` in a browser, or `npx serve .` and open the printed URL.

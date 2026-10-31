@@ -14,6 +14,8 @@ await ctx.addInitScript(() => { if (sessionStorage.getItem('seeded')) return; se
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
+// anything the app's Content-Security-Policy blocks counts as an error
+page.on('console', (m) => { if (/Content Security Policy/.test(m.text())) errors.push('CSP: ' + m.text()); });
 page.on('dialog', (d) => d.accept());
 await page.goto(url);
 

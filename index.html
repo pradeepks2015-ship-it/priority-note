@@ -2,6 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-SP4O1kCdopwElihSFQ1TbudOvy8u5NyyHvXoxz24F28=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -22,6 +23,7 @@
   --p1:#D63B3B; --p2:#C28A00; --p3:#2E9E5B; --p1-ink:#FFFFFF;
   --n-yellow:#FFD84D; --n-pink:#FF9DB5; --n-green:#8EDB9B; --n-blue:#8CC8FF; --n-orange:#FFB36B;
   --note-ink:#26220F; --banner:#FFF1C2; --banner-ink:#3B2F00; --upd:#FFE3C4; --upd-ink:#5C2B00; --upd-line:#E07B1F; --upd-btn-ink:#341700; --overlay:rgba(10,12,16,.88);
+  --paper:#FFFFFF; --on-overlay:#FFFFFF; --tape:rgba(255,255,255,.55);  /* same in both themes */
   --f-ui:"Hind","Noto Sans Devanagari",system-ui,sans-serif;
   --f-head:"Baloo 2","Hind",system-ui,sans-serif;
   --f-note:"Kalam","Hind",cursive;
@@ -57,7 +59,7 @@ h1{font-family:var(--f-head);font-weight:700;font-size:30px;line-height:1.2;marg
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start}
 .col{display:flex;flex-direction:column;gap:16px;min-width:0}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .tabbar{display:flex;gap:8px;align-items:stretch}
 .tabs{flex:1 1 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
 .tab{font:600 14px var(--f-ui);padding:10px 2px;border:0;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer;min-height:44px}
@@ -82,8 +84,7 @@ textarea.bulk::placeholder{color:var(--muted)}
 .txtrow textarea{flex:1 1 0;min-width:0;font:500 16px/1.45 var(--f-ui);padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:46px;max-height:45vh;resize:none;overflow-y:hidden}
 .txtrow textarea::placeholder{color:var(--muted)}
 .tpl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.tpl .chip{font-weight:500;max-width:100%}
-.tpl .chip{border-radius:16px;text-align:left}
+.tpl .chip{font-weight:500;max-width:100%;border-radius:16px;text-align:left}
 .tpl .chip .tt{white-space:normal;overflow-wrap:anywhere;min-width:0}
 .tpl .edit{display:flex;flex-direction:column;width:100%;gap:0}
 .tpl .lbl{margin-right:2px}
@@ -186,7 +187,7 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 /* sticky note */
 .stage{padding:26px 8px 12px}
 .note{position:relative;background:var(--note);color:var(--note-ink);font-family:var(--f-note);padding:26px 20px 20px;border-radius:3px 3px 20px 3px;transform:rotate(-.8deg);box-shadow:0 10px 18px rgba(0,0,0,.22),0 2px 3px rgba(0,0,0,.18)}
-.note::before{content:"";position:absolute;top:-12px;left:50%;width:96px;height:26px;background:rgba(255,255,255,.55);transform:translateX(-50%) rotate(2deg);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.note::before{content:"";position:absolute;top:-12px;left:50%;width:96px;height:26px;background:var(--tape);transform:translateX(-50%) rotate(2deg);box-shadow:0 1px 2px rgba(0,0,0,.15)}
 .note h2{font:700 23px/1.3 var(--f-note);margin:0 0 4px;text-wrap:balance}
 .note .tmline{font-size:16px;opacity:.78;margin-bottom:8px}
 .note .g{display:flex;align-items:center;gap:8px;font-weight:700;font-size:20px;margin-top:12px}
@@ -234,11 +235,10 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 #logBody{margin-top:8px}
 .toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:30;max-width:90vw}
 .lb{position:fixed;inset:0;background:var(--overlay);z-index:40;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));flex-direction:column;gap:12px}
-.lb img{max-width:100%;max-height:calc(100% - 64px);object-fit:contain;border-radius:6px;background:#fff}
+.lb img{max-width:100%;max-height:calc(100% - 64px);object-fit:contain;border-radius:6px;background:var(--paper)}
 .lbbar{justify-content:center}
-#lbN{color:#fff;font-weight:700;min-width:48px;text-align:center}
+#lbN{color:var(--on-overlay);font-weight:700;min-width:48px;text-align:center}
 .thumbs{display:flex;flex-wrap:wrap;gap:6px}
-textarea.hold{position:fixed;left:-9999px;top:0}
 @media (prefers-reduced-motion:reduce){.switch::after{transition:none}}
 </style>
 </head>
@@ -500,7 +500,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   </div>
   <p class="ver" id="ver"></p>
 </div>
-<textarea class="hold" id="hold" aria-hidden="true" tabindex="-1"></textarea>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="lb" id="lb" hidden>
   <img id="lbImg" alt="पत्र का स्क्रीनशॉट">
@@ -523,7 +522,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   var STI={'':'⏳',done:'✅',part:'🕒',block:'⛔'};
   var STS={'':'○',done:'✓',part:'◐',block:'✕'};
   var STC={'':'#6B6450',done:'#1E7B43',part:'#B07400',block:'#C0392B'};
-  var STN={done:'पूरा',part:'आधा',block:'रुका'};
   var INK='#26220F';
   var LS='priority-note-v2';
   var VIEWLBL={tasks:'काम',orders:'निर्देश',report:'रिपोर्ट'};
@@ -613,7 +611,6 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     out.forEach(function(g){g.items=g.items.slice().sort(function(a,b){return a.p-b.p||(a.due||'99').localeCompare(b.due||'99')})});
     return out;
   }
-  function staffByName(n){for(var i=0;i<S.staff.length;i++)if(S.staff[i].n===n)return S.staff[i];return null}
   function barEl(s){
     var b=mk('div','bar');b.setAttribute('role','img');b.setAttribute('aria-label','पूरे '+s.done+', आधा '+s.part+', रुके '+s.block+', बाकी '+s.pend);
     [['done','var(--p3)'],['part','var(--p2)'],['block','var(--p1)']].forEach(function(a){if(s[a[0]]){var sp=mk('span');sp.style.flex=s[a[0]]+' 1 0';sp.style.background=a[1];b.appendChild(sp)}});
@@ -913,10 +910,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     rows.forEach(function(x){if(x.gap){y+=x.gap;return}ctx.font=(x.big?'700 50px':'400 38px')+' Kalam, Hind, sans-serif';ctx.fillText(x.t,pad,y);y+=x.big?68:52});
     return c;
   }
-  function copyText(text){
-    function fb(){var h=$('hold');h.value=text;h.select();try{document.execCommand('copy');toast('संदेश कॉपी हो गया')}catch(e){toast('कॉपी नहीं हो सका')}}
-    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast('संदेश कॉपी हो गया')},fb)}else fb();
-  }
+
 
   /* ---------- rendering the left column ---------- */
   // Opens one picture, or several with ‹ › (and a swipe) between them.
@@ -1345,7 +1339,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     });
   }
   function parseCSV(text){
-    var rows=[],row=[],f='',q=false;text=String(text).replace(/^﻿/,'');
+    var rows=[],row=[],f='',q=false;text=String(text).replace(/^\uFEFF/,'');
     for(var i=0;i<text.length;i++){
       var ch=text[i];
       if(q){if(ch==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
@@ -1584,8 +1578,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.42',APP_NOTES=[
-    'बड़े सर्वे (हज़ारों खंभे) में भी नक्शा और खंभा-खोज तेज़'
+  var APP_V='1.43',APP_NOTES=[
+    'सुरक्षा: ऐप सिर्फ़ तय पतों से script/डेटा ले-दे सकता है (CSP), और हर बदलाव पर lint, CSS, XSS की जाँच'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1621,6 +1615,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   function lsSet(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
   function fbLoad(){
     if(!fb){
+      // eslint-disable-next-line no-unsanitized/method -- FBV is the fixed gstatic SDK address, no user data
       fb=Promise.all([import(FBV+'firebase-app.js'),import(FBV+'firebase-auth.js'),import(FBV+'firebase-firestore.js')]).then(function(m){
         var app=m[0].initializeApp(FB_CFG);
         return {app:app,A:m[1],F:m[2],auth:m[1].getAuth(app),db:m[2].getFirestore(app)};
@@ -1709,6 +1704,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var d=curDoc;
     Notification.requestPermission().then(function(p){
       if(p!=='granted'){if(!quiet)toast('सूचना की अनुमति नहीं मिली, फ़ोन की सेटिंग में अनुमति दें');return}
+      // eslint-disable-next-line no-unsanitized/method -- FBV is the fixed gstatic SDK address, no user data
       return Promise.all([fbLoad(),import(FBV+'firebase-messaging.js'),navigator.serviceWorker.register('sw.js')]).then(function(m){
         var f=m[0],M=m[1];
         return M.getToken(M.getMessaging(f.app),{vapidKey:VAPID,serviceWorkerRegistration:m[2]}).then(function(tok){
@@ -1877,6 +1873,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     var list=$('dtList');list.textContent='';
     if(!f.dts.length)list.appendChild(mk('p','hint','ट्रांसफार्मर पर पहुँचकर "⚡ यहाँ ट्रांसफार्मर" दबाएँ।'));
     f.dts.forEach(function(d,i){
+      // eslint-disable-next-line no-unsanitized/method -- dtSym() is fixed SVG markup, no data
       var row=mk('div','fdi');row.insertAdjacentHTML('beforeend',dtSym());
       var who=mk('div','who');who.appendChild(mk('b','',(i+1)+'. '+(d.n||'DT')));who.appendChild(mk('small','',dtLine(d)));
       var dp=dtPoles(f,d);if(dp.n)who.appendChild(mk('small','','🔵 LT खंभे '+dp.n+' · खंभों पर '+dp.c+' उपभोक्ता'));
@@ -2048,8 +2045,8 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   /* transformer form */
   function herePos(){
     return new Promise(function(res,rej){
-      if(FD.fix&&Date.now()-FD.fix.t<20000&&FD.fix.acc<=GPS_ACC*2)return res(FD.fix);
-      if(!navigator.geolocation)return rej();
+      if(FD.fix&&Date.now()-FD.fix.t<20000&&FD.fix.acc<=GPS_ACC*2){res(FD.fix);return}
+      if(!navigator.geolocation){rej();return}
       toast('GPS से जगह ली जा रही है…');
       navigator.geolocation.getCurrentPosition(function(p){FD.fix={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy||0,t:p.timestamp||Date.now()};drawMe();res(FD.fix)},function(e){geoErr(e);rej()},{enableHighAccuracy:true,maximumAge:0,timeout:20000});
     });
@@ -2150,7 +2147,7 @@ textarea.hold{position:fixed;left:-9999px;top:0}
     $('plNo').value=p?p.no:nextNo(f);$('plC').value=p&&p.c?p.c:'';$('plNote').value=p?p.note:'';
     setKind(k);
     // a new pole joins the last one marked of the same line: an 11kV pole the last 11kV pole, an LT pole the last LT pole or DT
-    var last=node(f,FD.last),def='';
+    var last=node(f,FD.last),def;
     if(p)def=p.to;
     else if(k==='h')def=FD.lastH&&node(f,FD.lastH)?FD.lastH:nearest(f,f.pl.filter(function(q){return q.k==='h'}),FD.plPos);
     else def=last&&(last.d||last.p.k==='l')?FD.last:nearest(f,f.dts,FD.plPos);
@@ -2322,10 +2319,10 @@ textarea.hold{position:fixed;left:-9999px;top:0}
   }
   // Shares the file (and any `more` files with it, in one go) through the phone's share sheet, or downloads them.
   function shareOrSave(name,blob,more){
-    var list=[{filename:name,data:blob}].concat(more||[]),files=[];
+    var list=[{filename:name,data:blob}].concat(more||[]),files;
     try{files=list.map(function(f){return new File([f.data],f.filename,{type:f.data.type||'image/png'})})}catch(e){files=[]}
     if(files.length&&navigator.canShare&&navigator.canShare({files:files})){
-      return navigator.share({files:files,title:'प्राथमिकता नोट'}).then(function(){return {status:'saved'}},function(e){throw {code:e&&e.name==='AbortError'?'declined':'unavailable'}});
+      return navigator.share({files:files,title:'प्राथमिकता नोट'}).then(function(){return {status:'saved'}},function(e){throw Object.assign(new Error('share'),{code:e&&e.name==='AbortError'?'declined':'unavailable'})});
     }
     list.forEach(function(f,i){setTimeout(function(){
       var u=URL.createObjectURL(f.data),a=document.createElement('a');a.href=u;a.download=f.filename;document.body.appendChild(a);a.click();a.remove();

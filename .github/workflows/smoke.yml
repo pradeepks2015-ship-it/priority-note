@@ -4,27 +4,47 @@ on:
   push:
   pull_request:
 
+# दो हिस्से (ADEGAON वाली प्रक्रिया): lint = कोड/CSS/सुरक्षा की जाँच, smoke = ब्राउज़र में पूरा ऐप चलाकर टेस्ट
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Version bumped?
+        run: sh tests/version-bump.sh "${{ github.event.pull_request.base.sha || github.event.before }}"
+      - run: npm ci
+      - run: npm run lint            # ESLint: गलतियाँ + innerHTML में बिना escape डेटा (XSS)
+      - run: npm run lint:css        # stylelint: CSS की गलतियाँ
+      - run: npm run check-css       # रंग सिर्फ़ tokens से, हर var(--…) परिभाषित
+      - run: npm run check-xss       # inline handler नहीं, नक्शे के HTML में डेटा xmlEsc() से
+      - run: npm run check-csp       # Content-Security-Policy का script hash ताज़ा
+      - run: npm run check-actions   # actions पक्के commit SHA से
+      - run: npm audit --audit-level=high
+
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Version bumped?
-        run: sh tests/version-bump.sh "${{ github.event.pull_request.base.sha || github.event.before }}"
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
+          cache: npm
+      - run: npm ci
       - name: Hourly reminder text
         run: node tests/notify.mjs
       # The runner already has Google Chrome; use it, so a stalled browser download can't hang the job.
       # Download Playwright's Chromium only if the runner has no Chrome.
-      - name: Install Playwright
+      - name: Browser
         timeout-minutes: 6
         run: |
-          npm install --no-save playwright@1.56.1
           C=$(command -v google-chrome || command -v google-chrome-stable || true)
           if [ -n "$C" ]; then echo "CHROMIUM_PATH=$C" >> "$GITHUB_ENV"; "$C" --version; else npx playwright install --with-deps chromium; fi
       - name: Serve app
@@ -41,5 +61,9 @@ jobs:
           APP_URL: http://127.0.0.1:8080/
       - name: Run feeder-map test (stand-in GPS)
         run: node tests/feeder.mjs
+        env:
+          APP_URL: http://127.0.0.1:8080/
+      - name: Run XSS attack test
+        run: node tests/xss.mjs
         env:
           APP_URL: http://127.0.0.1:8080/

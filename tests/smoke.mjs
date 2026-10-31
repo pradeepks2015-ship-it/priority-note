@@ -14,6 +14,8 @@ const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePa
 const page = await browser.newPage({ viewport: { width: 400, height: 900 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
+// anything the app's Content-Security-Policy blocks counts as an error
+page.on('console', (m) => { if (/Content Security Policy/.test(m.text())) errors.push('CSP: ' + m.text()); });
 
 await page.addInitScript(() => {
   const T = (id, t) => ({ id, t, p: 1, w: '', st: '', r: '', loc: '', due: '', ref: '', q: '', img: '', carry: false });
@@ -50,7 +52,7 @@ const updSaved = await page.evaluate(() => localStorage.getItem('priority-note-v
 // Wait until the service worker controls the page: a check made while it is taking over can get lost (first open only).
 await page.evaluate(async () => {
   await navigator.serviceWorker.ready;
-  if (!navigator.serviceWorker.controller) await new Promise((r) => navigator.serviceWorker.addEventListener('controllerchange', r, { once: true }));
+  if (!navigator.serviceWorker.controller) await new Promise((r) => { navigator.serviceWorker.addEventListener('controllerchange', r, { once: true }); });
 });
 // Routed on the context, so it also catches the request when the service worker already controls the page.
 await page.context().route('**/version.json*', (r) => r.fulfill({ contentType: 'application/json', body: '{"v":"99.0"}' }));
@@ -87,7 +89,7 @@ const rem = await dl;
 const remInfo = rem ? { name: rem.suggestedFilename(), b64: readFileSync(await rem.path()).toString('base64') } : null;
 // The reminder strip at the bottom must be light (it once came out black: JPEG turns an empty area black).
 const stripLight = remInfo ? await page.evaluate(async (b64) => {
-  const bmp = await createImageBitmap(await (await fetch('data:image/jpeg;base64,' + b64)).blob());
+  const bmp = await createImageBitmap(new Blob([Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0))], { type: 'image/jpeg' }));
   const c = new OffscreenCanvas(bmp.width, bmp.height), x = c.getContext('2d'); x.drawImage(bmp, 0, 0);
   const [r, g, b] = x.getImageData(20, bmp.height - 20, 1, 1).data; return (r + g + b) / 3 > 120;
 }, remInfo.b64) : false;

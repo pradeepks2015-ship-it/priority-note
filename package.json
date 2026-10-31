@@ -1,0 +1,28 @@
+{
+  "name": "priority-note",
+  "version": "1.0.0",
+  "description": "प्राथमिकता नोट — जाँच के औज़ार (ऐप में कुछ नहीं जाता, सिर्फ़ टेस्ट/CI के लिए)",
+  "private": true,
+  "scripts": {
+    "lint": "eslint --report-unused-disable-directives index.html sw.js notify tests eslint.config.mjs stylelint.config.mjs",
+    "lint:css": "stylelint index.html",
+    "check-xss": "node tests/check-xss.mjs",
+    "check-css": "node tests/check-css.mjs",
+    "check-csp": "node tests/csp.mjs",
+    "fix-csp": "node tests/csp.mjs --fix",
+    "check-actions": "node tests/check-actions-pinned.mjs",
+    "checks": "npm run lint && npm run lint:css && npm run check-xss && npm run check-css && npm run check-csp && npm run check-actions && npm audit --audit-level=high",
+    "test": "node tests/notify.mjs && node tests/smoke.mjs && node tests/cloud.mjs && node tests/feeder.mjs && node tests/xss.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.12.0",
+    "eslint-plugin-html": "8.2.1",
+    "eslint-plugin-no-unsanitized": "4.1.5",
+    "globals": "17.13.0",
+    "playwright": "1.56.1",
+    "postcss-html": "2.0.0",
+    "stylelint": "17.16.0",
+    "stylelint-config-recommended": "18.0.0"
+  }
+}

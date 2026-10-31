@@ -5,7 +5,8 @@ import { chromium } from 'playwright';
 
 const url = process.env.APP_URL || 'http://127.0.0.1:8080/';
 const SDK = 'https://www.gstatic.com/firebasejs/10.12.5/';
-const DOC = 'https://fake-firestore.test/__doc';
+// on a googleapis address, as the app's CSP only lets it talk to Firebase's own hosts
+const DOC = 'https://firestore.googleapis.com/__fake_doc';
 let doc = null; // users/{uid} as the app wrote it: { s, t, v, rem, fcm }
 
 const FAKE = {
@@ -63,6 +64,7 @@ async function phone(seed) {
   const p = await ctx.newPage();
   const errors = [];
   p.on('pageerror', (e) => errors.push(e.message));
+  p.on('console', (m) => { if (/Content Security Policy/.test(m.text())) errors.push('CSP: ' + m.text()); });
   p.errors = errors;
   await p.goto(url);
   await p.click('#me');
