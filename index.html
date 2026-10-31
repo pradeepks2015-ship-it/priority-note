@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WMaSShnHchRErqtHMqRt++UDXfrDLTV+yCAWMD2Zaek=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-rBjmUAYbsjatLcGAqO7iV3xUiy3bk5vF3iqLrpwLBbY=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -125,6 +125,7 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .psym.l .po{fill:var(--muted)}
 .psym .cb{fill:none;stroke:var(--ink);stroke-width:1.8}
 .psym .hk{fill:none;stroke:var(--ink);stroke-width:1.1}
+.psym .sw{fill:none;stroke:var(--ink);stroke-width:.7}
 .psym .db{fill:var(--p2);stroke:var(--ink);stroke-width:.7}
 .chk{display:flex;align-items:center;gap:8px;font-weight:600}
 .chk input{width:22px;height:22px}
@@ -1619,9 +1620,10 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.48',APP_NOTES=[
-    'नक्शे पर DP / TP / 4-पोल स्ट्रक्चर असली जैसे: गार्डिंग चैनल, डिस्क व पिन इंसुलेटर, X-ब्रेसिंग',
-    'TP अब L-आकार में (लाइन को 90° मोड़ने वाला); फ़ॉर्म में "TP (90° मोड़)"'
+  var APP_V='1.49',APP_NOTES=[
+    '11kV लाइन अब नक्शे पर सिर्फ़ एक लाल लाइन (R Y B हटाए)',
+    'फीडर दोबारा खोलने पर 11kV की लाल लाइन न दिखने की कमी ठीक',
+    'LT खंभा आपके चित्र जैसा: ऊपर छोटी पट्टी, हुक पर लटकी केबल, खंभे पर DB बॉक्स और उससे निकलता तार'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1917,9 +1919,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   }
   function poleSym(k,st,db){
     if(k!=='h')return '<svg class="psym l" viewBox="0 0 22 30" width="22" height="30" aria-hidden="true">'+
-      '<rect class="po" x="10" y="3" width="2.4" height="27"/>'+
-      '<path class="hk" d="M12.4 6.5h2.4v1.6"/><path class="cb" d="M0 7.5Q7 13 14.8 8.6Q18.5 6.8 22 9.5"/>'+
-      (db?'<rect class="db" x="13" y="15" width="7.5" height="8.5" rx="1"/>':'')+'</svg>';
+      '<rect class="po" x="10" y="2" width="2.4" height="28"/><rect class="po" x="7" y="3.2" width="8.4" height="1.2"/>'+
+      '<path class="hk" d="M12.4 7h2.2v1.8M9.9 7.5h-2v1.6"/><path class="cb" d="M0 11Q4 12.5 7.9 9.1M14.6 8.8Q18 12.5 22 11.5"/>'+
+      (db?'<path class="sw" d="M12.4 13.5h1.6M17.2 21.5v2.5Q18 27 22 27.5"/><rect class="db" x="13.6" y="12.8" width="7" height="8.7" rx="1"/>':'')+'</svg>';
     if(st==='dp'||st==='tp'||st==='4p')return strSym(st);
     return '<svg class="psym h" viewBox="0 0 22 30" width="22" height="30" aria-hidden="true">'+
       '<rect class="po" x="10" y="3" width="2.4" height="27"/><rect class="po" x="1" y="6" width="20" height="2.2"/>'+
@@ -2015,7 +2017,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       FD.grp=L.layerGroup().addTo(FD.map);
       FD.map.on('dragstart',function(){FD.follow=false});
       // pole numbers only when zoomed in, so the map stays readable
-      FD.map.on('moveend',drawLabels);FD.map.on('zoomend',drawWires);FD.lbl.addTo(FD.map);FD.hl.addTo(FD.map);
+      FD.map.on('moveend',drawLabels);FD.lbl.addTo(FD.map);FD.hl.addTo(FD.map);
       FD.hvg=L.layerGroup().addTo(FD.map);
       setBase('map');
     }
@@ -2050,31 +2052,23 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       L.marker([d.lat,d.lng],{icon:ic,title:d.n||'DT'}).on('click',function(){openDt(d)}).addTo(FD.grp);
       all.push([d.lat,d.lng]);
     });
-    drawMe();drawLabels();drawWires();
-    if(!fit)return;
-    if(all.length>1)FD.map.fitBounds(all,{padding:[30,30],maxZoom:17});
-    else if(all.length)FD.map.setView(all[0],16);
-    else if(FD.fix)FD.map.setView([FD.fix.lat,FD.fix.lng],16);
-    else FD.map.setView([22.5,79.2],8);
+    drawMe();drawLabels();
+    if(fit){
+      if(all.length>1)FD.map.fitBounds(all,{padding:[30,30],maxZoom:17});
+      else if(all.length)FD.map.setView(all[0],16);
+      else if(FD.fix)FD.map.setView([FD.fix.lat,FD.fix.lng],16);
+      else FD.map.setView([22.5,79.2],8);
+    }
+    drawWires();  // after the view is set: a new map has none before, and the 11kV line would be missed
   }
-  // 11kV: its three wires R, Y, B side by side, 4 px apart on screen (worked out again at each zoom); far out one red
-  // line. Each phase is a single layer for all spans, so thousands of poles stay quick.
+  // 11kV: one red line for all spans, in one layer, so thousands of poles stay quick.
   function drawWires(){
     var f=curF();if(!f||!FD.map||!FD.map._loaded||!FD.hvg)return;FD.hvg.clearLayers();
     var sp=[];
     f.pl.forEach(function(p){var up=node(f,p.to);if(up&&p.k==='h')sp.push([[p.lat,p.lng],nodeLL(up)])});
     f.dts.forEach(function(d){var up=node(f,d.to);if(up)sp.push([[d.lat,d.lng],nodeLL(up)])});
     if(!sp.length)return;
-    var red=tok('--p1')||'red';
-    if(FD.map.getZoom()<16){L.polyline(sp,{color:red,weight:4,opacity:.95,interactive:false,phase:'H'}).addTo(FD.hvg);return}
-    var m=FD.map,ph=[['R',red,-4],['Y',tok('--p2')||'orange',0],['B',tok('--accent')||'blue',4]];
-    ph.forEach(function(q){
-      var lines=sp.map(function(s){
-        var a=m.latLngToLayerPoint(s[0]),b=m.latLngToLayerPoint(s[1]),dx=b.x-a.x,dy=b.y-a.y,len=Math.sqrt(dx*dx+dy*dy)||1,nx=-dy/len*q[2],ny=dx/len*q[2];
-        return [m.layerPointToLatLng(L.point(a.x+nx,a.y+ny)),m.layerPointToLatLng(L.point(b.x+nx,b.y+ny))];
-      });
-      L.polyline(lines,{color:q[1],weight:2.2,opacity:1,interactive:false,phase:q[0]}).addTo(FD.hvg);
-    });
+    L.polyline(sp,{color:tok('--p1')||'red',weight:4,opacity:.95,interactive:false,phase:'H'}).addTo(FD.hvg);
   }
   // Pole symbols with their numbers: only when zoomed in, and only for the poles in view (at most 300), so big surveys stay quick.
   function drawLabels(){
@@ -2436,7 +2430,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       el('rect',{x:24,y:sy-30,width:96,height:60,fill:SLDC.paper,stroke:SLDC.ink,'stroke-width':2});
       text(72,sy-6,'उपकेंद्र /',{size:12,bold:true});text(72,sy+12,'फीडर',{size:12,bold:true});
       el('line',{x1:120,y1:sy,x2:X(first),y2:sy,stroke:SLDC.hv,'stroke-width':4});sldTicks(el,150,sy);
-      text((120+X(first))/2,sy+22,'11 kV · R Y B',{size:12,bold:true,fill:SLDC.hv});
+      text((120+X(first))/2,sy+22,'11 kV',{size:12,bold:true,fill:SLDC.hv});
     }
     // 11kV spans (elbow down to a branch lane), with the plain poles counted on them
     lay.edges.forEach(function(e){
@@ -2476,7 +2470,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     // legend: items flow left to right and wrap to a second row when the drawing is narrow
     var ly=H-110,lx=40,row=0;el('line',{x1:20,y1:ly-30,x2:W-20,y2:ly-30,stroke:SLDC.ink,'stroke-width':1});
     text(lx,ly,'संकेत:',{size:14,bold:true,anchor:'start'});lx+=70;
-    [[290,function(x,y){el('line',{x1:x,y1:y-5,x2:x+40,y2:y-5,stroke:SLDC.hv,'stroke-width':4});sldTicks(el,x+20,y-5)},'11 kV लाइन (/// = R Y B तीन तार)'],
+    [[290,function(x,y){el('line',{x1:x,y1:y-5,x2:x+40,y2:y-5,stroke:SLDC.hv,'stroke-width':4});sldTicks(el,x+20,y-5)},'11 kV लाइन (/// = तीन तार)'],
      [170,function(x,y){el('line',{x1:x,y1:y-5,x2:x+40,y2:y-5,stroke:SLDC.lt,'stroke-width':5})},'LT केबल (ABC)'],
      [110,function(x,y){el('circle',{cx:x+6,cy:y-5,r:5,fill:SLDC.ink})},'PCC पोल',18],
      [70,function(x,y){el('circle',{cx:x+6,cy:y-5,r:6,fill:'none',stroke:SLDC.ink,'stroke-width':2});el('circle',{cx:x+18,cy:y-5,r:6,fill:'none',stroke:SLDC.ink,'stroke-width':2})},'DP',30],

@@ -147,6 +147,12 @@ const other = JSON.parse(survey); other.f.id = 'copy1'; other.f.n = 'नमू�
 await page.setInputFiles('#fdImp', { name: 'survey2.txt', mimeType: 'text/plain', buffer: Buffer.from(JSON.stringify(other)) });
 await page.waitForTimeout(300);
 const imported = await page.evaluate(() => { const F = JSON.parse(localStorage.getItem('priority-note-v2')).feeders; return F.map((f) => f.n + ':' + f.pl.length + ':' + f.by); });
+// After a reload the map is new: the 11kV line must be there as soon as the saved feeder opens.
+await page.click('#fdItems [aria-label="खोलें: नमूना फीडर"]');
+await page.waitForTimeout(500);
+const wiresReopen = await phases();
+await page.click('#fdBack');
+await page.waitForTimeout(200);
 await page.setInputFiles('#fdImp', { name: 'bad.txt', mimeType: 'text/plain', buffer: Buffer.from('hello') });
 await page.waitForTimeout(200);
 const listTxt2 = await page.$eval('#fdItems', (n) => n.innerText);
@@ -189,8 +195,8 @@ const checks = {
   '"↩️ DT से 11kV आगे": अगला 11kV खंभा DT के टैप खंभे (1) से': backTo.includes('खंभा 1'),
   '"🏁 सर्वे पूरा": खंभे वाले बटन छिपे, स्थिति में पूरा': ended.end > 0 && ended.poleBtn && ended.stat.includes('सर्वे पूरा') && ended.endBtn.includes('फिर खोलें'),
   'SLD प्रिंट (PDF): शीर्षक, DP, DT, LT का हिसाब, संकेत': ['एकल रेखा आरेख (SLD)', 'नमूना फीडर', '(DP)', 'DT-1', 'LT केबल: 2 खंभे', '10 उपभोक्ता', 'संकेत:', 'वितरण ट्रांसफार्मर', 'सर्वे पूरा'].every((t) => sldSvg.includes(t)),
-  '11kV के तीन तार R Y B (ज़ूम पर), दूर से एक लाल; LT केबल अलग': wiresNear === 'B,LT,R,Y' && wiresFar === 'H,LT',
-  'SLD में R Y B तीन तार, LT केबल, DB बॉक्स': ['R Y B तीन तार', 'LT केबल', 'DB 2'].every((x) => sldSvg.includes(x)),
+  '11kV एक लाल लाइन (पास, दूर और दोबारा खोलने पर), LT केबल अलग': wiresNear === 'H,LT' && wiresFar === 'H,LT' && wiresReopen === 'H,LT',
+  'SLD में /// तीन तार, LT केबल, DB बॉक्स': ['/// = तीन तार', 'LT केबल', 'DB 2'].every((x) => sldSvg.includes(x)),
   'DP का निशान: ब्रेसिंग और डिस्क इंसुलेटर, गोल किनारा नहीं': dpSym.length === 1 && dpSym[0].br === 1 && dpSym[0].dsc === 3 && dpSym[0].radius === '0px',
   'SLD फोटो (PNG) बनी': /^sld-.*\.png$/.test(sldPng.name) && sldPng.size > 5000,
   'आड़ा स्क्रॉल नहीं': !hScroll,
