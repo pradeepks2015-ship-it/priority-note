@@ -121,6 +121,8 @@ and left out of reminders.
   v1.66: the button first takes a quick fix (low accuracy, up to 5 min old) and then the GPS one; `#geoDiag` keeps the
   GPS state in words (fix ± m, code 2 → switch on Google Location Accuracy, code 3 → go outside, `IN_APP` WebView →
   open in Chrome); the watch has no timeout (it waited and failed every 30 s).
+  v1.67: "🔧 GPS जाँच" (`#gpsTest`) reports, step by step, where the page is open, the permission state, a quick fix and a
+  GPS fix (accuracy and seconds, or the error code — never coordinates) and offers the report on WhatsApp (`#gpsRepWa`).
 - DTR loading (v1.65): `dtLoad(d, dtPoles())` = connected kW ÷ (kVA × `DTR_PF` 0.9); ≥80 % `hi` (yellow, "भरने के पास"),
   ≥100 % `ov` (red, "ओवरलोड"). Shown in the DTR list (`.ld`), as a ring round the DTR on the map (`.dtico.hi/.ov`), the
   "ओवरलोड DTR" total, the search box ("जुड़ा DTR"), WhatsApp and the SLD. Connected load, not measured demand.

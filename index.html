@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-VyCo4v3P2x4SpXOdaThfVzMusofPwyUyaUUum7aZ8Aw=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-mPGn8Y7M8iyn8Ali4ujE/vC/g/O1dgviw5T+Ijd3iJk=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -167,6 +167,7 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .ddm .ddl{display:flex;flex-direction:column;gap:6px;margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .ddm .ddl .btn{width:100%;justify-content:flex-start}
 .geodiag{margin:6px 0;font-weight:600;line-height:1.5}.geodiag.bad{color:var(--p1)}
+.gpsrep{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:6px 0;background:var(--surface)}.gpsrep pre{white-space:pre-wrap;margin:0 0 8px;font:13px/1.5 var(--f-ui)}
 .geohelp{border:1.5px solid var(--p1);border-radius:12px;padding:10px 12px;margin:8px 0;background:var(--surface);line-height:1.55}.geohelp ol{margin:6px 0 8px;padding-left:20px}
 .fdlegend .lg{font-weight:700;white-space:nowrap}.fdlegend .lg.h{color:var(--p1)}.fdlegend .lg.l{color:var(--ink)}.fdlegend .lg.w{color:var(--muted)}
 .dtico span{position:absolute;left:50%;top:36px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
@@ -443,6 +444,11 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost sm" type="button" id="fdMe">◎ मेरी जगह</button>
           </div>
           <p class="geodiag" id="geoDiag" role="status" hidden></p>
+          <div class="row"><button class="btn ghost sm" type="button" id="gpsTest">🔧 GPS जाँच</button></div>
+          <div class="gpsrep" id="gpsRepBox" hidden>
+            <pre id="gpsRep"></pre>
+            <a class="btn wa sm" id="gpsRepWa" href="#" target="_blank" rel="noopener">💬 यह जाँच WhatsApp पर भेजें</a>
+          </div>
           <p class="hint offinfo" id="offInfo" hidden>📴 बिना नेट: फ़ोन में सेव किया नक्शा दिख रहा है (जो हिस्सा पहले देखा या सेव किया था)।</p>
           <div class="row" style="align-items:center">
             <button class="btn ghost sm" type="button" id="offSave">📥 गाँव का नक्शा फ़ोन में रखें</button>
@@ -1730,9 +1736,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.66',APP_NOTES=[
-    '"◎ मेरी जगह": पहले तुरंत मोटी जगह, फिर GPS से पक्की; GPS की हालत बटन के नीचे लिखी रहती है (जगह मिली ±मी., या क्या चालू करें)',
-    'WhatsApp के अंदर खुला हो तो बताता है: "Chrome में खोलें"'
+  var APP_V='1.67',APP_NOTES=[
+    'नक्शे के नीचे "🔧 GPS जाँच": अनुमति, ऐप कहाँ खुला है, तुरंत और GPS वाली जगह — हर कदम का नतीजा; "WhatsApp पर भेजें" से रिपोर्ट भेजें'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2392,6 +2397,33 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       :'⚠️ फ़ोन जगह नहीं दे रहा। फ़ोन की Settings → Location में "Google Location Accuracy" (या "सटीकता बढ़ाएँ") चालू करें, फिर दबाएँ।'+(IN_APP?' यह पेज WhatsApp/दूसरे ऐप के अंदर खुला है — ऊपर ⋮ से "Chrome में खोलें"।':''),true);
   }
   function geoOk(){$('geoHelp').hidden=true}
+  /* "🔧 GPS जाँच" (v1.67): asks the phone step by step — where the page is open, the permission's real state, a quick
+     place, then the GPS's own — and writes each answer (accuracy and time, or the error code), never the coordinates.
+     The report can go on WhatsApp, so a problem on a phone far away can be seen as it is. */
+  $('gpsTest').onclick=function(){
+    var out=$('gpsRep'),L=[];$('gpsRepBox').hidden=false;
+    function put(t){L.push(t);out.textContent=L.join('\n');$('gpsRepWa').href='https://wa.me/?text='+encodeURIComponent('🔧 GPS जाँच — प्राथमिकता नोट\n'+L.join('\n'))}
+    var sa=window.matchMedia&&matchMedia('(display-mode: standalone)').matches;
+    put('संस्करण '+APP_V+' · '+(sa?'होम-स्क्रीन वाला ऐप':'ब्राउज़र')+(IN_APP?' · ⚠️ WhatsApp/दूसरे ऐप के अंदर खुला':''));
+    put('सुरक्षित पता (https): '+(window.isSecureContext?'हाँ':'नहीं ⚠️'));
+    if(!navigator.geolocation){put('GPS: इस ब्राउज़र में नहीं है ⚠️');return}
+    var perm=navigator.permissions&&navigator.permissions.query?navigator.permissions.query({name:'geolocation'}).then(function(r){return r.state},function(){return '?'}):Promise.resolve('?');
+    function one(label,opt){
+      var t0=Date.now();
+      return new Promise(function(res){navigator.geolocation.getCurrentPosition(function(p){
+        put(label+': ✅ ±'+Math.round(p.coords.accuracy)+' मी., '+((Date.now()-t0)/1000).toFixed(1)+' सेकंड में');onFix(p);res(true);
+      },function(e){
+        put(label+': ⚠️ कोड '+(e&&e.code)+' — '+({1:'अनुमति नहीं',2:'फ़ोन जगह नहीं दे रहा',3:'समय खत्म'}[e&&e.code]||'')+(e&&e.message?' ('+e.message+')':''));res(false);
+      },opt)});
+    }
+    perm.then(function(st){
+      put('अनुमति: '+({granted:'दी हुई ✅',denied:'मना की हुई ⚠️ (Chrome में Location → Allow)',prompt:'अभी तय नहीं ⚠️ (पूछने पर Allow दबाएँ)'}[st]||st));
+      put('तुरंत वाली जगह: जाँच रहे हैं…');
+      return one('तुरंत वाली जगह',{enableHighAccuracy:false,maximumAge:300000,timeout:10000});
+    }).then(function(){L.splice(L.indexOf('तुरंत वाली जगह: जाँच रहे हैं…'),1);put('GPS वाली जगह: जाँच रहे हैं (30 सेकंड तक)…');
+      return one('GPS वाली जगह',{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+    }).then(function(){L.splice(L.indexOf('GPS वाली जगह: जाँच रहे हैं (30 सेकंड तक)…'),1);put('— जाँच पूरी');});
+  };
   $('geoRetry').onclick=function(){FD.fix=null;herePos().then(function(){geoOk();toast('✅ जगह मिल गई')},function(){})};
   function startWatch(){
     if(FD.watch!=null)return true;
