@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-byAu0tCOKODdlhMT0tIsEYVn/EpeeSrwTDgD62856Eg=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-VyCo4v3P2x4SpXOdaThfVzMusofPwyUyaUUum7aZ8Aw=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -166,6 +166,7 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .ddm>summary{list-style:none;width:100%;justify-content:center}.ddm>summary::-webkit-details-marker{display:none}
 .ddm .ddl{display:flex;flex-direction:column;gap:6px;margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .ddm .ddl .btn{width:100%;justify-content:flex-start}
+.geodiag{margin:6px 0;font-weight:600;line-height:1.5}.geodiag.bad{color:var(--p1)}
 .geohelp{border:1.5px solid var(--p1);border-radius:12px;padding:10px 12px;margin:8px 0;background:var(--surface);line-height:1.55}.geohelp ol{margin:6px 0 8px;padding-left:20px}
 .fdlegend .lg{font-weight:700;white-space:nowrap}.fdlegend .lg.h{color:var(--p1)}.fdlegend .lg.l{color:var(--ink)}.fdlegend .lg.w{color:var(--muted)}
 .dtico span{position:absolute;left:50%;top:36px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
@@ -441,6 +442,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost sm" type="button" data-l="sat" aria-pressed="false">सैटेलाइट</button>
             <button class="btn ghost sm" type="button" id="fdMe">◎ मेरी जगह</button>
           </div>
+          <p class="geodiag" id="geoDiag" role="status" hidden></p>
           <p class="hint offinfo" id="offInfo" hidden>📴 बिना नेट: फ़ोन में सेव किया नक्शा दिख रहा है (जो हिस्सा पहले देखा या सेव किया था)।</p>
           <div class="row" style="align-items:center">
             <button class="btn ghost sm" type="button" id="offSave">📥 गाँव का नक्शा फ़ोन में रखें</button>
@@ -1728,9 +1730,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.65',APP_NOTES=[
-    'हर DTR कितना भरा है: जुड़ा भार (kW) ÷ (kVA × 0.9); 80% से ऊपर पीला "भरने के पास", 100% से ऊपर लाल "ओवरलोड" — सूची, नक्शा, खोज, WhatsApp, SLD में',
-    'बिना नेट का नक्शा: देखा हुआ नक्शा फ़ोन में रहता है; "📥 गाँव का नक्शा फ़ोन में रखें" से पूरे गाँव का हिस्सा पहले से सेव'
+  var APP_V='1.66',APP_NOTES=[
+    '"◎ मेरी जगह": पहले तुरंत मोटी जगह, फिर GPS से पक्की; GPS की हालत बटन के नीचे लिखी रहती है (जगह मिली ±मी., या क्या चालू करें)',
+    'WhatsApp के अंदर खुला हो तो बताता है: "Chrome में खोलें"'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2378,18 +2380,30 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* GPS */
   // Location refused (code 1): the steps stay on screen until it works; other errors are a short note.
-  function geoErr(e){if(e&&e.code===1){$('geoHelp').hidden=false;$('geoHelp').scrollIntoView({block:'center'})}else toast('GPS नहीं मिल रही, खुले में आएँ')}
+  // GPS state in words under the map buttons (v1.66), so a failure is not a toast that vanishes.
+  function geoDiag(t,bad){var n=$('geoDiag');n.textContent=t;n.className='geodiag'+(bad?' bad':'');n.hidden=!t}
+  // A browser inside another app (WhatsApp, Facebook …) is an Android WebView: it usually gives no location.
+  var IN_APP=/; wv\)|FBAN|FBAV|Instagram|Line\//.test(navigator.userAgent);
+  function geoErr(e){
+    var c=e&&e.code;
+    if(c===1){$('geoHelp').hidden=false;$('geoHelp').scrollIntoView({block:'center'});geoDiag('⚠️ जगह की अनुमति नहीं मिली (नीचे तरीका देखें)।',true);return}
+    if(FD.fix&&FD.fixAt>=FD.meAt)return;  // this press already got a place (the quick one): keep showing it
+    geoDiag(c===3?'⏳ GPS को पक्की जगह मिलने में देर हो रही है — खुले आसमान के नीचे आएँ और फिर "◎ मेरी जगह" दबाएँ।'
+      :'⚠️ फ़ोन जगह नहीं दे रहा। फ़ोन की Settings → Location में "Google Location Accuracy" (या "सटीकता बढ़ाएँ") चालू करें, फिर दबाएँ।'+(IN_APP?' यह पेज WhatsApp/दूसरे ऐप के अंदर खुला है — ऊपर ⋮ से "Chrome में खोलें"।':''),true);
+  }
   function geoOk(){$('geoHelp').hidden=true}
   $('geoRetry').onclick=function(){FD.fix=null;herePos().then(function(){geoOk();toast('✅ जगह मिल गई')},function(){})};
   function startWatch(){
     if(FD.watch!=null)return true;
     if(!navigator.geolocation){toast('इस फ़ोन/ब्राउज़र में GPS नहीं मिला');return false}
-    FD.watch=navigator.geolocation.watchPosition(onFix,geoErr,{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+    // no timeout on the watch: it waits for the GPS instead of failing every 30 s
+    FD.watch=navigator.geolocation.watchPosition(onFix,geoErr,{enableHighAccuracy:true,maximumAge:0});
     return true;
   }
   function stopWatch(){if(FD.watch!=null){navigator.geolocation.clearWatch(FD.watch);FD.watch=null}}
   function onFix(p){geoOk();
-    FD.fix={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy||0,t:p.timestamp||Date.now()};
+    FD.fix={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy||0,t:p.timestamp||Date.now()};FD.fixAt=Date.now();
+    geoDiag('✅ जगह मिली ±'+Math.round(FD.fix.acc)+' मी. ('+tm(new Date())+')'+(FD.fix.acc>100?' — मोटा अनुमान; खुले में कुछ सेकंड रुकें, ठीक होती जाएगी':''));
     if(FD.rec)addPoint(FD.fix);
     drawMe();
     if(view==='feeder')fdStat();
@@ -2427,9 +2441,15 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     toast('नापना शुरू · फीडर के साथ चलें');fdStat();
   };
   // A fresh fix every time (not an old one), then the map goes there; the watch keeps the dot moving.
+  // First a quick place (the phone's recent or network fix, may be rough), then the GPS's own; the watch keeps it moving.
   $('fdMe').onclick=function(){
-    FD.follow=true;if(!startWatch())return;FD.meGo=true;toast('GPS से आपकी जगह ली जा रही है…');
-    navigator.geolocation.getCurrentPosition(onFix,geoErr,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+    if(IN_APP)geoDiag('⚠️ यह पेज WhatsApp/दूसरे ऐप के अंदर खुला है, वहाँ GPS अक्सर नहीं चलता — ऊपर ⋮ से "Chrome में खोलें"।',true);
+    else geoDiag('📡 GPS से आपकी जगह ली जा रही है…');
+    if(!window.isSecureContext){geoDiag('⚠️ यह पेज सुरक्षित (https) पते से नहीं खुला, जगह नहीं मिलेगी।',true);return}
+    FD.follow=true;if(!startWatch())return;FD.meGo=true;FD.meAt=Date.now();
+    var g=navigator.geolocation;
+    g.getCurrentPosition(onFix,function(){},{enableHighAccuracy:false,maximumAge:300000,timeout:8000});
+    g.getCurrentPosition(onFix,geoErr,{enableHighAccuracy:true,maximumAge:0,timeout:30000});
   };
   document.querySelectorAll('.fdlayers [data-l]').forEach(function(b){b.onclick=function(){if(FD.map)setBase(b.dataset.l)}});
   $('fdBack').onclick=function(){

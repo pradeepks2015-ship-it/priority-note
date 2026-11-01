@@ -301,6 +301,11 @@ await ctx2.setGeolocation({ latitude: 23.1, longitude: 79.9, accuracy: 18 });
 await g.click('#fdMe');
 const meOk = await g.waitForFunction(() => { const m = window.__fdMap, c = m.getCenter(); return Math.abs(c.lat - 23.1) < 0.001 && Math.abs(c.lng - 79.9) < 0.001 && m.getZoom() >= 17; }, null, { timeout: 8000 }).then(() => true, () => false);
 const meRing = await g.evaluate(() => { let r = 0; window.__fdMap.eachLayer((l) => { if (l.options && l.options.meAcc) r = Math.round(l.getRadius()); }); return r; });
+const meDiag = await g.$eval('#geoDiag', (n) => !n.hidden && n.textContent);
+// The phone gives no position (code 2) even with permission: the line under the buttons says what to switch on.
+await g.evaluate(() => { navigator.geolocation.getCurrentPosition = (ok, bad) => setTimeout(() => bad({ code: 2, message: 'unavailable' }), 10); });
+await g.click('#fdMe');
+const noFixDiag = await g.waitForFunction(() => { const n = document.getElementById('geoDiag'); return !n.hidden && n.textContent.includes('Location Accuracy') ? n.textContent : false; }, null, { timeout: 5000 }).then(() => true, () => false);
 await ctx2.close();
 
 await browser.close();
@@ -362,6 +367,7 @@ const checks = {
   'SLD के दोनों बटन एक ड्रॉपडाउन में; चुनने पर बंद': sldMenuOpen && sldMenuShut,
   'संकेत और खंभे के फ़ॉर्म में DB बॉक्स का असली निशान (📦 नहीं)': dbLegend,
   '"◎ मेरी जगह": ताज़ा GPS, नक्शा वहीं ज़ूम होकर, सटीकता का घेरा': meOk && meRing === 18,
+  'GPS की हालत बटन के नीचे लिखी रहे: जगह मिली (±मी.), न मिले तो क्या चालू करें': !!meDiag && meDiag.includes('जगह मिली') && meDiag.includes('±18') && noFixDiag,
   'जगह (GPS) की अनुमति नहीं: तरीका दिखा, अनुमति देने पर "फिर कोशिश करें" से चला': geoShown && geoTxt.includes('Location') && geoTxt.includes('Chrome') && geoGone,
   'DTR कितना भरा (kW ÷ kVA×0.9): 22% ठीक; 10 kVA पर 139% ओवरलोड — सूची, नक्शा, कुल, WhatsApp': clDtr.includes('22% भरा') && ovList.includes('139% भरा') && ovList.includes('ओवरलोड') && ovMap === 1 && ovSum.includes('ओवरलोड DTR 1') && ovWa.includes('139% भरा') && ovWa.includes('ओवरलोड'),
   'बिना नेट का नक्शा: गाँव का हिस्सा फ़ोन में (150 तक टाइल), नेट बंद होने पर भी नक्शा और सूचना': offSaved && offCount > 0 && offCount <= 400 && offTiles && offNote,
