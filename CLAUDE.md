@@ -118,6 +118,16 @@ and left out of reminders.
   pole form, totals). The SLD choices sit in one dropdown `#sldMenu` (closes on a pick).
   "◎ मेरी जगह" (v1.64) asks for a fresh fix (`getCurrentPosition`, maximumAge 0) besides the watch; the first fix after it
   zooms the map there (≥17, `FD.meGo`) and says the accuracy; `drawMe()` draws the dot and an accuracy ring (`meAcc`).
+- DTR loading (v1.65): `dtLoad(d, dtPoles())` = connected kW ÷ (kVA × `DTR_PF` 0.9); ≥80 % `hi` (yellow, "भरने के पास"),
+  ≥100 % `ov` (red, "ओवरलोड"). Shown in the DTR list (`.ld`), as a ring round the DTR on the map (`.dtico.hi/.ov`), the
+  "ओवरलोड DTR" total, the search box ("जुड़ा DTR"), WhatsApp and the SLD. Connected load, not measured demand.
+- Map without internet (v1.65): `sw.js` keeps OpenStreetMap tiles in its own cache `pn-tiles` (network first, the saved
+  copy when offline; up to `TILE_MAX` 3000, oldest out; kept across app updates). Tiles load with `crossOrigin` so
+  the copies are not padded opaque responses. "📥 गाँव का नक्शा फ़ोन में रखें" posts the feeder's area (`areaTiles()`:
+  zoom 13–16, ~400 m around, ≤150 tiles) to the service worker, which fetches two at a time with a pause and reports
+  progress. Closer zooms (17+) only by looking at them — the OSM tile policy forbids bulk downloads there; satellite
+  tiles are never saved. `#offInfo` says when the map is offline. Tests set `PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS`
+  so routes also catch the service worker's fetches (no test reaches real tile servers).
 - Structures and SLD (v1.45): 11kV poles have `st` (pcc | dp | tp | 4p, `SLD_ST`), chosen in the pole form; map symbol
   (`strSym()`, v1.48, after the JE's DP drawing): H-beam poles, guarding channel with disc insulators, a second channel with
   pin insulators, belts and X-bracing (4-pole two pairs). TP (`tpSym()`, after the JE's photo) is three poles in an L that

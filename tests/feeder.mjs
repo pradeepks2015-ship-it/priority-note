@@ -8,9 +8,12 @@ import { readFileSync } from 'node:fs';
 
 const url = process.env.APP_URL || 'http://127.0.0.1:8080/';
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+// Let page.route/ctx.route also see what the service worker fetches (map tiles since v1.65), so no test reaches the
+// real tile servers and the offline map can be tested.
+process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS = '1';
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const ctx = await browser.newContext({ viewport: { width: 400, height: 900 }, permissions: ['geolocation'], geolocation: { latitude: 22.5, longitude: 79.2, accuracy: 5 }, acceptDownloads: true });
-await ctx.route(/tile\.openstreetmap\.org|arcgisonline\.com/, (r) => r.fulfill({ contentType: 'image/png', body: PNG }));
+await ctx.route(/tile\.openstreetmap\.org|arcgisonline\.com/, (r) => r.fulfill({ contentType: 'image/png', headers: { 'access-control-allow-origin': '*' }, body: PNG }));
 await ctx.addInitScript(() => { if (sessionStorage.getItem('seeded')) return; sessionStorage.setItem('seeded', '1'); localStorage.setItem('priority-note-ver', '99'); });
 const page = await ctx.newPage();
 const errors = [];
@@ -250,13 +253,36 @@ const clDetail = await page.$eval('#csInfo', (n) => n.innerText);
 await page.click('#plForm button[type=submit]');
 const clSaved = await page.evaluate(() => { const f = JSON.parse(localStorage.getItem('priority-note-v2')).feeders.find((x) => x.n === 'नमूना फीडर'); const p = f.pl.find((x) => x.no === 'Ckt-1-2'); return p.c + ':' + p.cs.map((c) => c.i + '/' + c.g + '/' + c.ph + '/' + c.kw).join(',') + ':' + f.cl.length; });
 const clDtr = await page.$eval('#dtList', (n) => n.innerText);
+// DTR loading: connected kW against kVA × 0.9; a small DTR shows as overloaded in the list, on the map and in WhatsApp.
+await page.click('#dtList [aria-label="बदलें: DTR-1"]');
+await page.selectOption('#dtKva', '10');
+await page.click('#dtForm button[type=submit]');
+const ovList = await page.$eval('#dtList', (n) => n.innerText);
+const ovMap = await page.$$eval('#fdMap .dtico.ov', (e) => e.length);
+const ovSum = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
+const ovWa = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
+// The map without internet: tiles you have seen are kept, and "📥" keeps the village's area (zoom 13–16) on the phone.
+await page.click('#offSave');
+const offSaved = await page.waitForFunction(() => document.getElementById('offStat').textContent.startsWith('✅'), null, { timeout: 30000 }).then(() => true, () => false);
+const offCount = await page.evaluate(async () => (await (await caches.open('pn-tiles')).keys()).length);
+await ctx.unroute(/tile\.openstreetmap\.org|arcgisonline\.com/);
+await ctx.setOffline(true);
+await page.reload();
+await page.click('#tab-feeder');
+await page.click('#fdItems [aria-label="खोलें: नमूना फीडर"]');
+await page.waitForSelector('#fdMap.leaflet-container');
+await page.evaluate(() => { const m = window.__fdMap; m.setView(m.getCenter(), 16); });
+const offTiles = await page.waitForFunction(() => document.querySelectorAll('#fdMap .leaflet-tile-loaded').length > 0, null, { timeout: 8000 }).then(() => true, () => false);
+const offNote = await page.$eval('#offInfo', (n) => !n.hidden && n.textContent.includes('बिना नेट'));
+await ctx.setOffline(false);
+await ctx.route(/tile\.openstreetmap\.org|arcgisonline\.com/, (r) => r.fulfill({ contentType: 'image/png', headers: { 'access-control-allow-origin': '*' }, body: PNG }));
 await page.$eval('#fdOne details.more:has(#fdDelete)', (d) => { d.open = true; });
 await page.click('#fdDelete');
 const gone = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.length === 1);
 
 // Location refused (phone or Chrome): the page says how to turn it on, and "फिर कोशिश करें" works once allowed.
 const ctx2 = await browser.newContext({ viewport: { width: 400, height: 900 } });
-await ctx2.route(/tile\.openstreetmap\.org|arcgisonline\.com/, (r) => r.fulfill({ contentType: 'image/png', body: PNG }));
+await ctx2.route(/tile\.openstreetmap\.org|arcgisonline\.com/, (r) => r.fulfill({ contentType: 'image/png', headers: { 'access-control-allow-origin': '*' }, body: PNG }));
 await ctx2.addInitScript(() => { localStorage.setItem('priority-note-ver', '99'); if (!localStorage.getItem('priority-note-v2')) localStorage.setItem('priority-note-v2', JSON.stringify({ tasks: [], feeders: [{ id: 'g1', n: 'जगह की जाँच', segs: [], dts: [], pl: [] }] })); });
 const g = await ctx2.newPage();
 await g.goto(url);
@@ -337,6 +363,8 @@ const checks = {
   'संकेत और खंभे के फ़ॉर्म में DB बॉक्स का असली निशान (📦 नहीं)': dbLegend,
   '"◎ मेरी जगह": ताज़ा GPS, नक्शा वहीं ज़ूम होकर, सटीकता का घेरा': meOk && meRing === 18,
   'जगह (GPS) की अनुमति नहीं: तरीका दिखा, अनुमति देने पर "फिर कोशिश करें" से चला': geoShown && geoTxt.includes('Location') && geoTxt.includes('Chrome') && geoGone,
+  'DTR कितना भरा (kW ÷ kVA×0.9): 22% ठीक; 10 kVA पर 139% ओवरलोड — सूची, नक्शा, कुल, WhatsApp': clDtr.includes('22% भरा') && ovList.includes('139% भरा') && ovList.includes('ओवरलोड') && ovMap === 1 && ovSum.includes('ओवरलोड DTR 1') && ovWa.includes('139% भरा') && ovWa.includes('ओवरलोड'),
+  'बिना नेट का नक्शा: गाँव का हिस्सा फ़ोन में (150 तक टाइल), नेट बंद होने पर भी नक्शा और सूचना': offSaved && offCount > 0 && offCount <= 400 && offTiles && offNote,
   'फीडर हटाना (पूछकर)': gone,
   'कोई JS error नहीं': errors.length === 0,
 };

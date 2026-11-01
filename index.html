@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-EZ8y5qp6m+hlWKJ9XGWSfXeeibMURPyFdHDFI1lbOs4=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-byAu0tCOKODdlhMT0tIsEYVn/EpeeSrwTDgD62856Eg=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -152,6 +152,9 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .plico span{position:absolute;left:50%;top:100%;transform:translateX(-50%);white-space:nowrap;font:700 11px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 3px;border-radius:4px;border:1px solid var(--line)}
 .plinfo{border:1.5px solid var(--accent);border-radius:12px;padding:10px 12px;margin-top:8px;line-height:1.5}
 .plinfo b{font-size:17px}
+.offinfo{font-weight:700;color:var(--p2)}
+.fdi .ld{font-weight:700}.fdi .ld.hi{color:var(--p2)}.fdi .ld.ov{color:var(--p1)}
+.dtico.hi svg{box-shadow:0 0 0 3px var(--p2)}.dtico.ov svg{box-shadow:0 0 0 3px var(--p1)}
 .csl{margin:6px 0}.csl .chip{font-variant-numeric:tabular-nums}
 .csinfo{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;background:var(--surface);line-height:1.6}
 .csform{border:1px dashed var(--line);border-radius:10px;padding:8px;margin:6px 0}
@@ -437,6 +440,11 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost sm" type="button" data-l="map" aria-pressed="true">नक्शा</button>
             <button class="btn ghost sm" type="button" data-l="sat" aria-pressed="false">सैटेलाइट</button>
             <button class="btn ghost sm" type="button" id="fdMe">◎ मेरी जगह</button>
+          </div>
+          <p class="hint offinfo" id="offInfo" hidden>📴 बिना नेट: फ़ोन में सेव किया नक्शा दिख रहा है (जो हिस्सा पहले देखा या सेव किया था)।</p>
+          <div class="row" style="align-items:center">
+            <button class="btn ghost sm" type="button" id="offSave">📥 गाँव का नक्शा फ़ोन में रखें</button>
+            <span class="hint" id="offStat" style="flex:1 1 160px"></span>
           </div>
           <p class="fdstat" id="fdStat" role="status"></p>
           <div class="geohelp" id="geoHelp" hidden>
@@ -1720,8 +1728,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.64',APP_NOTES=[
-    '"◎ मेरी जगह": हर बार ताज़ा GPS, नक्शा सीधे आपकी जगह पर ज़ूम होकर; नीला बिंदु और उसके चारों ओर सटीकता का घेरा (± मीटर)'
+  var APP_V='1.65',APP_NOTES=[
+    'हर DTR कितना भरा है: जुड़ा भार (kW) ÷ (kVA × 0.9); 80% से ऊपर पीला "भरने के पास", 100% से ऊपर लाल "ओवरलोड" — सूची, नक्शा, खोज, WhatsApp, SLD में',
+    'बिना नेट का नक्शा: देखा हुआ नक्शा फ़ोन में रहता है; "📥 गाँव का नक्शा फ़ोन में रखें" से पूरे गाँव का हिस्सा पहले से सेव'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1977,6 +1986,10 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
         x:head.map(function(h,c){return used[c]||!h||/^(क्र|क्रमांक|s\.?\s*no|sr\.?\s*no|sl\.?\s*no)\.?$/i.test(h)?null:[h,cells[c]||'']}).filter(Boolean)};
     });
   }
+  /* How full a DTR is (v1.65): connected kW on its LT poles against kVA × 0.9 (power factor). 80 % and more: nearly full;
+     100 % and more: overloaded. Connected load, not the measured demand — a guide for where to look first. */
+  var DTR_PF=0.9;
+  function dtLoad(d,dp){if(!d.kva||!dp||!dp.kw)return null;var pct=Math.round(dp.kw/(d.kva*DTR_PF)*100);return {pct:pct,cls:pct>=100?'ov':pct>=80?'hi':'ok',txt:pct+'% भरा'+(pct>=100?' ⚠️ ओवरलोड':pct>=80?' ⚠️ भरने के पास':'')}}
   function fmtKw(v){return String(Math.round(v*100)/100)}
   function poleKw(p){var s=0;(p.cs||[]).forEach(function(c){s+=c.kw});return s}
   // One consumer's details, each line as text.
@@ -2192,7 +2205,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     $('clSum').textContent='👥 गाँव की उपभोक्ता सूची (Excel)'+(f.cl?' ('+f.cl.length+')':'');$('clDel').hidden=!f.cl;
     var t=fdTotals(f),sum=$('fdSum');sum.textContent='';
     var boxes=[['फीडर की लंबाई (GPS)',fmtLen(t.len)],['खंभे'+(t.est?' (अनुमान)':''),t.poles?String(t.poles):'—'],['ट्रांसफार्मर',t.dt+(t.kva?' · '+t.kva+' kVA':'')],['उपभोक्ता (DTR पर लिखे)',String(t.c)],['LT लाइन कुल',fmtLen(t.lt)]];
-    if(f.pl.length)boxes.push(['🔴 11kV खंभे (सर्वे)',String(t.hp)],['🔵 LT खंभे (सर्वे)',String(t.lp)],['खंभों पर उपभोक्ता',String(t.pc)],['जुड़ा भार (kW)',fmtKw(t.kw)],['DB बॉक्स',String(t.db),1]);
+    if(f.pl.length)boxes.push(['🔴 11kV खंभे (सर्वे)',String(t.hp)],['🔵 LT खंभे (सर्वे)',String(t.lp)],['खंभों पर उपभोक्ता',String(t.pc)],['जुड़ा भार (kW)',fmtKw(t.kw)],['ओवरलोड DTR',String(f.dts.filter(function(d){var l=dtLoad(d,dtPoles(f,d));return l&&l.cls==='ov'}).length)],['DB बॉक्स',String(t.db),1]);
     boxes.forEach(function(p){
       var d=mk('div'),sm=mk('small','',p[0]);if(p[2])sm.insertBefore(symEl(dbSym()),sm.firstChild);d.appendChild(sm);d.appendChild(mk('b','',p[1]));sum.appendChild(d);
     });
@@ -2206,7 +2219,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       // eslint-disable-next-line no-unsanitized/method -- dtSym() is fixed SVG markup, no data
       var row=mk('div','fdi');row.insertAdjacentHTML('beforeend',dtSym());
       var who=mk('div','who');who.appendChild(mk('b','',(i+1)+'. '+(d.n||'DTR')));who.appendChild(mk('small','',dtLine(d)));
-      var dp=dtPoles(f,d);if(dp.n)who.appendChild(mk('small','','🔵 LT खंभे '+dp.n+' · उपभोक्ता '+dp.c+(dp.kw?' · भार '+fmtKw(dp.kw)+' kW':'')+(dp.db?' · 📦 DB '+dp.db:'')));
+      var dp=dtPoles(f,d);if(dp.n)who.appendChild(mk('small','','🔵 LT खंभे '+dp.n+' · उपभोक्ता '+dp.c+(dp.kw?' · भार '+fmtKw(dp.kw)+' kW':'')+(dp.db?' · DB '+dp.db:'')));
+      var ld=dtLoad(d,dp);if(ld)who.appendChild(mk('small','ld '+ld.cls,'⚡ '+ld.txt+' ('+fmtKw(dp.kw)+' kW ÷ '+d.kva+' kVA×0.9)'));
       if(d.note)who.appendChild(mk('small','',d.note));
       row.appendChild(who);
       if(d.img&&blobURL(d.img)){var im=mk('img','thumb');im.src=blobURL(d.img);im.alt=(d.n||'DTR')+' की फोटो';im.onclick=function(){$('lbImg').src=blobURL(d.img);$('lb').hidden=false};row.appendChild(im)}
@@ -2249,7 +2263,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       FD.map=L.map('fdMap',{zoomControl:true,attributionControl:true,preferCanvas:true});
       FD.lbl=L.layerGroup();FD.hl=L.layerGroup();
       window.__fdMap=FD.map;  // lets tests count what is drawn on the canvas
-      FD.tiles.map=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+      FD.tiles.map=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap',crossOrigin:true});
       FD.tiles.sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'});
       FD.grp=L.layerGroup().addTo(FD.map);
       FD.map.on('dragstart',function(){FD.follow=false});
@@ -2261,6 +2275,31 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     setTimeout(function(){FD.map.invalidateSize()},50);
     drawLayers(true);
   }
+  /* The map without internet (v1.65): sw.js keeps every OpenStreetMap tile you look at (network first, the saved copy
+     when offline, up to 3000). "📥" also saves the village's area at zoom 13–16 (at most 150 tiles, slowly, as the
+     OSM tile policy asks; closer zooms only by looking at them). Satellite pictures are not saved (their terms). */
+  function tileXY(lat,lng,z){var n=Math.pow(2,z),r=lat*Math.PI/180;return [Math.floor((lng+180)/360*n),Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n)]}
+  function areaTiles(f){
+    var pts=[];f.pl.forEach(function(p){pts.push([p.lat,p.lng])});f.dts.forEach(function(d){pts.push([d.lat,d.lng])});f.segs.forEach(function(sg){sg.forEach(function(q){pts.push(q)})});
+    if(!pts.length&&FD.fix)pts.push([FD.fix.lat,FD.fix.lng]);if(!pts.length)return [];
+    var la=pts.map(function(q){return q[0]}),lo=pts.map(function(q){return q[1]}),pad=0.004;  // about 400 m around
+    var n=Math.max.apply(null,la)+pad,s0=Math.min.apply(null,la)-pad,e=Math.max.apply(null,lo)+pad,w=Math.min.apply(null,lo)-pad,out=[];
+    for(var z=13;z<=16;z++){var a=tileXY(n,w,z),b=tileXY(s0,e,z);for(var x=a[0];x<=b[0];x++)for(var y=a[1];y<=b[1];y++)out.push('https://tile.openstreetmap.org/'+z+'/'+x+'/'+y+'.png')}
+    return out.slice(0,150);
+  }
+  $('offSave').onclick=function(){
+    var f=curF();if(!f)return;var sw=navigator.serviceWorker&&navigator.serviceWorker.controller;
+    if(!navigator.onLine){toast('अभी नेट नहीं है — नेट चालू होने पर दबाएँ');return}
+    if(!sw){toast('एक बार ऐप बंद करके फिर खोलें, फिर दबाएँ');return}
+    var urls=areaTiles(f);if(!urls.length){toast('पहले कोई खंभा/DTR जोड़ें या "◎ मेरी जगह" दबाएँ');return}
+    $('offStat').textContent='नक्शा सेव हो रहा है… 0/'+urls.length;sw.postMessage({type:'tiles',urls:urls});
+  };
+  if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',function(e){
+    var m=e.data||{};if(m.type!=='tiles')return;
+    $('offStat').textContent=m.done?'✅ गाँव का नक्शा फ़ोन में सेव ('+m.ok+' टुकड़े)। और पास से भी चाहिए तो नेट रहते उस हिस्से को एक बार ज़ूम करके देख लें।':'नक्शा सेव हो रहा है… '+m.n+'/'+m.of;
+  });
+  function offNote(){$('offInfo').hidden=navigator.onLine}
+  window.addEventListener('online',offNote);window.addEventListener('offline',offNote);offNote();
   function setBase(k){
     if(FD.base)FD.map.removeLayer(FD.tiles[FD.base]);
     FD.base=k;FD.tiles[k].addTo(FD.map);
@@ -2282,7 +2321,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     });
     drawHl();
     f.dts.forEach(function(d){
-      var ic=L.divIcon({className:'dtico',html:dtSym()+'<span>'+xmlEsc(d.n||'DTR')+'</span>',iconSize:[40,34],iconAnchor:[20,30]});
+      var dl=dtLoad(d,dtPoles(f,d)),ic=L.divIcon({className:'dtico'+(dl?' '+dl.cls:''),html:dtSym()+'<span>'+xmlEsc(d.n||'DTR')+'</span>',iconSize:[40,34],iconAnchor:[20,30]});
       L.marker([d.lat,d.lng],{icon:ic,title:d.n||'DTR'}).on('click',function(){openDt(d)}).addTo(FD.grp);
       all.push([d.lat,d.lng]);
     });
@@ -2678,7 +2717,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     var DTR=dtSym(),DB=poleSym('l','pcc',true),L=[];
     if(p.k==='l'){
       L.push(['👥','इस खंभे से जुड़े उपभोक्ता: '+p.c+(p.cs?' · भार '+fmtKw(poleKw(p))+' kW':'')]);L.push([DB,'DB बॉक्स: '+(p.db?'लगा है':'नहीं')]);
-      var u=poleDt(f,p);L.push([DTR,'जुड़ा DTR: '+(u?u.d.n||'DTR':'नहीं')]);
+      var u=poleDt(f,p),ul=u&&dtLoad(u.d,dtPoles(f,u.d));L.push([DTR,'जुड़ा DTR: '+(u?(u.d.n||'DTR')+(ul?' ('+ul.txt+')':''):'नहीं')]);
     }
     var bl=below(f,p.id);if(bl.n)L.push([ltLineSym(),'आगे जुड़े खंभे: '+bl.n+(bl.c?' (उन पर '+bl.c+' उपभोक्ता)':'')]);
     var hangs=f.dts.filter(function(d){return d.to===p.id});if(hangs.length)L.push([DTR,'इस खंभे से: '+hangs.map(function(d){return d.n||'DTR'}).join(', ')]);
@@ -2812,7 +2851,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
         el('circle',{cx:dx,cy:y+64,r:16,fill:'none',stroke:SLDC.ink,'stroke-width':2.5});
         el('circle',{cx:dx,cy:y+88,r:16,fill:'none',stroke:SLDC.ink,'stroke-width':2.5});
         text(dx+24,y+64,d.n||'DTR',{size:13,bold:true,anchor:'start'});
-        text(dx+24,y+82,d.kva?d.kva+' kVA':'— kVA',{size:12,anchor:'start'});
+        var sl=dtLoad(d,dp);text(dx+24,y+82,(d.kva?d.kva+' kVA':'— kVA')+(sl?' · '+sl.pct+'%':''),{size:12,anchor:'start',fill:sl&&sl.cls==='ov'?SLDC.hv:SLDC.ink,bold:!!(sl&&sl.cls!=='ok')});
         el('line',{x1:dx,y1:y+104,x2:dx,y2:y+140,stroke:SLDC.lt,'stroke-width':3});
         text(dx,y+158,'LT केबल: '+(dp.n?dp.n+' खंभे':'—'),{size:12,fill:SLDC.lt,bold:true});
         text(dx,y+176,(dp.n?dp.c:d.c)+' उपभोक्ता'+(dp.kw?' · '+fmtKw(dp.kw)+' kW':'')+(dp.db?' · DB '+dp.db:''),{size:12,fill:SLDC.lt});
@@ -2880,6 +2919,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     f.dts.forEach(function(d,i){
       L.push('');L.push((i+1)+'. '+(d.n||'DTR')+' — '+dtLine(d)+(d.note?' — '+d.note:''));
       var dp=dtPoles(f,d);if(dp.n)L.push('   🔵 LT खंभे '+dp.n+', उन पर '+dp.c+' उपभोक्ता'+(dp.kw?', भार '+fmtKw(dp.kw)+' kW':''));
+      var ld=dtLoad(d,dp);if(ld)L.push('   ⚡ '+ld.txt);
       L.push('   📍 '+mapsLink(d.lat,d.lng));
     });
     if(S.sign.trim()){L.push('');L.push('— '+S.sign.trim())}

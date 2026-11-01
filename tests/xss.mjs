@@ -6,6 +6,9 @@ import { chromium } from 'playwright';
 
 const url = process.env.APP_URL || 'http://127.0.0.1:8080/';
 const X = (tag) => `<img src=x onerror="window.__xss=(window.__xss||[]).concat('${tag}')"><svg onload="window.__xss=(window.__xss||[]).concat('${tag}-svg')"></svg>`;
+// Let page.route/ctx.route also see what the service worker fetches (map tiles since v1.65), so no test reaches the
+// real tile servers and the offline map can be tested.
+process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS = '1';
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const ctx = await browser.newContext({ viewport: { width: 400, height: 900 }, acceptDownloads: true });
 await ctx.route(/tile\.openstreetmap\.org|arcgisonline\.com/, (r) => r.abort());
