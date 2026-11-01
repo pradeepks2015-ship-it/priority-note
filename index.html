@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Gm6SZgX1czBe1V1ORckN5M7ucqyuFggmfbPrammQ1Ok=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-P0uIWSVwp0yjpD0yn4IoT2JkvjOlGO7lp8LPB/92Hg4=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -152,6 +152,9 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .plico span{position:absolute;left:50%;top:100%;transform:translateX(-50%);white-space:nowrap;font:700 11px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 3px;border-radius:4px;border:1px solid var(--line)}
 .plinfo{border:1.5px solid var(--accent);border-radius:12px;padding:10px 12px;margin-top:8px;line-height:1.5}
 .plinfo b{font-size:17px}
+.mcard{font:14px/1.5 var(--f-ui);color:var(--ink)}.mcard b{font-size:15px;display:block;margin-bottom:2px}.mcard .row{margin-top:6px;gap:6px}
+.mcard .mlist{max-height:140px;overflow:auto;border-top:1px solid var(--line);margin:4px 0;padding-top:4px;font-size:13px}
+.mcard .ld.hi{color:var(--p2);font-weight:700}.mcard .ld.ov{color:var(--p1);font-weight:700}
 .offinfo{font-weight:700;color:var(--p2)}
 .fdi .ld{font-weight:700}.fdi .ld.hi{color:var(--p2)}.fdi .ld.ov{color:var(--p1)}
 .dtico.hi svg{box-shadow:0 0 0 3px var(--p2)}.dtico.ov svg{box-shadow:0 0 0 3px var(--p1)}
@@ -1757,8 +1760,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.71',APP_NOTES=[
-    'फ़ोन के "पीछे" बटन से साइड मेनू बंद होता है (ऐप से बाहर नहीं जाता)'
+  var APP_V='1.72',APP_NOTES=[
+    'नक्शे पर हर LT खंभे और DTR के साथ उपभोक्ताओं की गिनती (👥)',
+    'नक्शे पर खंभा दबाएँ: उसका कार्ड — जुड़ा DTR, उपभोक्ता (IVRS, नाम, kW), आगे के खंभे; DTR दबाएँ: kVA, कितना भरा, खंभे, उपभोक्ता, बदलें'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2201,6 +2205,33 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   // A fixed symbol (dtSym / poleSym markup, no data in it) as an element for the info box.
   // The DB box alone (legend, form, totals): the same box as on the LT pole symbol.
   function dbSym(){return '<svg class="dbic" viewBox="0 0 10 12" width="14" height="17" aria-hidden="true"><rect class="bd" x="0" y="2" width="2" height=".8"/><rect class="bd" x="0" y="9" width="2" height=".8"/><rect class="db" x="1.6" y=".6" width="7.8" height="10.6" rx="1.4"/><path class="dl" d="M1.6 3.2h7.8M1.6 8.6h7.8"/><rect class="dbw" x="3.6" y="4.4" width="3.8" height="2.8" rx=".4"/></svg>'}
+  /* Map cards (v1.72): tapping a pole or a DTR on the map shows, right there, what hangs on it — built with mk(), so
+     no HTML string reaches Leaflet. */
+  // Map labels: the pole number (and its structure), an LT pole's consumers; a DTR's name and its consumers.
+  function plLabel(p){return (p.no||'?')+(p.k==='h'&&p.st!=='pcc'?' '+SLD_ST[p.st]:'')+(p.k==='l'&&p.c?' · 👥'+p.c:'')}
+  function dtLabel(d,dp){return (d.n||'DTR')+(dp.c?' · 👥'+dp.c:'')}
+  function cardBtn(t,fn){var b=mk('button','btn ghost sm',t);b.type='button';b.onclick=function(){FD.map.closePopup();fn()};return b}
+  function poleCard(f,p){
+    var c=mk('div','mcard'),r=mk('div','row');
+    c.appendChild(mk('b','',poleFull(f,p)+' · '+(p.k==='h'?'11kV'+(p.st&&p.st!=='pcc'?' '+SLD_ST[p.st]:''):'LT')));
+    if(p.k==='l'){
+      var u=poleDt(f,p);c.appendChild(mk('div','','⚡ जुड़ा DTR: '+(u?u.d.n||'DTR':'नहीं')));
+      c.appendChild(mk('div','','👥 उपभोक्ता: '+p.c+(p.cs?' · '+fmtKw(poleKw(p))+' kW':'')+(p.db?' · DB बॉक्स':'')));
+      if(p.cs){var l=mk('div','mlist');p.cs.slice(0,12).forEach(function(x){l.appendChild(mk('div','',x.i+(x.n?' · '+x.n:'')+(x.kw?' · '+fmtKw(x.kw)+' kW':'')))});
+        if(p.cs.length>12)l.appendChild(mk('div','hint','और '+(p.cs.length-12)+' …'));c.appendChild(l)}
+    }else{var hangs=f.dts.filter(function(d){return d.to===p.id});if(hangs.length)c.appendChild(mk('div','','⚡ इस खंभे से: '+hangs.map(function(d){return d.n||'DTR'}).join(', ')))}
+    var bl=below(f,p.id);if(bl.n)c.appendChild(mk('div','','⬇️ आगे '+bl.n+' खंभे'+(bl.c?', '+bl.c+' उपभोक्ता':'')));
+    r.appendChild(cardBtn('📋 पूरा विवरण',function(){$('plInfo').scrollIntoView({block:'start'})}));
+    r.appendChild(cardBtn('✏️ बदलें',function(){openPl(p)}));c.appendChild(r);return c;
+  }
+  function dtrCard(f,d){
+    var c=mk('div','mcard'),dp=dtPoles(f,d),ld=dtLoad(d,dp),r=mk('div','row');
+    c.appendChild(mk('b','','⚡ '+(d.n||'DTR')));
+    c.appendChild(mk('div',ld?'ld '+ld.cls:'',(d.kva?d.kva+' kVA':'kVA नहीं लिखा')+(ld?' · '+ld.txt:'')));
+    c.appendChild(mk('div','','🔵 LT खंभे '+dp.n+' · 👥 उपभोक्ता '+dp.c+(dp.kw?' · भार '+fmtKw(dp.kw)+' kW':'')));
+    if(d.note)c.appendChild(mk('div','hint',d.note));
+    r.appendChild(cardBtn('✏️ बदलें',function(){openDt(d)}));c.appendChild(r);return c;
+  }
   function symEl(svg){var s=mk('span','pic');
     // eslint-disable-next-line no-unsanitized/method -- fixed SVG markup from dtSym()/poleSym(), no data
     s.insertAdjacentHTML('beforeend',svg);return s}
@@ -2344,13 +2375,13 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     var steel=tok('--steel')||'gray',blue=tok('--accent')||'blue',ring=tok('--surface')||'white';
     f.pl.forEach(function(p){
       L.circleMarker([p.lat,p.lng],{radius:6,color:ring,weight:2,fillColor:p.k==='h'?steel:blue,fillOpacity:1,k:p.k})
-        .on('click',function(){FD.find=p.id;$('plQ').value=p.no;showFind();drawHl()}).addTo(FD.grp);
+        .on('click',function(){FD.find=p.id;$('plQ').value=p.no;showFind();drawHl();var f=curF();if(f)L.popup({maxWidth:270,autoPanPadding:[20,20]}).setLatLng([p.lat,p.lng]).setContent(poleCard(f,p)).openOn(FD.map)}).addTo(FD.grp);
       all.push([p.lat,p.lng]);
     });
     drawHl();
     f.dts.forEach(function(d){
-      var dl=dtLoad(d,dtPoles(f,d)),ic=L.divIcon({className:'dtico'+(dl?' '+dl.cls:''),html:dtSym()+'<span>'+xmlEsc(d.n||'DTR')+'</span>',iconSize:[40,34],iconAnchor:[20,30]});
-      L.marker([d.lat,d.lng],{icon:ic,title:d.n||'DTR'}).on('click',function(){openDt(d)}).addTo(FD.grp);
+      var dpp=dtPoles(f,d),dl=dtLoad(d,dpp),ic=L.divIcon({className:'dtico'+(dl?' '+dl.cls:''),html:dtSym()+'<span>'+xmlEsc(dtLabel(d,dpp))+'</span>',iconSize:[40,34],iconAnchor:[20,30]});
+      L.marker([d.lat,d.lng],{icon:ic,title:d.n||'DTR'}).on('click',function(){L.popup({maxWidth:270,autoPanPadding:[20,20]}).setLatLng([d.lat,d.lng]).setContent(dtrCard(f,d)).openOn(FD.map)}).addTo(FD.grp);
       all.push([d.lat,d.lng]);
     });
     drawMe();drawLabels();
@@ -2381,8 +2412,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     if(FD.map.getZoom()<17)return;
     var bd=FD.map.getBounds(),n=0;
     for(var i=0;i<f.pl.length&&n<300;i++){var p=f.pl[i];if(!bd.contains([p.lat,p.lng]))continue;n++;
-      (function(p){L.marker([p.lat,p.lng],{icon:L.divIcon({className:'plico',html:poleSym(p.k,p.st,p.db)+'<span>'+xmlEsc(p.no||'?')+(p.k==='h'&&p.st!=='pcc'?' '+xmlEsc(SLD_ST[p.st]):'')+'</span>',iconSize:p.k==='h'&&p.st!=='pcc'?[34,34]:[22,30],iconAnchor:p.k==='h'&&p.st!=='pcc'?[17,33]:[11,29]}),title:poleName(p)})
-        .on('click',function(){FD.find=p.id;$('plQ').value=p.no;showFind();drawHl()}).addTo(FD.lbl)})(p)}
+      (function(p){L.marker([p.lat,p.lng],{icon:L.divIcon({className:'plico',html:poleSym(p.k,p.st,p.db)+'<span>'+xmlEsc(plLabel(p))+'</span>',iconSize:p.k==='h'&&p.st!=='pcc'?[34,34]:[22,30],iconAnchor:p.k==='h'&&p.st!=='pcc'?[17,33]:[11,29]}),title:poleName(p)})
+        .on('click',function(){FD.find=p.id;$('plQ').value=p.no;showFind();drawHl();var f=curF();if(f)L.popup({maxWidth:270,autoPanPadding:[20,20]}).setLatLng([p.lat,p.lng]).setContent(poleCard(f,p)).openOn(FD.map)}).addTo(FD.lbl)})(p)}
   }
   // The searched pole gets a ring of its own layer, so searching does not redraw the whole map.
   function drawHl(){

@@ -133,6 +133,11 @@ and left out of reminders.
   backdrop. `#shareMenu` and `#mapSet` are gone. The feeder page itself holds only the survey.
   v1.71: the phone's back button closes it — opening pushes one history state (`{fdMenu:1}`), `popstate` closes, and
   closing any other way calls `history.back()` so no extra step is left.
+- Map cards (v1.72): an LT pole's label and a DTR's label carry the consumer count (" · 👥N"). Tapping a pole (dot or
+  symbol) opens `poleCard()` in a Leaflet popup (pole, its DTR, consumers with IVRS/name/kW — 12 shown —, poles further
+  down, "📋 पूरा विवरण" / "✏️ बदलें") as well as the search box; tapping a DTR opens `dtrCard()` (kVA, loading, LT poles,
+  consumers, kW, "✏️ बदलें") instead of the edit form. Cards are DOM built with `mk()`; check-xss allows only these two
+  builders in `setContent()`.
 - DTR loading (v1.65): `dtLoad(d, dtPoles())` = connected kW ÷ (kVA × `DTR_PF` 0.9); ≥80 % `hi` (yellow, "भरने के पास"),
   ≥100 % `ov` (red, "ओवरलोड"). Shown in the DTR list (`.ld`), as a ring round the DTR on the map (`.dtico.hi/.ov`), the
   "ओवरलोड DTR" total, the search box ("जुड़ा DTR"), WhatsApp and the SLD. Connected load, not measured demand.

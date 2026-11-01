@@ -18,7 +18,8 @@ lines.forEach((l, i) => {
   // Leaflet calls that take HTML: every dynamic part must go through xmlEsc()
   for (const m of l.matchAll(/(?:\.setContent|\.bindTooltip|\.bindPopup)\(([^)]*\)?)/g)) {
     const arg = m[1];
-    if (!/^\s*xmlEsc\(/.test(arg) && !/^\s*'[^']*'\s*\)?$/.test(arg)) problems.push(`पंक्ति ${n}: Leaflet ${m[0].split('(')[0]}() में xmlEsc() नहीं: ${arg.slice(0, 60)}`);
+    // poleCard()/dtrCard() build the map cards as DOM elements with mk()/textContent (v1.72), so no HTML string at all
+    if (!/^\s*xmlEsc\(/.test(arg) && !/^\s*'[^']*'\s*\)?$/.test(arg) && !/^\s*(poleCard|dtrCard)\(/.test(arg)) problems.push(`पंक्ति ${n}: Leaflet ${m[0].split('(')[0]}() में xmlEsc() नहीं: ${arg.slice(0, 60)}`);
   }
   for (const m of l.matchAll(/html:([^,}]+)/g)) {
     const parts = m[1].split('+').map((x) => x.trim()).filter(Boolean);

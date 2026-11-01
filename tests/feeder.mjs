@@ -135,6 +135,16 @@ await page.evaluate(() => window.__fdMap.setView([22.5 + 5 * 0.00027, 79.2], 18)
 await page.waitForTimeout(400);
 const iconsNear = await page.$$eval('#fdMap .plico', (e) => e.map((x) => x.innerText.trim()).sort());
 const dbIcons = await page.$$eval('#fdMap .plico svg .db', (e) => e.length);
+// Tap a pole on the map: a card with the pole, its DTR and consumers; tap the DTR: its card with kVA, load and बदलें.
+await page.click('#fdMap .plico:has-text("Ckt-1-2")');
+const poleCard = await page.waitForSelector('#fdMap .leaflet-popup-content .mcard', { timeout: 3000 }).then((h) => h.innerText(), () => '');
+await page.evaluate(() => window.__fdMap.closePopup());
+await page.$eval('#fdMap .dtico', (el) => el.click());
+const dtrCard = await page.waitForFunction(() => [...document.querySelectorAll('#fdMap .leaflet-popup-content .mcard')].map((n) => n.innerText).find((t) => t.includes('kVA')) || false, null, { timeout: 3000 }).then((h) => h.jsonValue(), () => '');
+await page.click('#fdMap .leaflet-popup-content .mcard:has-text("kVA") button:has-text("बदलें")');
+const dtrEdit = await page.$eval('#dtForm', (f) => !f.hidden);
+await page.click('#dtCancel');
+await page.evaluate(() => window.__fdMap.closePopup());
 const dbWin = await page.$$eval('#fdMap .plico svg .dbw', (e) => e.length);
 // LT pole: the cable on one hook, on one side only (the JE removed the left one).
 const ltSide = await page.$$eval('#fdMap .plico svg.l', (e) => e.map((x) => [x.querySelector('.cb').getAttribute('d'), x.querySelector('.hk').getAttribute('d')].join('').split('M').length - 1));
@@ -362,7 +372,7 @@ const checks = {
   'कुल: 1 11kV, 2 LT खंभे, 10 उपभोक्ता, 2 DB बॉक्स': sum2.includes('11kV खंभे (सर्वे) 1') && sum2.includes('LT खंभे (सर्वे) 2') && sum2.includes('खंभों पर उपभोक्ता 10') && sum2.includes('DB बॉक्स 2'),
   'DT के नीचे उसके LT खंभे और उपभोक्ता': dtList2.includes('LT खंभे 2 · उपभोक्ता 10'),
   'नक्शे पर खंभे और लाइनें': poleDots >= 3 + 3 + 1,
-  'ज़ूम पर खंभों के निशान+नंबर, दूर से नहीं; DT पर ट्रांसफार्मर का निशान; LT खंभे पर DB बॉक्स': iconsNear.join(',') === 'Ckt-1-1,Ckt-1-2,HT-1 DP' && iconsFar === 0 && dtSymOk === 1 && dbIcons === 2,
+  'ज़ूम पर खंभों के निशान+नंबर, दूर से नहीं; DT पर ट्रांसफार्मर का निशान; LT खंभे पर DB बॉक्स': iconsNear.join(',') === 'Ckt-1-1 · 👥6,Ckt-1-2 · 👥4,HT-1 DP' && iconsFar === 0 && dtSymOk === 1 && dbIcons === 2,
   'WhatsApp सारांश में खंभे और सर्वे करने वाला': wa2.includes('11kV खंभे: 1 · 🔵 LT खंभे: 2 · खंभों पर उपभोक्ता: 10') && wa2.includes('सर्वे: नमूना लाइनमैन'),
   'KML में खंभे': kml2.includes('<name>खंभा Ckt-1-2 (DTR-1)</name>') && kml2.includes('#ll'),
   'सर्वे फ़ाइल: वही सर्वे बदला, नया जुड़ा, गलत फ़ाइल नहीं': afterSame === 1 && imported.length === 2 && imported.every((x) => x.endsWith(':3:नमूना लाइनमैन')) && listTxt2.includes('नमूना गाँव (लाइनमैन)'),
@@ -399,6 +409,7 @@ const checks = {
   'जगह (GPS) की अनुमति नहीं: तरीका दिखा (Chrome ⋮ → Site settings → Location → Not allowed → यह साइट), अनुमति देने पर "फिर कोशिश करें" से चला': geoShown && geoTxt.includes('Location') && geoTxt.includes('Site settings') && geoTxt.includes('Not allowed') && geoTxt.includes('127.0.0.1:8080') && geoGone,
   'DTR कितना भरा (kW ÷ kVA×0.9): 22% ठीक; 10 kVA पर 139% ओवरलोड — सूची, नक्शा, कुल, WhatsApp': clDtr.includes('22% भरा') && ovList.includes('139% भरा') && ovList.includes('ओवरलोड') && ovMap === 1 && ovSum.includes('ओवरलोड DTR 1') && ovWa.includes('139% भरा') && ovWa.includes('ओवरलोड'),
   'बिना नेट का नक्शा: गाँव का हिस्सा फ़ोन में (150 तक टाइल), नेट बंद होने पर भी नक्शा और सूचना': offSaved && offCount > 0 && offCount <= 400 && offTiles && offNote,
+  'नक्शे पर खंभा दबाने पर कार्ड: खंभा, जुड़ा DTR, उपभोक्ता; DTR दबाने पर kVA, खंभे, उपभोक्ता और बदलें': poleCard.includes('Ckt-1-2') && poleCard.includes('उपभोक्ता: 4') && poleCard.includes('DTR-1') && dtrCard.includes('63 kVA') && dtrCard.includes('LT खंभे 2') && dtrCard.includes('उपभोक्ता 10') && dtrEdit,
   'फीडर हटाना (पूछकर)': gone,
   'कोई JS error नहीं': errors.length === 0,
 };
