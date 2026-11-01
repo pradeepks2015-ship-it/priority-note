@@ -69,6 +69,15 @@ await page.fill('#fdPoles', '7');
 await page.press('#fdPoles', 'Tab');
 await page.keyboard.press('Escape');
 const escShut = await page.$eval('#fdDrawer', (d) => d.hidden);
+// The phone's back button closes the menu and stays on this feeder; ✕ leaves no extra step in the history.
+await menu();
+await page.goBack();
+const backShut = await page.waitForFunction(() => document.getElementById('fdDrawer').hidden, null, { timeout: 3000 }).then(() => true, () => false);
+const backStay = await page.$eval('#fdOne', (n) => !n.hidden);
+await menu();
+await page.click('#fdMenuX');
+const xShut = await page.$eval('#fdDrawer', (d) => d.hidden);
+const histOk = await page.evaluate(() => !(history.state && history.state.fdMenu));
 const sum = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
 const wa = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 // The home page shows only the survey: summary, files and SLD sit in one closed dropdown.
@@ -382,6 +391,7 @@ const checks = {
   'सूची वाले उपभोक्ता का पूरा विवरण (मोबाइल, पिता का नाम, पता)': clDetail.includes('9826012345') && clDetail.includes('पिता का नाम: रामदीन') && clDetail.includes('पता: वार्ड 3') && clDetail.includes('LV1.2'),
   'DTR में नए उपभोक्ता और भार जुड़े': clDtr.includes('उपभोक्ता 4') && clDtr.includes('भार 12.5 kW'),
   'फीडर पेज पर सिर्फ़ सर्वे; बाकी सब ☰ साइड मेनू में (बंद), कुछ चुनने पर या Esc से बंद': drawerShut && homeClean && escShut && sharePicked,
+  'फ़ोन के "पीछे" बटन से साइड मेनू बंद, उसी फीडर पर रहे; ✕ से बंद होने पर इतिहास में फालतू कदम नहीं': backShut && backStay && xShut && histOk,
   'संकेत और खंभे के फ़ॉर्म में DB बॉक्स का असली निशान (📦 नहीं)': dbLegend,
   '"◎ मेरी जगह": ताज़ा GPS, नक्शा वहीं ज़ूम होकर, सटीकता का घेरा': meOk && meRing === 18,
   '"🔧 GPS जाँच": अनुमति, Chrome/दूसरा ऐप, तुरंत और GPS वाली जगह की रिपोर्ट, WhatsApp पर भेजने लायक': gpsRep.includes('अनुमति: दी हुई') && gpsRep.includes('तुरंत वाली जगह: ✅') && gpsRep.includes('GPS वाली जगह: ✅') && gpsWa.includes('GPS वाली जगह'),

@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-sGLlGPABjVixljJcMJxCPs5pC7QNYEANHTYxYTRVyE0=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Gm6SZgX1czBe1V1ORckN5M7ucqyuFggmfbPrammQ1Ok=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1757,8 +1757,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.70',APP_NOTES=[
-    'फीडर पेज साफ़: ऊपर "☰ मेनू" से साइड मेनू खुलता है — भेजें और फ़ाइलें, SLD, गाँव की उपभोक्ता सूची, नक्शा (संकेत, बिना नेट, GPS जाँच), सर्वे का तरीका, और बाकी विकल्प'
+  var APP_V='1.71',APP_NOTES=[
+    'फ़ोन के "पीछे" बटन से साइड मेनू बंद होता है (ऐप से बाहर नहीं जाता)'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2956,10 +2956,16 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   /* Side menu (v1.70): the feeder page keeps only the survey; files, SLD, the consumer list, map tools, the how-to and
      the rest open from ☰ at the side. A pick that leaves the page (send, file, print, delete …) closes it; Esc, ✕ or a tap
      outside too. */
-  function menuOpen(on){
+  // The phone's back button closes the menu (v1.71): opening adds one step to the history; back takes it away and
+  // closes; closing any other way takes that step back, so no extra back press is left behind.
+  function menuOpen(on,fromBack){
+    var was=!$('fdDrawer').hidden;if(on===was)return;
     $('fdDrawer').hidden=!on;$('fdDrawerBg').hidden=!on;$('fdMenu').setAttribute('aria-expanded',String(on));
-    document.body.classList.toggle('noscroll',on);if(on)$('fdMenuX').focus();
+    document.body.classList.toggle('noscroll',on);
+    if(on){try{history.pushState({fdMenu:1},'')}catch(e){}$('fdMenuX').focus()}
+    else if(!fromBack&&history.state&&history.state.fdMenu)history.back();
   }
+  window.addEventListener('popstate',function(){if(!$('fdDrawer').hidden)menuOpen(false,true)});
   $('fdMenu').onclick=function(){menuOpen(true)};
   $('fdMenuX').onclick=function(){menuOpen(false)};
   $('fdDrawerBg').onclick=function(){menuOpen(false)};

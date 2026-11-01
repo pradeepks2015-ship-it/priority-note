@@ -131,6 +131,8 @@ and left out of reminders.
   📤 files, 📐 SLD, 👥 village consumer list (`#clSum`), 🗺️ map (legend, offline save, GPS check), ❓ how-to, ⚙️ more
   (pole estimate, renumber, clear track, delete). `menuOpen()`; closes on a pick that leaves the page, ✕, Esc or the
   backdrop. `#shareMenu` and `#mapSet` are gone. The feeder page itself holds only the survey.
+  v1.71: the phone's back button closes it — opening pushes one history state (`{fdMenu:1}`), `popstate` closes, and
+  closing any other way calls `history.back()` so no extra step is left.
 - DTR loading (v1.65): `dtLoad(d, dtPoles())` = connected kW ÷ (kVA × `DTR_PF` 0.9); ≥80 % `hi` (yellow, "भरने के पास"),
   ≥100 % `ov` (red, "ओवरलोड"). Shown in the DTR list (`.ld`), as a ring round the DTR on the map (`.dtico.hi/.ov`), the
   "ओवरलोड DTR" total, the search box ("जुड़ा DTR"), WhatsApp and the SLD. Connected load, not measured demand.
