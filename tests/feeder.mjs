@@ -2,6 +2,7 @@
 // fixes are skipped, a transformer is marked with its details and photo, and the summary/KML carry it all.
 // Map pictures are replaced by a blank tile, so no internet is needed.
 // Run like smoke.mjs: serve the repo root, then APP_URL=http://127.0.0.1:8080/ node tests/feeder.mjs
+import { makeXlsx } from './xlsx-fixture.mjs';
 import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
 
@@ -180,9 +181,9 @@ await page.click('#fdItems [aria-label="खोलें: नमूना फी�
 await page.waitForTimeout(500);
 const wiresReopen = await phases();
 // "🔢 नंबर फिर से लगाएँ": numbers in survey order, the same as they already are.
-await page.click('#fdOne details.more summary');
+await page.click('#fdOne details.more:has(#fdRenum) summary');
 await page.click('#fdRenum');
-await page.click('#fdOne details.more summary');
+await page.click('#fdOne details.more:has(#fdRenum) summary');
 const renum = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.find((f) => f.n === 'नमूना फीडर').pl.map((p) => p.no).join(','));
 await page.click('#fdBack');
 await page.waitForTimeout(200);
@@ -214,7 +215,37 @@ await page.click('#plInfo .csl button:has-text("1234567890")');
 const csDetail = await page.$eval('#plInfo .csinfo', (n) => n.innerText);
 const csSum = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
 const csWa = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
-await page.$eval('#fdOne details.more', (d) => { d.open = true; });
+// The village's consumer list from Excel (any column order, Hindi or English headings, extra columns kept),
+// then on a pole: type IVRS, mobile or name and pick the consumer from the list.
+await page.click('#clSum');
+await page.setInputFiles('#clFile', { name: 'upbhokta.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: makeXlsx([
+  ['ग्राम नमूना — उपभोक्ता सूची'],
+  ['क्र.', 'IVRS No', 'उपभोक्ता का नाम', 'पिता का नाम', 'मोबाइल', 'Tariff', 'Phase', 'Connected Load (kW)', 'Meter No', 'पता'],
+  [1, 3334567890, 'सीता बाई', 'रामदीन', 9826012345, 'LV1.2 घरेलू', 'Single', 0.5, 'MT-301', 'वार्ड 3'],
+  [2, 4434567890, 'मोहन आटा चक्की', 'हरिराम', 9826054321, 'LV2 गैर घरेलू', '3 Phase', 7.5, 'MT-302', 'बस स्टैंड'],
+  [3, 1234567890, 'नमूना उपभोक्ता एक', '', '', 'LV1', '1', 1.5, 'M-11', ''],
+]) });
+await page.waitForTimeout(400);
+const clCount = await page.$eval('#clSum', (n) => n.textContent);
+await page.fill('#plQ', 'Ckt-1-2');
+await page.click('#plFind button[type=submit]');
+await page.click('#plInfo button:has-text("बदलें")');
+await page.waitForSelector('#plForm:not([hidden])');
+await page.fill('#csQ', '98260123');  // part of a mobile number
+const hitMob = await page.$$eval('#csHits button', (b) => b.map((x) => x.textContent));
+await page.click('#csHits button');
+await page.fill('#csQ', 'मोहन');  // a name
+await page.click('#csHits button');
+await page.fill('#csQ', '1234567890');  // already on pole Ckt-1-1
+const hitTaken = await page.$$eval('#csHits button', (b) => b.map((x) => x.textContent).join('|'));
+await page.click('#csHits button');
+const clChips = await page.$$eval('#csList button', (b) => b.map((x) => x.textContent.trim()).join(','));
+await page.click('#csList button:has-text("3334567890")');
+const clDetail = await page.$eval('#csInfo', (n) => n.innerText);
+await page.click('#plForm button[type=submit]');
+const clSaved = await page.evaluate(() => { const f = JSON.parse(localStorage.getItem('priority-note-v2')).feeders.find((x) => x.n === 'नमूना फीडर'); const p = f.pl.find((x) => x.no === 'Ckt-1-2'); return p.c + ':' + p.cs.map((c) => c.i + '/' + c.g + '/' + c.ph + '/' + c.kw).join(',') + ':' + f.cl.length; });
+const clDtr = await page.$eval('#dtList', (n) => n.innerText);
+await page.$eval('#fdOne details.more:has(#fdDelete)', (d) => { d.open = true; });
 await page.click('#fdDelete');
 const gone = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.length === 1);
 
@@ -270,6 +301,10 @@ const checks = {
   'IVRS से उपभोक्ता जोड़े, वही IVRS दोबारा नहीं; संख्या अपने-आप': csChips === '1234567890,2234567890' && cntLocked && csSaved === '2:1234567890/d/1/1.5,2234567890/nd/3/3',
   'DTR में खंभों के उपभोक्ता और जुड़ा भार kW': csDtr.includes('उपभोक्ता 6') && csDtr.includes('भार 4.5 kW') && csSum.includes('जुड़ा भार (kW) 4.5') && csWa.includes('भार 4.5 kW'),
   'IVRS से खोज, IVRS दबाने पर पूरा विवरण': ivrsFind.includes('Ckt-1-1') && ivrsFind.includes('2234567890') && ivrsFind.includes('गैर-घरेलू') && csDetail.includes('नमूना उपभोक्ता एक') && csDetail.includes('घरेलू') && csDetail.includes('1 फेज़') && csDetail.includes('1.5 kW') && csDetail.includes('M-11'),
+  'Excel से गाँव की उपभोक्ता सूची (3) आई': clCount.includes('(3)'),
+  'खंभे पर मोबाइल/नाम/IVRS लिखने पर सूची से उपभोक्ता मिला और जुड़ा; दूसरे खंभे वाला नहीं जुड़ा': hitMob.length === 1 && hitMob[0].includes('सीता बाई') && hitTaken.includes('Ckt-1-1') && clChips === '3334567890,4434567890' && clSaved === '2:3334567890/d/1/0.5,4434567890/nd/3/7.5:3',
+  'सूची वाले उपभोक्ता का पूरा विवरण (मोबाइल, पिता का नाम, पता)': clDetail.includes('9826012345') && clDetail.includes('पिता का नाम: रामदीन') && clDetail.includes('पता: वार्ड 3') && clDetail.includes('LV1.2'),
+  'DTR में नए उपभोक्ता और भार जुड़े': clDtr.includes('उपभोक्ता 4') && clDtr.includes('भार 12.5 kW'),
   'फीडर हटाना (पूछकर)': gone,
   'कोई JS error नहीं': errors.length === 0,
 };

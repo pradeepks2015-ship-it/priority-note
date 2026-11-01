@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-qX/tg5ArqNggV7F8/VGjiRCfX4TNBoOh9ciXRZE9oak=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-4psof6ZSIHxpXDo+Qq48v7r9TlRqEAHoSyKZnvi9gdc=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -464,6 +464,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <input type="number" id="plC" inputmode="numeric" min="0" placeholder="इस खंभे से जुड़े उपभोक्ता" aria-label="इस खंभे से जुड़े उपभोक्ता">
             <div id="plCs">
               <p class="lbl">👥 उपभोक्ता (IVRS नंबर से)</p>
+              <div id="csFind"><input type="text" id="csQ" placeholder="गाँव की सूची में खोजें: IVRS, मोबाइल या नाम" aria-label="गाँव की उपभोक्ता सूची में खोजें"><div class="chips csl" id="csHits"></div></div>
               <div class="chips csl" id="csList"></div>
               <div id="csInfo" hidden></div>
               <div class="fields csform" id="csForm" hidden>
@@ -522,6 +523,15 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
           <label class="lbl" for="fdPoles">खंभे (अनुमान से लिखें)</label>
           <div class="row"><input type="number" id="fdPoles" inputmode="numeric" min="0" style="flex:1 1 120px"><span class="hint" id="fdPoleHint" style="flex:1 1 160px"></span></div>
           <div id="dtList" style="margin-top:12px"></div>
+          <details class="more" style="margin-top:12px">
+            <summary id="clSum">👥 गाँव की उपभोक्ता सूची (Excel)</summary>
+            <p class="hint">Excel (.xlsx) या CSV: पहली पंक्ति (या ऊपर की कोई पंक्ति) में कॉलम के नाम हों: IVRS, नाम, मोबाइल, श्रेणी/Tariff, फेज़, भार (kW), मीटर नंबर — और जो भी कॉलम हों (पिता का नाम, पता …) वे भी विवरण में दिखेंगे। फिर खंभे पर IVRS, मोबाइल या नाम लिखकर उपभोक्ता चुनें।</p>
+            <div class="row" style="padding:6px 0 10px">
+              <button class="btn ghost sm" type="button" id="clFileBtn">📥 Excel / CSV से सूची डालें</button>
+              <input type="file" id="clFile" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden>
+              <button class="btn ghost sm" type="button" id="clDel">🗑️ सूची हटाएँ</button>
+            </div>
+          </details>
           <div class="row" style="margin-top:12px">
             <a class="btn wa" id="fdWa" href="#" target="_blank" rel="noopener" style="flex:1 1 150px">💬 WhatsApp पर सारांश</a>
             <button class="btn ghost" type="button" id="fdKml" style="flex:1 1 150px">🌍 Google Earth फ़ाइल</button>
@@ -1691,9 +1701,10 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.61',APP_NOTES=[
-    'ऑनलाइन बैकअप: हर फीडर अब अपनी अलग फ़ाइल में सेव होता है, इसलिए 1 MB की सीमा हर फीडर पर अलग से (पूरे केंद्र पर नहीं)',
-    'सिर्फ़ बदला हुआ फीडर ऑनलाइन जाता है, इसलिए सेव और तेज़'
+  var APP_V='1.62',APP_NOTES=[
+    'गाँव की उपभोक्ता सूची Excel/CSV से डालें ("👥 गाँव की उपभोक्ता सूची"); कॉलम के नाम हिंदी या अंग्रेज़ी में, कोई भी क्रम',
+    'LT खंभे पर IVRS, मोबाइल या नाम लिखते ही सूची से उपभोक्ता मिलता है, एक बार दबाकर जुड़ जाता है',
+    'उपभोक्ता के विवरण में सूची के सारे कॉलम (मोबाइल, पिता का नाम, पता …)'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1913,13 +1924,49 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     });
     return out;
   }
+  /* The village's consumer list from Excel (v1.62): f.cl = [{i IVRS, n name, mo mobile, g, gt (category as written), ph,
+     kw, m meter, x [[column, value] …] (every other column)}], at most 5000, unique IVRS. A pole's consumer is looked up
+     here by IVRS for the full details. */
+  function cleanCl(a){
+    var seen={},out=[];
+    (Array.isArray(a)?a:[]).forEach(function(r){
+      if(!r||out.length>=5000)return;var c=cleanCs([r])[0];if(!c||seen[c.i.toLowerCase()])return;seen[c.i.toLowerCase()]=1;
+      c.mo=String(r.mo==null?'':r.mo).replace(/\D/g,'').slice(-10);c.gt=str(r.gt).trim().slice(0,40);
+      c.x=(Array.isArray(r.x)?r.x:[]).filter(function(p){return Array.isArray(p)&&p[0]&&p[1]}).slice(0,12).map(function(p){return [String(p[0]).trim().slice(0,40),String(p[1]).trim().slice(0,80)]});
+      if(!c.mo)delete c.mo;if(!c.gt)delete c.gt;if(!c.x.length)delete c.x;delete c.t;
+      out.push(c);
+    });
+    return out;
+  }
+  function clFind(f,i){if(!f||!f.cl)return null;var lc=String(i).toLowerCase();for(var k=0;k<f.cl.length;k++)if(f.cl[k].i.toLowerCase()===lc)return f.cl[k];return null}
+  // The list's columns by heading (Hindi or English, any order); the rest are kept as they are.
+  var CL_COLS=[['i',/ivrs|उपभोक्ता\s*(क्र|क्रमांक|नं|नंबर|संख्या)|consumer\s*(no|number|id)|cons\.?\s*no|service\s*no|account\s*no|खाता/i],
+    ['mo',/mob|phone|contact|मोबाइल|मोबा|फोन|फ़ोन/i],['g',/categ|tariff|श्रेणी|टैरिफ|टेरिफ/i],['ph',/phase|फेज|फ़ेज/i],
+    ['kw',/load|\bkw\b|\bhp\b|भार|लोड/i],['m',/meter|मीटर/i],
+    ['n',/^(name|consumer\s*name|नाम|उपभोक्ता\s*(का\s*)?नाम|हितग्राही)/i]];
+  function clRows(rows){
+    var hi=-1,map={};
+    for(var r=0;r<Math.min(rows.length,15)&&hi<0;r++){if(rows[r].some(function(h){return CL_COLS[0][1].test(h)}))hi=r}
+    if(hi<0)return null;
+    var head=rows[hi];
+    head.forEach(function(h,c){if(!h)return;for(var k=0;k<CL_COLS.length;k++){var key=CL_COLS[k][0];if(map[key]==null&&CL_COLS[k][1].test(h)&&!/पिता|पति|father|husband/i.test(h)){map[key]=c;return}}});
+    var used={};Object.keys(map).forEach(function(k){used[map[k]]=1});
+    return rows.slice(hi+1).map(function(cells){
+      var g=function(k){return map[k]==null?'':String(cells[map[k]]||'').trim()},gt=g('g'),t=gt.toLowerCase(),ph=g('ph'),kw=parseFloat(g('kw').replace(/[^\d.]/g,''));
+      if(map.kw!=null&&/\bhp\b/i.test(head[map.kw])&&isFinite(kw))kw=kw*0.746;  // HP → kW
+      return {i:g('i'),n:g('n'),mo:g('mo'),gt:gt,kw:kw,m:g('m'),
+        g:/non|गैर|lv\s*-?\s*2|commer|व्यावसा/.test(t)?'nd':/agri|कृषि|pump|पंप|lv\s*-?\s*5/.test(t)?'ag':/ind|औद्यो|lv\s*-?\s*4/.test(t)?'in':/dom|घरेलू|lv\s*-?\s*1/.test(t)||!t?'d':'o',
+        ph:/3|three|थ्री|तीन/i.test(ph)?3:1,
+        x:head.map(function(h,c){return used[c]||!h||/^(क्र|क्रमांक|s\.?\s*no|sr\.?\s*no|sl\.?\s*no)\.?$/i.test(h)?null:[h,cells[c]||'']}).filter(Boolean)};
+    });
+  }
   function fmtKw(v){return String(Math.round(v*100)/100)}
   function poleKw(p){var s=0;(p.cs||[]).forEach(function(c){s+=c.kw});return s}
   // One consumer's details, each line as text.
   function csDetail(c){
-    var d=mk('div','csinfo');
-    [['IVRS',c.i],['नाम',c.n],['श्रेणी',CS_G[c.g]],['फेज़',c.ph+' फेज़'],['जुड़ा भार',c.kw?fmtKw(c.kw)+' kW':''],['मीटर नंबर',c.m],['टिप्पणी',c.t]]
-      .forEach(function(r){if(r[1])d.appendChild(mk('div','',r[0]+': '+r[1]))});
+    var d=mk('div','csinfo'),r=clFind(curF(),c.i)||{};
+    [['IVRS',c.i],['नाम',c.n||r.n],['मोबाइल',r.mo],['श्रेणी',CS_G[c.g]+(r.gt?' ('+r.gt+')':'')],['फेज़',c.ph+' फेज़'],['जुड़ा भार',c.kw?fmtKw(c.kw)+' kW':''],['मीटर नंबर',c.m||r.m],['टिप्पणी',c.t]]
+      .concat(r.x||[]).forEach(function(q){if(q[1])d.appendChild(mk('div','',q[0]+': '+q[1]))});
     return d;
   }
   function cleanFeeder(f){
@@ -1935,6 +1982,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       return o;
     });
     var out={id:str(f.id)||uid(),n:f.n.trim(),by:str(f.by),end:num(f.end),poles:Math.floor(num(f.poles)),segs:segs,dts:dts,pl:pl,at:num(f.at)||Date.now()};
+    var cl=cleanCl(f.cl);if(cl.length)out.cl=cl;
     // surveys from before v1.54 numbered every pole 1, 2, 3 …: give them HT / Ckt numbers once
     if(pl.length&&pl.every(function(p){return /^\d*$/.test(p.no)}))renumber(out);
     return out;
@@ -2122,6 +2170,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   }
   function renderFdInfo(){
     var f=curF();if(!f)return;
+    $('clSum').textContent='👥 गाँव की उपभोक्ता सूची (Excel)'+(f.cl?' ('+f.cl.length+')':'');$('clDel').hidden=!f.cl;
     var t=fdTotals(f),sum=$('fdSum');sum.textContent='';
     var boxes=[['फीडर की लंबाई (GPS)',fmtLen(t.len)],['खंभे'+(t.est?' (अनुमान)':''),t.poles?String(t.poles):'—'],['ट्रांसफार्मर',t.dt+(t.kva?' · '+t.kva+' kVA':'')],['उपभोक्ता (DTR पर लिखे)',String(t.c)],['LT लाइन कुल',fmtLen(t.lt)]];
     if(f.pl.length)boxes.push(['🔴 11kV खंभे (सर्वे)',String(t.hp)],['🔵 LT खंभे (सर्वे)',String(t.lp)],['खंभों पर उपभोक्ता',String(t.pc)],['जुड़ा भार (kW)',fmtKw(t.kw)],['📦 DB बॉक्स',String(t.db)]);
@@ -2428,7 +2477,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     FD.pl=p?p.id:'';if(p)FD.plPos={lat:p.lat,lng:p.lng,acc:0};
     k=p?p.k:k;
     $('plFormT').textContent=p?poleName(p)+' बदलें':(k==='h'?'नया 11kV खंभा':'नया LT खंभा');
-    FD.cs=p&&p.cs?p.cs.map(function(c){return Object.assign({},c)}):[];FD.csSel='';$('csForm').hidden=true;renderCs();
+    FD.cs=p&&p.cs?p.cs.map(function(c){return Object.assign({},c)}):[];FD.csSel='';FD.csEdit='';$('csForm').hidden=true;renderCs();
+    $('csFind').hidden=!f.cl;$('csQ').value='';$('csHits').textContent='';
     if(!FD.cs.length)$('plC').value=p&&p.c?p.c:'';$('plDb').checked=p?!!p.db:FD.lastDb!==false;$('plNote').value=p?p.note:'';
     setKind(k);setPlSt(p?p.st:'pcc');
     // a new pole joins the last one marked of the same line: an 11kV pole the last 11kV pole, an LT pole the last LT pole or DTR
@@ -2461,18 +2511,43 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     $('csOk').textContent=c?'✔ सेव':'✔ जोड़ें';$('csForm').hidden=false;$('csI').focus();
   }
   $('csAdd').onclick=function(){csOpen(null)};
+  // Adds a consumer to the pole being edited, unless the IVRS is already on it or on another pole.
+  function csTake(c){
+    var f=curF();if(!f)return false;
+    var lc=c.i.toLowerCase(),edit=FD.csEdit;
+    if(FD.cs.some(function(x){return x.i.toLowerCase()===lc&&x.i!==edit})){toast('IVRS '+c.i+' इसी खंभे पर पहले से है');return false}
+    var other=f.pl.filter(function(q){return q.id!==FD.pl&&(q.cs||[]).some(function(x){return x.i.toLowerCase()===lc})})[0];
+    if(other){toast('IVRS '+c.i+' पहले से '+poleFull(f,other)+' पर है');return false}
+    if(FD.cs.length>=200){toast('एक खंभे पर 200 तक उपभोक्ता');return false}
+    if(edit)FD.cs=FD.cs.map(function(x){return x.i===edit?c:x});else FD.cs.push(c);
+    FD.csSel=c.i;renderCs();return true;
+  }
+  // The village list: IVRS or mobile (digits, part of it) or name; at most 8 matches, each a button to add.
+  function csHits(){
+    var f=curF(),box=$('csHits');box.textContent='';var q=$('csQ').value.trim();if(!f||!f.cl||q.length<3)return;
+    var dq=q.replace(/\D/g,''),lq=q.toLowerCase(),on={};
+    f.pl.forEach(function(p){(p.id===FD.pl?FD.cs:p.cs||[]).forEach(function(c){on[c.i.toLowerCase()]=p.id===FD.pl?'इसी खंभे पर':poleFull(f,p)})});
+    var hits=f.cl.filter(function(c){return (dq.length>=3&&(c.i.indexOf(dq)>=0||(c.mo||'').indexOf(dq)>=0))||c.i.toLowerCase()===lq||(c.n&&c.n.toLowerCase().indexOf(lq)>=0)}).slice(0,8);
+    if(!hits.length){box.appendChild(mk('small','hint','सूची में नहीं मिला'));return}
+    hits.forEach(function(c){
+      var w=on[c.i.toLowerCase()],b=mk('button','chip',c.i+' · '+(c.n||'—')+(c.mo?' · '+c.mo:'')+(w?' (✓ '+w+')':''));b.type='button';
+      b.onclick=function(){var x={i:c.i,n:c.n,g:c.g,ph:c.ph,kw:c.kw,m:c.m,t:''};FD.csEdit='';if(csTake(x)){$('csQ').value='';csHits();toast('जुड़ा: '+c.i+(c.n?' · '+c.n:''))}};
+      box.appendChild(b);
+    });
+  }
+  $('csQ').addEventListener('input',csHits);
+  $('csQ').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var b=$('csHits').querySelector('button');if(b)b.click()}});
+  $('csI').addEventListener('change',function(){
+    var r=clFind(curF(),this.value.trim());if(!r)return;
+    if(!$('csN').value)$('csN').value=r.n;$('csG').value=r.g;$('csPh').value=String(r.ph);if(!$('csKw').value&&r.kw)$('csKw').value=r.kw;if(!$('csM').value)$('csM').value=r.m;
+  });
   $('csCancel').onclick=function(){$('csForm').hidden=true};
   $('csOk').onclick=function(){
     var f=curF();if(!f)return;
     var c=cleanCs([{i:$('csI').value,n:$('csN').value,g:$('csG').value,ph:$('csPh').value,kw:$('csKw').value,m:$('csM').value,t:$('csT').value}])[0];
     if(!c){toast('IVRS नंबर लिखें');$('csI').focus();return}
-    var lc=c.i.toLowerCase(),edit=FD.csEdit;
-    if(FD.cs.some(function(x){return x.i.toLowerCase()===lc&&x.i!==edit})){toast('IVRS '+c.i+' इसी खंभे पर पहले से है');$('csI').focus();return}
-    var other=f.pl.filter(function(q){return q.id!==FD.pl&&(q.cs||[]).some(function(x){return x.i.toLowerCase()===lc})})[0];
-    if(other){toast('IVRS '+c.i+' पहले से '+poleFull(f,other)+' पर है');$('csI').focus();return}
-    if(FD.cs.length>=200){toast('एक खंभे पर 200 तक उपभोक्ता');return}
-    if(edit)FD.cs=FD.cs.map(function(x){return x.i===edit?c:x});else FD.cs.push(c);
-    FD.csSel=c.i;$('csForm').hidden=true;renderCs();
+    if(!csTake(c)){$('csI').focus();return}
+    $('csForm').hidden=true;
   };
   // Enter in the consumer fields adds the consumer; it must not save the whole pole form.
   $('csForm').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('csOk').click()}});
@@ -2502,6 +2577,21 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     if(!confirm('सभी खंभों के नंबर सर्वे के क्रम से फिर से लगाएँ? 11kV: HT-1, HT-2 …; LT: हर DTR के सर्किट Ckt-1-1, Ckt-1-2 …'))return;
     renumber(f);FD.find='';$('plQ').value='';save();renderFdInfo();drawLayers(false);showFind();toast('🔢 नंबर फिर से लगे');
   };
+  $('clFileBtn').onclick=function(){$('clFile').click()};
+  $('clFile').onchange=function(){
+    var file=this.files&&this.files[0];this.value='';var f=curF();if(!file||!f)return;
+    readSheet(file).then(function(rows){
+      var got=clRows(rows);if(!got){toast('IVRS वाला कॉलम नहीं मिला — ऊपर की पंक्ति में कॉलम के नाम (IVRS, नाम, मोबाइल …) रखें');return}
+      var add=cleanCl(got);if(!add.length){toast('फ़ाइल में IVRS नंबर वाली कोई पंक्ति नहीं मिली');return}
+      // same IVRS: the new row replaces the old one; others are added
+      var by={},nw=0,ch=0;(f.cl||[]).forEach(function(c,k){by[c.i.toLowerCase()]=k});
+      var list=(f.cl||[]).slice();add.forEach(function(c){var k=by[c.i.toLowerCase()];if(k==null){list.push(c);nw++}else{list[k]=c;ch++}});
+      f.cl=cleanCl(list);save();renderFdInfo();
+      var kb=Math.round(new Blob([JSON.stringify(f)]).size/1024);
+      toast(f.cl.length+' उपभोक्ता सूची में ('+nw+' नए'+(ch?', '+ch+' बदले':'')+')'+(kb>700?' — यह फीडर '+kb+' KB का हो गया, 1 MB के पास':''));
+    }).catch(sheetError);
+  };
+  $('clDel').onclick=function(){var f=curF();if(!f||!f.cl||!confirm('इस गाँव की उपभोक्ता सूची हटाएँ? (खंभों पर जुड़े उपभोक्ता बने रहेंगे)'))return;delete f.cl;save();renderFdInfo()};
   $('fdPoleH').onclick=function(){newPole('h')};
   $('fdPoleL').onclick=function(){newPole('l')};
   $('plKind').addEventListener('click',function(e){var b=e.target.closest('.chip');if(b){setKind(b.dataset.k);autoNo()}});

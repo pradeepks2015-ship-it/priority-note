@@ -107,6 +107,12 @@ and left out of reminders.
   too. `poleKw()` sums kW: totals (`t.kw`), each DTR (`dtPoles().kw`), DTR list, WhatsApp, SLD and KML show it.
   Size: each feeder is its own Firestore document (v1.61), so the 1 MB limit is per feeder; `push()` refuses a feeder
   above `CLOUD_KB` (980 KB) with a plain message (split it into two villages), the phone keeps everything.
+- Village consumer list (v1.62): `f.cl[]` `{i, n, mo mobile, g, gt (category as written), ph, kw, m, x [[column, value]…]}`
+  (`cleanCl()`, ≤5000, unique IVRS) from Excel/CSV via "👥 गाँव की उपभोक्ता सूची" (`readSheet` → `clRows()`: the heading
+  row is the first with an IVRS-like heading; `CL_COLS` maps Hindi/English headings, पिता/पति columns are never the name,
+  HP → kW; every other column is kept in `x`). Same IVRS replaces, others are added. In the pole form `#csQ` searches it
+  (`csHits()`: part of IVRS or mobile, or part of the name; 8 at most; shows where a consumer already is) and a tap adds
+  it via `csTake()` (same duplicate rules as typing). `csDetail()` merges the list's record (mobile, columns).
 - Structures and SLD (v1.45): 11kV poles have `st` (pcc | dp | tp | 4p, `SLD_ST`), chosen in the pole form; map symbol
   (`strSym()`, v1.48, after the JE's DP drawing): H-beam poles, guarding channel with disc insulators, a second channel with
   pin insulators, belts and X-bracing (4-pole two pairs). TP (`tpSym()`, after the JE's photo) is three poles in an L that
