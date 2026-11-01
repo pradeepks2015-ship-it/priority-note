@@ -94,6 +94,13 @@ and left out of reminders.
   "आगे जुड़े खंभे" has a three-pole LT line picture `ltLineSym()` (v1.59); its lines show the map's own pole, DTR and DB-box symbols via `symEl()`, v1.57): consumers, its DT via `poleDt()`, poles further down via `below()`. Deleting a pole
   joins its children to its parent. "📤 सर्वे फ़ाइल" is the feeder as JSON in a .txt (shareable on WhatsApp, photos left
   out); "📥 सर्वे फ़ाइल जोड़ें" adds it (same id: asks, then replaces, keeping this phone's DT photos).
+- Consumers by IVRS (v1.60): an LT pole may carry `cs[]` `{i IVRS (letters/digits, ≤20, unique in the feeder), n name,
+  g category (`CS_G`: d घरेलू | nd गैर-घरेलू | ag कृषि | in औद्योगिक | o अन्य), ph 1|3, kw connected load, m meter no., t note}`
+  (`cleanCs()`, ≤200 per pole). With a list, `c` is the list's length (the count field is locked). The pole form adds/edits
+  them (`renderCs`, `csOpen`); the search box shows IVRS buttons, a tap shows `csDetail()`; search finds a pole by IVRS
+  too. `poleKw()` sums kW: totals (`t.kw`), each DTR (`dtPoles().kw`), DTR list, WhatsApp, SLD and KML show it.
+  Size: the whole state is one Firestore document; `push()` refuses above `CLOUD_KB` (980 KB) with a plain message, the
+  phone keeps everything. A full DC's consumers will need their own documents (per feeder) — planned.
 - Structures and SLD (v1.45): 11kV poles have `st` (pcc | dp | tp | 4p, `SLD_ST`), chosen in the pole form; map symbol
   (`strSym()`, v1.48, after the JE's DP drawing): H-beam poles, guarding channel with disc insulators, a second channel with
   pin insulators, belts and X-bracing (4-pole two pairs). TP (`tpSym()`, after the JE's photo) is three poles in an L that
@@ -174,4 +181,5 @@ online backup and push tokens across several "phones" with a stand-in Firebase (
 the note text changes.
 
 ## Planned next steps
+- Consumers (and big surveys) in their own Firestore documents per feeder, so the 1 MB limit stops mattering.
 - Upload letter screenshots to Storage (needs the Blaze plan).

@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-nTR7hGu9Ce4jQwFtBen+1gb0dgpP4+6AxjbJVoELAP8=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iaQyVTpWzf3edJgCUa5OXoUNvtFwUDaaApHKuCEmP3I=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -150,12 +150,15 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .plico span{position:absolute;left:50%;top:100%;transform:translateX(-50%);white-space:nowrap;font:700 11px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 3px;border-radius:4px;border:1px solid var(--line)}
 .plinfo{border:1.5px solid var(--accent);border-radius:12px;padding:10px 12px;margin-top:8px;line-height:1.5}
 .plinfo b{font-size:17px}
+.csl{margin:6px 0}.csl .chip{font-variant-numeric:tabular-nums}
+.csinfo{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;background:var(--surface);line-height:1.6}
+.csform{border:1px dashed var(--line);border-radius:10px;padding:8px;margin:6px 0}
 .pli{display:flex;align-items:center;gap:8px;min-height:30px}
 .pli .pic,.pli .pe{flex:none;width:34px;display:flex;justify-content:center}
 .pli .pic svg{width:auto;height:28px;margin:0}
 .ltline .po{fill:var(--muted)}
 .ltline .cb{fill:none;stroke:var(--ink);stroke-width:1.4}
-.fdlegend .lg{font-weight:700}.fdlegend .lg.h,.fdlegend .r{color:var(--p1)}.fdlegend .y{color:var(--p2)}.fdlegend .b{color:var(--accent)}.fdlegend .lg.l{color:var(--ink)}.fdlegend .lg.w{color:var(--muted)}
+.fdlegend .lg{font-weight:700}.fdlegend .lg.h{color:var(--p1)}.fdlegend .lg.l{color:var(--ink)}.fdlegend .lg.w{color:var(--muted)}
 .dtico span{position:absolute;left:50%;top:36px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
 .prev{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .pv{display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -459,6 +462,22 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
               <button type="button" class="chip" data-s="4p" aria-pressed="false">4-पोल</button>
             </div>
             <input type="number" id="plC" inputmode="numeric" min="0" placeholder="इस खंभे से जुड़े उपभोक्ता" aria-label="इस खंभे से जुड़े उपभोक्ता">
+            <div id="plCs">
+              <p class="lbl">👥 उपभोक्ता (IVRS नंबर से)</p>
+              <div class="chips csl" id="csList"></div>
+              <div id="csInfo" hidden></div>
+              <div class="fields csform" id="csForm" hidden>
+                <input type="text" id="csI" inputmode="numeric" maxlength="20" placeholder="IVRS नंबर" aria-label="IVRS नंबर">
+                <input type="text" id="csN" maxlength="60" placeholder="उपभोक्ता का नाम" aria-label="उपभोक्ता का नाम">
+                <select id="csG" aria-label="श्रेणी"><option value="d">घरेलू</option><option value="nd">गैर-घरेलू</option><option value="ag">कृषि (पंप)</option><option value="in">औद्योगिक</option><option value="o">अन्य</option></select>
+                <select id="csPh" aria-label="फेज़"><option value="1">1 फेज़</option><option value="3">3 फेज़</option></select>
+                <input type="number" id="csKw" inputmode="decimal" min="0" step="0.01" placeholder="जुड़ा भार (kW)" aria-label="जुड़ा भार (kW)">
+                <input type="text" id="csM" maxlength="20" placeholder="मीटर नंबर" aria-label="मीटर नंबर">
+                <input type="text" id="csT" maxlength="100" placeholder="टिप्पणी (वैकल्पिक)" aria-label="उपभोक्ता की टिप्पणी">
+                <div class="row"><button class="btn sm" type="button" id="csOk">✔ जोड़ें</button><button class="btn ghost sm" type="button" id="csCancel">रद्द</button></div>
+              </div>
+              <button class="btn ghost sm" type="button" id="csAdd">➕ IVRS से उपभोक्ता जोड़ें</button>
+            </div>
             <label class="chk" id="plDbL"><input type="checkbox" id="plDb"> 📦 इस खंभे पर DB बॉक्स लगा है</label>
             <label class="lbl" for="plTo">किससे जुड़ा (लाइन)</label>
             <select id="plTo"></select>
@@ -495,7 +514,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             </div>
           </form>
           <form id="plFind" class="row" style="margin-top:12px" autocomplete="off">
-            <input type="text" id="plQ" placeholder="खंभा नंबर, जैसे HT-15 या Ckt-1-3" aria-label="खंभा नंबर से खोजें" style="flex:1 1 150px">
+            <input type="text" id="plQ" placeholder="खंभा नंबर या IVRS, जैसे Ckt-1-3" aria-label="खंभा नंबर से खोजें" style="flex:1 1 150px">
             <button class="btn sm" type="submit">🔍 खोजें</button>
           </form>
           <div class="plinfo" id="plInfo" hidden></div>
@@ -512,7 +531,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost" type="button" id="fdSldPdf" style="flex:1 1 150px">📐 SLD (PDF / प्रिंट)</button>
             <button class="btn ghost" type="button" id="fdSldPng" style="flex:1 1 150px">🖼️ SLD फोटो</button>
           </div>
-          <p class="hint fdlegend">नक्शे पर: <b class="lg h">11kV: <span class="r">R</span> <span class="y">Y</span> <span class="b">B</span> तीन तार</b> · <b class="lg l">▬ LT केबल (हुक पर) · 📦 DB बॉक्स</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
+          <p class="hint fdlegend">नक्शे पर: <b class="lg h">▬ 11kV लाइन (लाल)</b> · <b class="lg l">▬ LT केबल (हुक पर) · 📦 DB बॉक्स</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
           <details class="more" style="margin-top:12px">
             <summary>और विकल्प</summary>
             <div class="row" style="padding:10px 0">
@@ -644,9 +663,13 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     clearTimeout(saveTimer);
     saveTimer=setTimeout(push,600);
   }
+  var CLOUD_KB=980;  // a Firestore document holds 1 MiB; keep a little room for its other fields
   function push(){
     if(!ref)return;
-    var body=JSON.parse(JSON.stringify(S));
+    var js=JSON.stringify(S),kb=Math.round(new Blob([js]).size/1024);
+    // The whole state is one Firestore document (1 MB at most): say so plainly instead of failing quietly.
+    if(kb>CLOUD_KB){cloud.st='err';cloud.msg='डेटा बहुत बड़ा है ('+kb+' KB): ऑनलाइन कॉपी में 1 MB तक ही आता है, इसलिए ऑनलाइन सेव रुका है। फ़ोन पर सारा डेटा सुरक्षित है।';renderCloud();return}
+    var body=JSON.parse(js);
     chain=chain.then(function(){return ref.set(body)}).then(function(){cloud.at=Date.now();cloud.st='on';renderCloud()},function(e){cloudErr(e)});
   }
 
@@ -1630,10 +1653,11 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.59',APP_NOTES=[
-    'DTR का निशान हर जगह एक जैसा: बिजली के निशान वाला (नक्शा, खोज, सूची)',
-    'खंभे की खोज में DTR के बारे में सिर्फ़ "जुड़ा DTR: नाम"; "सीधे" और "पिछला" हटाए',
-    '"आगे जुड़े खंभे" के साथ तीन खंभों की छोटी LT लाइन का चित्र'
+  var APP_V='1.60',APP_NOTES=[
+    'LT खंभे पर उपभोक्ता IVRS नंबर से जोड़ें: नाम, श्रेणी, फेज़, जुड़ा भार (kW), मीटर नंबर',
+    'IVRS दबाने पर उपभोक्ता का पूरा विवरण; खोज में IVRS नंबर से भी खंभा मिलता है',
+    'हर DTR में उसके सभी LT खंभों के उपभोक्ता और कुल जुड़ा भार (kW)',
+    'डेटा 1 MB से बड़ा होने पर ऑनलाइन सेव रुकता है और साफ़ बताता है (फ़ोन पर डेटा सुरक्षित)'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1827,6 +1851,27 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   var SLD_ST={pcc:'PCC पोल',dp:'DP',tp:'TP','4p':'4-पोल'};
   var SPAN=65,GPS_ACC=35,GPS_STEP=8,GPS_MAXV=45;  // metres per pole (estimate), worst accepted accuracy, min step, max m/s
   var FD={pl:'',plPos:null,plKind:'h',last:'',find:'',open:'',rec:false,live:null,watch:null,fix:null,lastT:0,weak:false,unsaved:0,lastSave:0,lock:null,map:null,grp:null,me:null,base:null,tiles:{},follow:true,dt:'',dtPos:null,dtImg:'',dtNewImg:[]};
+  /* Consumers on an LT pole (v1.60): {i IVRS, n name, g category (CS_G), ph 1|3, kw connected load, m meter no., t note}.
+     IVRS is letters/digits only, unique in the list; at most 200 per pole. */
+  var CS_G={d:'घरेलू',nd:'गैर-घरेलू',ag:'कृषि (पंप)','in':'औद्योगिक',o:'अन्य'};
+  function cleanCs(a){
+    var seen={},out=[];
+    (Array.isArray(a)?a:[]).forEach(function(c){
+      if(!c||out.length>=200)return;var i=String(c.i==null?'':c.i).replace(/[^0-9A-Za-z-]/g,'').slice(0,20);
+      if(!i||seen[i.toLowerCase()])return;seen[i.toLowerCase()]=1;var kw=+c.kw;
+      out.push({i:i,n:str(c.n).trim().slice(0,60),g:CS_G[c.g]?c.g:'d',ph:+c.ph===3?3:1,kw:isFinite(kw)&&kw>0?Math.round(Math.min(kw,9999)*100)/100:0,m:str(c.m).trim().slice(0,20),t:str(c.t).trim().slice(0,100)});
+    });
+    return out;
+  }
+  function fmtKw(v){return String(Math.round(v*100)/100)}
+  function poleKw(p){var s=0;(p.cs||[]).forEach(function(c){s+=c.kw});return s}
+  // One consumer's details, each line as text.
+  function csDetail(c){
+    var d=mk('div','csinfo');
+    [['IVRS',c.i],['नाम',c.n],['श्रेणी',CS_G[c.g]],['फेज़',c.ph+' फेज़'],['जुड़ा भार',c.kw?fmtKw(c.kw)+' kW':''],['मीटर नंबर',c.m],['टिप्पणी',c.t]]
+      .forEach(function(r){if(r[1])d.appendChild(mk('div','',r[0]+': '+r[1]))});
+    return d;
+  }
   function cleanFeeder(f){
     if(!f||typeof f.n!=='string'||!f.n.trim())return null;
     var num=function(v){v=+v;return isFinite(v)&&v>0?v:0};
@@ -1835,7 +1880,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       return {id:str(d.id)||uid(),n:str(d.n).replace(/^DT(?=[\s\-\d]|$)/,'DTR'),kva:num(d.kva),c:Math.floor(num(d.c)),lt:Math.round(num(d.lt)),lat:+d.lat,lng:+d.lng,img:str(d.img),note:str(d.note),to:str(d.to),at:num(d.at)||Date.now()};
     });
     var pl=(Array.isArray(f.pl)?f.pl:[]).filter(function(p){return p&&isFinite(p.lat)&&isFinite(p.lng)}).map(function(p){
-      return {id:str(p.id)||uid(),no:str(p.no).trim(),k:p.k==='l'?'l':'h',st:SLD_ST[p.st]?p.st:'pcc',db:p.k==='l'&&!!p.db,c:Math.floor(num(p.c)),to:str(p.to),lat:+p.lat,lng:+p.lng,note:str(p.note),at:num(p.at)||Date.now()};
+      var o={id:str(p.id)||uid(),no:str(p.no).trim(),k:p.k==='l'?'l':'h',st:SLD_ST[p.st]?p.st:'pcc',db:p.k==='l'&&!!p.db,c:Math.floor(num(p.c)),to:str(p.to),lat:+p.lat,lng:+p.lng,note:str(p.note),at:num(p.at)||Date.now()};
+      var cs=o.k==='l'?cleanCs(p.cs):[];if(cs.length){o.cs=cs;o.c=cs.length}  // with an IVRS list the count is the list
+      return o;
     });
     var out={id:str(f.id)||uid(),n:f.n.trim(),by:str(f.by),end:num(f.end),poles:Math.floor(num(f.poles)),segs:segs,dts:dts,pl:pl,at:num(f.at)||Date.now()};
     // surveys from before v1.54 numbered every pole 1, 2, 3 …: give them HT / Ckt numbers once
@@ -1857,7 +1904,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     var t={len:trackLen(f),dt:f.dts.length,c:0,lt:0,kva:0,hp:0,lp:0,pc:0};
     f.dts.forEach(function(d){t.c+=d.c;t.lt+=d.lt;t.kva+=d.kva});
     t.st={dp:0,tp:0,'4p':0};t.db=0;
-    f.pl.forEach(function(p){if(p.k==='h'){t.hp++;if(t.st[p.st]!=null)t.st[p.st]++}else{t.lp++;t.pc+=p.c;if(p.db)t.db++}});
+    t.kw=0;f.pl.forEach(function(p){if(p.k==='h'){t.hp++;if(t.st[p.st]!=null)t.st[p.st]++}else{t.lp++;t.pc+=p.c;t.kw+=poleKw(p);if(p.db)t.db++}});
     t.poles=f.poles||poleEst(f);t.est=!f.poles;return t;
   }
   /* the network: each pole hangs from a pole or a DTR (p.to); a DTR hangs from an 11kV pole (d.to) */
@@ -1888,8 +1935,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     return r;
   }
   function dtPoles(f,d){
-    var X=net(f);if(!X.per){X.per={};f.pl.forEach(function(p){var x=X.dt[p.id];if(x){var a=X.per[x.id]=X.per[x.id]||{n:0,c:0,db:0};a.n++;a.c+=p.c;if(p.db)a.db++}})}
-    return X.per[d.id]||{n:0,c:0,db:0};
+    var X=net(f);if(!X.per){X.per={};f.pl.forEach(function(p){var x=X.dt[p.id];if(x){var a=X.per[x.id]=X.per[x.id]||{n:0,c:0,db:0,kw:0};a.n++;a.c+=p.c;a.kw+=poleKw(p);if(p.db)a.db++}})}
+    return X.per[d.id]||{n:0,c:0,db:0,kw:0};
   }
   /* Pole numbers (v1.54, the JE's scheme): 11kV poles HT-1, HT-2 …; LT poles Ckt-<circuit>-<pole>, where each line
      leaving a DTR is a circuit (Ckt-1, Ckt-2 … per DTR) and its poles count 1, 2, 3 … in survey order. An LT number is
@@ -1936,7 +1983,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   function findPoles(f,q){
     q=String(q||'').trim();if(!q)return [];
     var a=canonNo(q,'').toLowerCase(),b=canonNo(q,'h').toLowerCase();
-    return f.pl.filter(function(p){var n=p.no.toLowerCase();return n===a||n===b});
+    return f.pl.filter(function(p){var n=p.no.toLowerCase();return n===a||n===b||(p.cs||[]).some(function(c){return c.i.toLowerCase()===a})});
   }
   function findPole(f,q){return findPoles(f,q)[0]||null}
   // Pole name with its DTR for an LT pole, where the same number may stand under another DTR.
@@ -2027,7 +2074,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     var f=curF();if(!f)return;
     var t=fdTotals(f),sum=$('fdSum');sum.textContent='';
     var boxes=[['फीडर की लंबाई (GPS)',fmtLen(t.len)],['खंभे'+(t.est?' (अनुमान)':''),t.poles?String(t.poles):'—'],['ट्रांसफार्मर',t.dt+(t.kva?' · '+t.kva+' kVA':'')],['उपभोक्ता (DTR पर लिखे)',String(t.c)],['LT लाइन कुल',fmtLen(t.lt)]];
-    if(f.pl.length)boxes.push(['🔴 11kV खंभे (सर्वे)',String(t.hp)],['🔵 LT खंभे (सर्वे)',String(t.lp)],['खंभों पर उपभोक्ता',String(t.pc)],['📦 DB बॉक्स',String(t.db)]);
+    if(f.pl.length)boxes.push(['🔴 11kV खंभे (सर्वे)',String(t.hp)],['🔵 LT खंभे (सर्वे)',String(t.lp)],['खंभों पर उपभोक्ता',String(t.pc)],['जुड़ा भार (kW)',fmtKw(t.kw)],['📦 DB बॉक्स',String(t.db)]);
     boxes.forEach(function(p){
       var d=mk('div');d.appendChild(mk('small','',p[0]));d.appendChild(mk('b','',p[1]));sum.appendChild(d);
     });
@@ -2041,7 +2088,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       // eslint-disable-next-line no-unsanitized/method -- dtSym() is fixed SVG markup, no data
       var row=mk('div','fdi');row.insertAdjacentHTML('beforeend',dtSym());
       var who=mk('div','who');who.appendChild(mk('b','',(i+1)+'. '+(d.n||'DTR')));who.appendChild(mk('small','',dtLine(d)));
-      var dp=dtPoles(f,d);if(dp.n)who.appendChild(mk('small','','🔵 LT खंभे '+dp.n+' · खंभों पर '+dp.c+' उपभोक्ता'+(dp.db?' · 📦 DB '+dp.db:'')));
+      var dp=dtPoles(f,d);if(dp.n)who.appendChild(mk('small','','🔵 LT खंभे '+dp.n+' · उपभोक्ता '+dp.c+(dp.kw?' · भार '+fmtKw(dp.kw)+' kW':'')+(dp.db?' · 📦 DB '+dp.db:'')));
       if(d.note)who.appendChild(mk('small','',d.note));
       row.appendChild(who);
       if(d.img&&blobURL(d.img)){var im=mk('img','thumb');im.src=blobURL(d.img);im.alt=(d.n||'DTR')+' की फोटो';im.onclick=function(){$('lbImg').src=blobURL(d.img);$('lb').hidden=false};row.appendChild(im)}
@@ -2321,7 +2368,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   // A new pole's suggested number follows its kind and "किससे जुड़ा", until the number is typed by hand.
   function autoNo(){var f=curF();if(!f||FD.pl||$('plNo').value!==FD.autoNo)return;$('plNo').value=FD.autoNo=nextNo(f,FD.plKind,$('plTo').value)}
   function setKind(k){
-    FD.plKind=k;$('plC').hidden=k!=='l';$('plSt').hidden=k!=='h';$('plDbL').hidden=k!=='l';
+    FD.plKind=k;$('plC').hidden=k!=='l';$('plCs').hidden=k!=='l';$('plSt').hidden=k!=='h';$('plDbL').hidden=k!=='l';
     $('plKind').querySelectorAll('.chip').forEach(function(c){c.setAttribute('aria-pressed',String(c.dataset.k===k))});
   }
   function showPlPos(){var p=FD.plPos;$('plPos').textContent=p?'📍 जगह: '+r5(p.lat)+', '+r5(p.lng)+(p.acc?' (±'+Math.round(p.acc)+' मी.)':''):''}
@@ -2331,7 +2378,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     FD.pl=p?p.id:'';if(p)FD.plPos={lat:p.lat,lng:p.lng,acc:0};
     k=p?p.k:k;
     $('plFormT').textContent=p?poleName(p)+' बदलें':(k==='h'?'नया 11kV खंभा':'नया LT खंभा');
-    $('plC').value=p&&p.c?p.c:'';$('plDb').checked=p?!!p.db:FD.lastDb!==false;$('plNote').value=p?p.note:'';
+    FD.cs=p&&p.cs?p.cs.map(function(c){return Object.assign({},c)}):[];FD.csSel='';$('csForm').hidden=true;renderCs();
+    if(!FD.cs.length)$('plC').value=p&&p.c?p.c:'';$('plDb').checked=p?!!p.db:FD.lastDb!==false;$('plNote').value=p?p.note:'';
     setKind(k);setPlSt(p?p.st:'pcc');
     // a new pole joins the last one marked of the same line: an 11kV pole the last 11kV pole, an LT pole the last LT pole or DTR
     var last=node(f,FD.last),def;
@@ -2343,6 +2391,41 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     $('plDel').hidden=!p;$('plForm').hidden=false;showPlPos();
     $('plForm').scrollIntoView({block:'center'});
   }
+  // The pole form's consumer list: IVRS buttons, a tap shows the details with बदलें / हटाएँ; with a list the count is locked.
+  function renderCs(){
+    var box=$('csList'),inf=$('csInfo');box.textContent='';inf.textContent='';
+    FD.cs.forEach(function(c){var b=mk('button','chip',c.i);b.type='button';b.setAttribute('aria-pressed',String(FD.csSel===c.i));b.onclick=function(){FD.csSel=FD.csSel===c.i?'':c.i;renderCs()};box.appendChild(b)});
+    var c=FD.cs.filter(function(x){return x.i===FD.csSel})[0];inf.hidden=!c;
+    if(c){
+      inf.appendChild(csDetail(c));var r=mk('div','row');
+      var e=mk('button','btn ghost sm','बदलें');e.type='button';e.onclick=function(){csOpen(c)};r.appendChild(e);
+      var d=mk('button','btn ghost sm','हटाएँ');d.type='button';d.onclick=function(){if(!confirm('IVRS '+c.i+' हटाएँ?'))return;FD.cs=FD.cs.filter(function(x){return x!==c});FD.csSel='';renderCs()};r.appendChild(d);
+      inf.appendChild(r);
+    }
+    $('plC').readOnly=!!FD.cs.length;if(FD.cs.length)$('plC').value=FD.cs.length;
+    $('csAdd').textContent=FD.cs.length?'➕ और उपभोक्ता (IVRS)':'➕ IVRS से उपभोक्ता जोड़ें';
+  }
+  function csOpen(c){
+    FD.csEdit=c?c.i:'';$('csI').value=c?c.i:'';$('csN').value=c?c.n:'';$('csG').value=c?c.g:'d';$('csPh').value=String(c?c.ph:1);
+    $('csKw').value=c&&c.kw?c.kw:'';$('csM').value=c?c.m:'';$('csT').value=c?c.t:'';
+    $('csOk').textContent=c?'✔ सेव':'✔ जोड़ें';$('csForm').hidden=false;$('csI').focus();
+  }
+  $('csAdd').onclick=function(){csOpen(null)};
+  $('csCancel').onclick=function(){$('csForm').hidden=true};
+  $('csOk').onclick=function(){
+    var f=curF();if(!f)return;
+    var c=cleanCs([{i:$('csI').value,n:$('csN').value,g:$('csG').value,ph:$('csPh').value,kw:$('csKw').value,m:$('csM').value,t:$('csT').value}])[0];
+    if(!c){toast('IVRS नंबर लिखें');$('csI').focus();return}
+    var lc=c.i.toLowerCase(),edit=FD.csEdit;
+    if(FD.cs.some(function(x){return x.i.toLowerCase()===lc&&x.i!==edit})){toast('IVRS '+c.i+' इसी खंभे पर पहले से है');$('csI').focus();return}
+    var other=f.pl.filter(function(q){return q.id!==FD.pl&&(q.cs||[]).some(function(x){return x.i.toLowerCase()===lc})})[0];
+    if(other){toast('IVRS '+c.i+' पहले से '+poleFull(f,other)+' पर है');$('csI').focus();return}
+    if(FD.cs.length>=200){toast('एक खंभे पर 200 तक उपभोक्ता');return}
+    if(edit)FD.cs=FD.cs.map(function(x){return x.i===edit?c:x});else FD.cs.push(c);
+    FD.csSel=c.i;$('csForm').hidden=true;renderCs();
+  };
+  // Enter in the consumer fields adds the consumer; it must not save the whole pole form.
+  $('csForm').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('csOk').click()}});
   function closePl(){FD.pl='';$('plForm').hidden=true}
   function newPole(k){startWatch();herePos().then(function(pos){FD.plPos=pos;openPl(null,k)},function(){})}
   // After an LT circuit ends: the next 11kV pole continues from the 11kV pole the DTR is tapped from.
@@ -2387,7 +2470,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     if(same){toast(poleFull(f,same)+' पहले से है, दूसरा नंबर लिखें');$('plNo').focus();return}
     var p=null;f.pl.forEach(function(x){if(x.id===FD.pl)p=x});
     if(!p){p={id:uid(),at:Date.now()};f.pl.push(p)}
-    p.no=no;p.k=FD.plKind;p.st=p.k==='h'?FD.plSt:'pcc';p.db=p.k==='l'&&$('plDb').checked;if(p.k==='l')FD.lastDb=p.db;p.c=p.k==='l'?Math.max(0,Math.floor(+$('plC').value||0)):0;p.to=$('plTo').value;p.note=$('plNote').value.trim();
+    p.no=no;p.k=FD.plKind;p.st=p.k==='h'?FD.plSt:'pcc';p.db=p.k==='l'&&$('plDb').checked;if(p.k==='l')FD.lastDb=p.db;p.c=p.k==='l'?Math.max(0,Math.floor(+$('plC').value||0)):0;
+    if(p.k==='l'&&FD.cs.length){p.cs=FD.cs.slice();p.c=p.cs.length}else delete p.cs;p.to=$('plTo').value;p.note=$('plNote').value.trim();
     p.lat=r5(FD.plPos.lat);p.lng=r5(FD.plPos.lng);
     FD.last=p.id;if(p.k==='h')FD.lastH=p.id;
     closePl();save();renderFdInfo();drawLayers(false);toast('सेव हुआ: '+poleName(p));
@@ -2420,13 +2504,17 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     // each line: [picture or emoji, text]; the pictures are the map's own DTR and DB-box symbols
     var DTR=dtSym(),DB=poleSym('l','pcc',true),L=[];
     if(p.k==='l'){
-      L.push(['👥','इस खंभे से जुड़े उपभोक्ता: '+p.c]);L.push([DB,'DB बॉक्स: '+(p.db?'लगा है':'नहीं')]);
+      L.push(['👥','इस खंभे से जुड़े उपभोक्ता: '+p.c+(p.cs?' · भार '+fmtKw(poleKw(p))+' kW':'')]);L.push([DB,'DB बॉक्स: '+(p.db?'लगा है':'नहीं')]);
       var u=poleDt(f,p);L.push([DTR,'जुड़ा DTR: '+(u?u.d.n||'DTR':'नहीं')]);
     }
     var bl=below(f,p.id);if(bl.n)L.push([ltLineSym(),'आगे जुड़े खंभे: '+bl.n+(bl.c?' (उन पर '+bl.c+' उपभोक्ता)':'')]);
     var hangs=f.dts.filter(function(d){return d.to===p.id});if(hangs.length)L.push([DTR,'इस खंभे से: '+hangs.map(function(d){return d.n||'DTR'}).join(', ')]);
     if(p.note)L.push(['📝',p.note]);
-    L.forEach(function(t){var r=mk('div','pli');r.appendChild(t[0].charAt(0)==='<'?symEl(t[0]):mk('span','pe',t[0]));r.appendChild(document.createTextNode(t[1]));box.appendChild(r)});
+    L.forEach(function(t,i){var r=mk('div','pli');r.appendChild(t[0].charAt(0)==='<'?symEl(t[0]):mk('span','pe',t[0]));r.appendChild(document.createTextNode(t[1]));box.appendChild(r);
+      if(i===0&&p.cs){  // under the consumer line: one IVRS button each; a tap shows that consumer
+        var cl=mk('div','chips csl');p.cs.forEach(function(c){var b=mk('button','chip',c.i);b.type='button';b.setAttribute('aria-pressed',String(FD.csShow===c.i));b.onclick=function(){FD.csShow=FD.csShow===c.i?'':c.i;showFind()};cl.appendChild(b)});
+        box.appendChild(cl);var sh=p.cs.filter(function(c){return c.i===FD.csShow})[0];if(sh)box.appendChild(csDetail(sh));
+      }});
     var row=mk('div','row');row.style.marginTop='8px';
     var e=mk('button','btn ghost sm','बदलें');e.type='button';e.onclick=function(){openPl(p)};row.appendChild(e);
     var g=mk('a','btn ghost sm','🗺️ Google Maps');g.href=mapsLink(p.lat,p.lng);g.target='_blank';g.rel='noopener';row.appendChild(g);
@@ -2434,6 +2522,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   }
   function doFind(fly){
     var f=curF();if(!f)return;var q=$('plQ').value.trim(),p=findPole(f,q);
+    var hit=p&&(p.cs||[]).filter(function(c){return c.i.toLowerCase()===q.toLowerCase()})[0];FD.csShow=hit?hit.i:'';  // found by IVRS: open that consumer
     FD.find=p?p.id:'';showFind();drawHl();
     if(p&&fly&&FD.map){FD.follow=false;FD.map.setView([p.lat,p.lng],Math.max(FD.map.getZoom(),18))}
     if(!p&&fly&&q)toast('खंभा '+q+' नहीं मिला');
@@ -2553,7 +2642,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
         text(dx+24,y+82,d.kva?d.kva+' kVA':'— kVA',{size:12,anchor:'start'});
         el('line',{x1:dx,y1:y+104,x2:dx,y2:y+140,stroke:SLDC.lt,'stroke-width':3});
         text(dx,y+158,'LT केबल: '+(dp.n?dp.n+' खंभे':'—'),{size:12,fill:SLDC.lt,bold:true});
-        text(dx,y+176,(dp.n?dp.c:d.c)+' उपभोक्ता'+(dp.db?' · DB '+dp.db:''),{size:12,fill:SLDC.lt});
+        text(dx,y+176,(dp.n?dp.c:d.c)+' उपभोक्ता'+(dp.kw?' · '+fmtKw(dp.kw)+' kW':'')+(dp.db?' · DB '+dp.db:''),{size:12,fill:SLDC.lt});
         if(d.lt)text(dx,y+194,'LT '+fmtLen(d.lt),{size:11,fill:SLDC.mute});
       });
       if(n.loose)text(x,y-30,'(11kV खंभा नहीं चुना)',{size:11,fill:SLDC.mute});
@@ -2609,13 +2698,13 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     L.push('⚡ ट्रांसफार्मर: '+t.dt+(t.kva?' (कुल '+t.kva+' kVA)':''));
     L.push('👥 उपभोक्ता: '+t.c);
     if(t.lt)L.push('〰️ LT लाइन कुल: '+fmtLen(t.lt));
-    if(f.pl.length)L.push('🔴 11kV खंभे: '+t.hp+' · 🔵 LT खंभे: '+t.lp+' · खंभों पर उपभोक्ता: '+t.pc+(t.db?' · 📦 DB बॉक्स: '+t.db:''));
+    if(f.pl.length)L.push('🔴 11kV खंभे: '+t.hp+' · 🔵 LT खंभे: '+t.lp+' · खंभों पर उपभोक्ता: '+t.pc+(t.kw?' · भार '+fmtKw(t.kw)+' kW':'')+(t.db?' · 📦 DB बॉक्स: '+t.db:''));
     if(t.st.dp+t.st.tp+t.st['4p'])L.push('🏗️ स्ट्रक्चर: DP '+t.st.dp+' · TP '+t.st.tp+' · 4-पोल '+t.st['4p']);
     if(f.end)L.push('✅ सर्वे पूरा: '+full(new Date(f.end)));
     if(f.by)L.push('👷 सर्वे: '+f.by);
     f.dts.forEach(function(d,i){
       L.push('');L.push((i+1)+'. '+(d.n||'DTR')+' — '+dtLine(d)+(d.note?' — '+d.note:''));
-      var dp=dtPoles(f,d);if(dp.n)L.push('   🔵 LT खंभे '+dp.n+', उन पर '+dp.c+' उपभोक्ता');
+      var dp=dtPoles(f,d);if(dp.n)L.push('   🔵 LT खंभे '+dp.n+', उन पर '+dp.c+' उपभोक्ता'+(dp.kw?', भार '+fmtKw(dp.kw)+' kW':''));
       L.push('   📍 '+mapsLink(d.lat,d.lng));
     });
     if(S.sign.trim()){L.push('');L.push('— '+S.sign.trim())}
@@ -2637,7 +2726,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     var link=function(a,b,st){k.push('<Placemark><styleUrl>#'+st+'</styleUrl><LineString><coordinates>'+a[1]+','+a[0]+',0 '+b[1]+','+b[0]+',0</coordinates></LineString></Placemark>')};
     f.pl.forEach(function(p){var up=node(f,p.to);if(up)link([p.lat,p.lng],nodeLL(up),p.k==='h'?'hl':'ll')});
     f.dts.forEach(function(d){var up=node(f,d.to);if(up)link([d.lat,d.lng],nodeLL(up),'hl')});
-    f.pl.forEach(function(p){k.push('<Placemark><name>'+xmlEsc(poleFull(f,p))+'</name><description>'+xmlEsc((p.k==='h'?'11kV':'LT · '+p.c+' उपभोक्ता')+(p.note?' — '+p.note:''))+'</description><styleUrl>#'+(p.k==='h'?'hp':'lp')+'</styleUrl><Point><coordinates>'+p.lng+','+p.lat+',0</coordinates></Point></Placemark>')});
+    f.pl.forEach(function(p){k.push('<Placemark><name>'+xmlEsc(poleFull(f,p))+'</name><description>'+xmlEsc((p.k==='h'?'11kV':'LT · '+p.c+' उपभोक्ता'+(p.cs?' · '+fmtKw(poleKw(p))+' kW · IVRS '+p.cs.map(function(c){return c.i}).join(', '):''))+(p.note?' — '+p.note:''))+'</description><styleUrl>#'+(p.k==='h'?'hp':'lp')+'</styleUrl><Point><coordinates>'+p.lng+','+p.lat+',0</coordinates></Point></Placemark>')});
     f.dts.forEach(function(d){k.push('<Placemark><name>'+xmlEsc(d.n||'DTR')+'</name><description>'+xmlEsc(dtLine(d)+(d.note?' — '+d.note:''))+'</description><styleUrl>#dt</styleUrl><Point><coordinates>'+d.lng+','+d.lat+',0</coordinates></Point></Placemark>')});
     k.push('</Document></kml>');
     return k.join('\n');

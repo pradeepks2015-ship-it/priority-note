@@ -115,6 +115,20 @@ await C.click('#cloudIn');
 const cKept = await until(C, () => JSON.parse(localStorage.getItem('priority-note-v2')).tasks.some((x) => x.t === 'फ़ोन B का काम'));
 const cTasks = await tasksOf(C);
 
+// Phone D has a very big survey (over the 1 MB a Firestore document can hold) and keeps its own data:
+// the app says so plainly and does not send it; the online copy stays as it was.
+const bigName = 'नमूना उपभोक्ता का बहुत लंबा नाम ग्राम आदेगाँव वार्ड नंबर';
+const bigPl = Array.from({ length: 3000 }, (_, i) => ({ id: 'p' + i, no: 'Ckt-1-' + (i + 1), k: 'l', to: i ? 'p' + (i - 1) : 'd1', lat: 22.5 + i * 1e-5, lng: 79.2, cs: [{ i: 'A' + i, n: bigName, kw: 1 }, { i: 'B' + i, n: bigName, kw: 2 }] }));
+const D = await phone({ dev: 'D', state: { tasks: [T('d', 'फ़ोन D का काम')], orders: [], staff: [], log: [], feeders: [{ id: 'big', n: 'बड़ा सर्वे', segs: [], dts: [{ id: 'd1', n: 'DTR-1', lat: 22.5, lng: 79.2 }], pl: bigPl }] } });
+D.on('dialog', (d) => d.dismiss());
+const docBefore = doc;
+await D.click('#cloudIn');
+const dWarned = await until(D, () => document.getElementById('cloudBox').innerText.includes('1 MB'));
+await D.waitForTimeout(800);
+const dNotSent = doc === docBefore;
+const dKept = await D.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0].pl.length === 3000);
+await D.context().close();
+
 // Reopening A keeps it logged in and in sync.
 await A.reload();
 await A.click('#me');
@@ -131,6 +145,7 @@ const afterLogout = JSON.parse(doc);
 
 await browser.close();
 const checks = {
+  'बहुत बड़ा डेटा (1 MB से ऊपर): साफ़ चेतावनी, ऑनलाइन नहीं भेजा, फ़ोन पर सुरक्षित': dWarned && dNotSent && dKept,
   'लॉगिन से पहले "Google से लॉगिन करें" दिखे': offBtn.includes('Google से लॉगिन करें: सारा डेटा'),
   'लॉगिन के बाद "ऑनलाइन सेव चालू"': aOn,
   'फ़ोन A का डेटा ऑनलाइन गया': uploaded,

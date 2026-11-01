@@ -20,7 +20,7 @@ const seed = {
   log: [{ id: 'l1', ts: Date.now(), lbl: X('loglbl'), tot: 1, done: 0, txt: X('logtxt') }],
   sign: X('sign'),
   feeders: [{ id: 'f1', n: X('feeder'), by: X('by'), segs: [], dts: [{ id: 'd1', n: X('dt'), note: X('dtnote'), lat: 22.5, lng: 79.2 }],
-    pl: [{ id: 'p1', no: X('pole'), k: 'l', c: 3, to: 'd1', note: X('polenote'), lat: 22.5002, lng: 79.2 }, { id: 'p2', no: '7', k: 'l', c: 1, to: 'p1', lat: 22.5004, lng: 79.2 }] }],
+    pl: [{ id: 'p1', no: X('pole'), k: 'l', c: 3, to: 'd1', note: X('polenote'), lat: 22.5002, lng: 79.2 }, { id: 'p2', no: '7', k: 'l', c: 1, to: 'p1', lat: 22.5004, lng: 79.2, cs: [{ i: '9001', n: X('csname'), m: X('meter'), t: X('csnote'), kw: 1 }] }] }],
 };
 await ctx.addInitScript((d) => { if (sessionStorage.getItem('seeded')) return; sessionStorage.setItem('seeded', '1'); localStorage.setItem('priority-note-ver', '99'); localStorage.setItem('priority-note-v2', JSON.stringify(d)); }, seed);
 const page = await ctx.newPage();
@@ -48,8 +48,9 @@ await step('SLD', async () => {
   await page.click('#fdSldPdf'); await page.waitForTimeout(200);
   await Promise.all([page.waitForEvent('download', { timeout: 8000 }).catch(() => null), page.click('#fdSldPng')]);
 });
-await step('खंभा खोज', async () => { await page.fill('#plQ', '7'); await page.click('#plFind button[type=submit]'); });
-await step('खंभा फ़ॉर्म', async () => { await page.click('#plInfo button'); await page.waitForTimeout(100); await page.click('#plCancel'); });
+await step('खंभा खोज', async () => { await page.fill('#plQ', '7'); await page.click('#plFind button[type=submit]'); await page.click('#plInfo .csl button'); });
+await step('IVRS खोज', async () => { await page.fill('#plQ', '9001'); await page.click('#plFind button[type=submit]'); });
+await step('खंभा फ़ॉर्म', async () => { await page.click('#plInfo button:has-text("बदलें")'); await page.waitForTimeout(100); await page.click('#csList button'); await page.click('#plCancel'); });
 await step('DT फ़ॉर्म', async () => { await page.click('#dtList button:has-text("बदलें")'); await page.click('#dtCancel'); });
 await step('सर्वे फ़ाइल जोड़ें', async () => {
   await page.click('#fdBack');

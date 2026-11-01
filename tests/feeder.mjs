@@ -192,6 +192,28 @@ const listTxt2 = await page.$eval('#fdItems', (n) => n.innerText);
 await page.click('#fdItems [aria-label="खोलें: नमूना फीडर"]');
 await page.waitForSelector('#fdMap .dtico', { timeout: 8000 }).catch(() => {});
 const reopened = await page.$$eval('#fdMap .dtico', (m) => m.length);
+// Consumers by IVRS on an LT pole: details on a tap, the count and connected load add up at the DTR.
+await page.fill('#plQ', 'Ckt-1-1');
+await page.click('#plFind button[type=submit]');
+await page.click('#plInfo button:has-text("बदलें")');
+await page.waitForSelector('#plForm:not([hidden])');
+const addCs = async (o) => { await page.click('#csAdd'); await page.fill('#csI', o.i); await page.fill('#csN', o.n); await page.selectOption('#csG', o.g); await page.selectOption('#csPh', o.ph); await page.fill('#csKw', o.kw); await page.fill('#csM', o.m); await page.click('#csOk'); };
+await addCs({ i: '1234567890', n: 'नमूना उपभोक्ता एक', g: 'd', ph: '1', kw: '1.5', m: 'M-11' });
+await addCs({ i: '2234567890', n: 'नमूना दुकान', g: 'nd', ph: '3', kw: '3', m: 'M-22' });
+await addCs({ i: '1234567890', n: 'दोहराया', g: 'd', ph: '1', kw: '1', m: '' });  // same IVRS again: refused
+await page.click('#csCancel').catch(() => {});
+const csChips = await page.$$eval('#csList button', (b) => b.map((x) => x.textContent.trim()).join(','));
+const cntLocked = await page.$eval('#plC', (i) => i.readOnly && i.value === '2');
+await page.click('#plForm button[type=submit]');
+const csDtr = await page.$eval('#dtList', (n) => n.innerText);
+const csSaved = await page.evaluate(() => { const f = JSON.parse(localStorage.getItem('priority-note-v2')).feeders.find((x) => x.n === 'नमूना फीडर'); const p = f.pl.find((x) => x.no === 'Ckt-1-1'); return p.c + ':' + p.cs.map((c) => c.i + '/' + c.g + '/' + c.ph + '/' + c.kw).join(','); });
+await page.fill('#plQ', '2234567890');
+await page.click('#plFind button[type=submit]');
+const ivrsFind = await page.$eval('#plInfo', (n) => n.innerText);
+await page.click('#plInfo .csl button:has-text("1234567890")');
+const csDetail = await page.$eval('#plInfo .csinfo', (n) => n.innerText);
+const csSum = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
+const csWa = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 await page.$eval('#fdOne details.more', (d) => { d.open = true; });
 await page.click('#fdDelete');
 const gone = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.length === 1);
@@ -222,7 +244,7 @@ const checks = {
   'खंभा 2: आगे 1 खंभा (4 उपभोक्ता)': find2.includes('उपभोक्ता: 6') && find2.includes('आगे जुड़े खंभे: 1 (उन पर 4 उपभोक्ता)'),
   'न मिला नंबर: कुछ न दिखे': find99,
   'कुल: 1 11kV, 2 LT खंभे, 10 उपभोक्ता, 2 DB बॉक्स': sum2.includes('11kV खंभे (सर्वे) 1') && sum2.includes('LT खंभे (सर्वे) 2') && sum2.includes('खंभों पर उपभोक्ता 10') && sum2.includes('DB बॉक्स 2'),
-  'DT के नीचे उसके LT खंभे और उपभोक्ता': dtList2.includes('LT खंभे 2 · खंभों पर 10 उपभोक्ता'),
+  'DT के नीचे उसके LT खंभे और उपभोक्ता': dtList2.includes('LT खंभे 2 · उपभोक्ता 10'),
   'नक्शे पर खंभे और लाइनें': poleDots >= 3 + 3 + 1,
   'ज़ूम पर खंभों के निशान+नंबर, दूर से नहीं; DT पर ट्रांसफार्मर का निशान; LT खंभे पर DB बॉक्स': iconsNear.join(',') === 'Ckt-1-1,Ckt-1-2,HT-1 DP' && iconsFar === 0 && dtSymOk === 1 && dbIcons === 2,
   'WhatsApp सारांश में खंभे और सर्वे करने वाला': wa2.includes('11kV खंभे: 1 · 🔵 LT खंभे: 2 · खंभों पर उपभोक्ता: 10') && wa2.includes('सर्वे: नमूना लाइनमैन'),
@@ -245,6 +267,9 @@ const checks = {
   'SLD फोटो (PNG) बनी': /^sld-.*\.png$/.test(sldPng.name) && sldPng.size > 5000,
   'आड़ा स्क्रॉल नहीं': !hScroll,
   'दोबारा खोलने पर फीडर सूची में': listTxt.includes('नमूना फीडर') && listTxt.includes('1 ट्रांसफार्मर') && reopened === 1,
+  'IVRS से उपभोक्ता जोड़े, वही IVRS दोबारा नहीं; संख्या अपने-आप': csChips === '1234567890,2234567890' && cntLocked && csSaved === '2:1234567890/d/1/1.5,2234567890/nd/3/3',
+  'DTR में खंभों के उपभोक्ता और जुड़ा भार kW': csDtr.includes('उपभोक्ता 6') && csDtr.includes('भार 4.5 kW') && csSum.includes('जुड़ा भार (kW) 4.5') && csWa.includes('भार 4.5 kW'),
+  'IVRS से खोज, IVRS दबाने पर पूरा विवरण': ivrsFind.includes('Ckt-1-1') && ivrsFind.includes('2234567890') && ivrsFind.includes('गैर-घरेलू') && csDetail.includes('नमूना उपभोक्ता एक') && csDetail.includes('घरेलू') && csDetail.includes('1 फेज़') && csDetail.includes('1.5 kW') && csDetail.includes('M-11'),
   'फीडर हटाना (पूछकर)': gone,
   'कोई JS error नहीं': errors.length === 0,
 };
