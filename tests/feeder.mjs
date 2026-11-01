@@ -22,6 +22,8 @@ page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => { if (/Content Security Policy/.test(m.text())) errors.push('CSP: ' + m.text()); });
 page.on('dialog', (d) => d.accept());
 await page.goto(url);
+// The feeder page keeps only the survey; everything else is in the side menu (☰, v1.70).
+const menu = async (pg = page) => { if (await pg.$eval('#fdDrawer', (d) => d.hidden)) await pg.click('#fdMenu'); };
 
 await page.click('#tab-feeder');
 const noteHidden = await page.$eval('#noteCol', (n) => n.hidden);
@@ -60,15 +62,19 @@ const dtList = await page.$eval('#dtList', (n) => n.innerText);
 const dtThumb = await page.$$eval('#dtList img.thumb', (i) => i.length);
 const dtMarker = await page.$$eval('#fdMap .dtico', (m) => m.map((x) => x.textContent));
 const poleHint = await page.$eval('#fdPoles', (n) => n.placeholder);
+const drawerShut = await page.$eval('#fdDrawer', (d) => d.hidden && ['fdWa', 'fdKml', 'fdExp', 'fdSldPdf', 'fdSldPng', 'clFileBtn', 'offSave', 'gpsTest', 'fdRenum', 'fdDelete', 'fdPoles'].every((id) => d.querySelector('#' + id)));
+const homeClean = await page.$eval('#fdOne', (n) => { const t = n.innerText; return !t.includes('WhatsApp पर सारांश') && !t.includes('Google Earth') && !t.includes('नक्शे पर:') && !t.includes('क्रम:'); });
+await menu();
 await page.fill('#fdPoles', '7');
 await page.press('#fdPoles', 'Tab');
+await page.keyboard.press('Escape');
+const escShut = await page.$eval('#fdDrawer', (d) => d.hidden);
 const sum = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
 const wa = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 // The home page shows only the survey: summary, files and SLD sit in one closed dropdown.
-const shareShut = await page.$eval('#shareMenu', (d) => !d.open && !!d.querySelector('#fdWa') && !!d.querySelector('#fdKml') && !!d.querySelector('#fdExp') && !!d.querySelector('#fdSldPdf'));
-await page.click('#shareMenu summary');
+await menu();
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
-const sharePicked = await page.$eval('#shareMenu', (d) => !d.open);
+const sharePicked = await page.$eval('#fdDrawer', (d) => d.hidden);
 const kml = readFileSync(await dl.path(), 'utf8');
 // Village survey: an 11kV pole, then two LT poles fed from the DT; the line joins up by itself.
 await page.fill('#fdBy', 'नमूना लाइनमैन');
@@ -143,11 +149,11 @@ const dtSymOk = await page.$$eval('#fdMap .dtico svg .tk', (e) => e.length);
 // DTR as in the JE's picture: two poles, bushings, tank on a plinth, fencing; 1.5× size on the map.
 const dtrPic = await page.$$eval('#fdMap .dtico svg', (e) => e.map((x) => ({ bo: x.querySelectorAll('.bo').length, fe: x.querySelectorAll('.fe').length, w: Math.round(x.getBoundingClientRect().width) })));
 const wa2 = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
-await page.click('#shareMenu summary');
+await menu();
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
 const kml2 = readFileSync(await dl2.path(), 'utf8');
 // Survey file out, and back in on the list page (same survey: asks, then replaces; a copy with a new id: added).
-await page.click('#shareMenu summary');
+await menu();
 const [dl3] = await Promise.all([page.waitForEvent('download'), page.click('#fdExp')]);
 const survey = readFileSync(await dl3.path(), 'utf8');
 // LT circuit done: "↩️ DT से 11kV आगे" makes the next 11kV pole continue from DTR-1's tapping pole (pole 1).
@@ -162,15 +168,15 @@ await page.click('#fdEnd');
 const ended = await page.evaluate(() => ({ end: JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0].end, st: JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0].pl[0].st, poleBtn: document.getElementById('fdPoleH').hidden, stat: document.getElementById('fdStat').innerText, endBtn: document.getElementById('fdEnd').innerText }));
 // SLD: printed (PDF) and as a picture.
 await page.evaluate(() => { window.__printed = 0; window.print = () => { window.__printed++; window.__sld = document.getElementById('sldPrint').innerHTML; }; });
-await page.click('#shareMenu summary');
+await menu();
 await page.click('#fdSldPdf');
 await page.waitForFunction(() => window.__printed > 0, null, { timeout: 3000 }).catch(() => {});
 const sldSvg = await page.evaluate(() => window.__sld || '');
-await page.click('#shareMenu summary');
+await menu();
 const [dl4] = await Promise.all([page.waitForEvent('download'), page.click('#fdSldPng')]);
-const dbLegend = await page.evaluate(() => { const l = document.querySelector('#mapSet .fdlegend'); return !!l.querySelector('svg.dbic') && !l.textContent.includes('📦') && !!document.querySelector('#plDbL svg.dbic'); });
+const dbLegend = await page.evaluate(() => { const l = document.querySelector('#fdDrawer .fdlegend'); return !!l.querySelector('svg.dbic') && !l.textContent.includes('📦') && !!document.querySelector('#plDbL svg.dbic'); });
 const sldPng = { name: dl4.suggestedFilename(), size: readFileSync(await dl4.path()).length };
-const uiDtr = await page.evaluate(() => { const t = document.getElementById('feederCard').innerText + document.getElementById('dtN').placeholder; return t.includes('↩️ DTR से 11kV आगे') && !/\bDT\b/.test(t); });
+const uiDtr = await page.evaluate(() => { const t = document.getElementById('feederCard').textContent + document.getElementById('dtN').placeholder; return t.includes('↩️ DTR से 11kV आगे') && !/\bDT\b/.test(t); });
 const hScroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 
 // Saved: after reopening, the feeder is in the list with its length and transformer.
@@ -193,9 +199,8 @@ await page.click('#fdItems [aria-label="खोलें: नमूना फी�
 await page.waitForTimeout(500);
 const wiresReopen = await phases();
 // "🔢 नंबर फिर से लगाएँ": numbers in survey order, the same as they already are.
-await page.click('#fdOne details.more:has(#fdRenum) summary');
+await menu();
 await page.click('#fdRenum');
-await page.click('#fdOne details.more:has(#fdRenum) summary');
 const renum = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.find((f) => f.n === 'नमूना फीडर').pl.map((p) => p.no).join(','));
 await page.click('#fdBack');
 await page.waitForTimeout(200);
@@ -229,7 +234,7 @@ const csSum = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' ')
 const csWa = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 // The village's consumer list from Excel (any column order, Hindi or English headings, extra columns kept),
 // then on a pole: type IVRS, mobile or name and pick the consumer from the list.
-await page.click('#clSum');
+await menu();
 await page.setInputFiles('#clFile', { name: 'upbhokta.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: makeXlsx([
   ['ग्राम नमूना — उपभोक्ता सूची'],
   ['क्र.', 'IVRS No', 'उपभोक्ता का नाम', 'पिता का नाम', 'मोबाइल', 'Tariff', 'Phase', 'Connected Load (kW)', 'Meter No', 'पता'],
@@ -239,6 +244,7 @@ await page.setInputFiles('#clFile', { name: 'upbhokta.xlsx', mimeType: 'applicat
 ]) });
 await page.waitForTimeout(400);
 const clCount = await page.$eval('#clSum', (n) => n.textContent);
+await page.keyboard.press('Escape');
 await page.fill('#plQ', 'Ckt-1-2');
 await page.click('#plFind button[type=submit]');
 await page.click('#plInfo button:has-text("बदलें")');
@@ -266,8 +272,7 @@ const ovMap = await page.$$eval('#fdMap .dtico.ov', (e) => e.length);
 const ovSum = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
 const ovWa = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 // The map without internet: tiles you have seen are kept, and "📥" keeps the village's area (zoom 13–16) on the phone.
-const setShut = await page.$eval('#mapSet', (d) => !d.open && d.querySelector('#offSave') && d.querySelector('#gpsTest') ? true : false);
-await page.click('#mapSet summary');
+await menu();
 await page.click('#offSave');
 const offSaved = await page.waitForFunction(() => document.getElementById('offStat').textContent.startsWith('✅'), null, { timeout: 30000 }).then(() => true, () => false);
 const offCount = await page.evaluate(async () => (await (await caches.open('pn-tiles')).keys()).length);
@@ -282,7 +287,7 @@ const offTiles = await page.waitForFunction(() => document.querySelectorAll('#fd
 const offNote = await page.$eval('#offInfo', (n) => !n.hidden && n.textContent.includes('बिना नेट'));
 await ctx.setOffline(false);
 await ctx.route(/tile\.openstreetmap\.org|arcgisonline\.com/, (r) => r.fulfill({ contentType: 'image/png', headers: { 'access-control-allow-origin': '*' }, body: PNG }));
-await page.$eval('#fdOne details.more:has(#fdDelete)', (d) => { d.open = true; });
+await menu();
 await page.click('#fdDelete');
 const gone = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.length === 1);
 
@@ -309,10 +314,11 @@ const meOk = await g.waitForFunction(() => { const m = window.__fdMap, c = m.get
 const meRing = await g.evaluate(() => { let r = 0; window.__fdMap.eachLayer((l) => { if (l.options && l.options.meAcc) r = Math.round(l.getRadius()); }); return r; });
 const meDiag = await g.$eval('#geoDiag', (n) => !n.hidden && n.textContent);
 // "🔧 GPS जाँच": asks the phone step by step and writes a report that can be sent on WhatsApp.
-await g.click('#mapSet summary');
+await menu(g);
 await g.click('#gpsTest');
 const gpsRep = await g.waitForFunction(() => { const t = document.getElementById('gpsRep').textContent; return t.includes('GPS वाली जगह:') && t.includes('±') ? t : false; }, null, { timeout: 15000 }).then((h) => h.jsonValue(), () => '');
 const gpsWa = await g.$eval('#gpsRepWa', (a) => decodeURIComponent(a.href));
+await g.click('#fdMenuX');
 // The phone gives no position (code 2) even with permission: the line under the buttons says what to switch on.
 await g.evaluate(() => { navigator.geolocation.getCurrentPosition = (ok, bad) => setTimeout(() => bad({ code: 2, message: 'unavailable' }), 10); });
 await g.click('#fdMe');
@@ -375,13 +381,12 @@ const checks = {
   'खंभे पर मोबाइल/नाम/IVRS लिखने पर सूची से उपभोक्ता मिला और जुड़ा; दूसरे खंभे वाला नहीं जुड़ा': hitMob.length === 1 && hitMob[0].includes('सीता बाई') && hitTaken.includes('Ckt-1-1') && clChips === '3334567890,4434567890' && clSaved === '2:3334567890/d/1/0.5,4434567890/nd/3/7.5:3',
   'सूची वाले उपभोक्ता का पूरा विवरण (मोबाइल, पिता का नाम, पता)': clDetail.includes('9826012345') && clDetail.includes('पिता का नाम: रामदीन') && clDetail.includes('पता: वार्ड 3') && clDetail.includes('LV1.2'),
   'DTR में नए उपभोक्ता और भार जुड़े': clDtr.includes('उपभोक्ता 4') && clDtr.includes('भार 12.5 kW'),
-  'होम पेज पर सिर्फ़ सर्वे: WhatsApp, Google Earth, सर्वे फ़ाइल, SLD एक बंद ड्रॉपडाउन में, चुनने पर बंद; संकेत "नक्शा सेटिंग" में': shareShut && sharePicked,
+  'फीडर पेज पर सिर्फ़ सर्वे; बाकी सब ☰ साइड मेनू में (बंद), कुछ चुनने पर या Esc से बंद': drawerShut && homeClean && escShut && sharePicked,
   'संकेत और खंभे के फ़ॉर्म में DB बॉक्स का असली निशान (📦 नहीं)': dbLegend,
   '"◎ मेरी जगह": ताज़ा GPS, नक्शा वहीं ज़ूम होकर, सटीकता का घेरा': meOk && meRing === 18,
   '"🔧 GPS जाँच": अनुमति, Chrome/दूसरा ऐप, तुरंत और GPS वाली जगह की रिपोर्ट, WhatsApp पर भेजने लायक': gpsRep.includes('अनुमति: दी हुई') && gpsRep.includes('तुरंत वाली जगह: ✅') && gpsRep.includes('GPS वाली जगह: ✅') && gpsWa.includes('GPS वाली जगह'),
   'GPS की हालत बटन के नीचे लिखी रहे: जगह मिली (±मी.), न मिले तो क्या चालू करें': !!meDiag && meDiag.includes('जगह मिली') && meDiag.includes('±18') && noFixDiag,
   'जगह (GPS) की अनुमति नहीं: तरीका दिखा (Chrome ⋮ → Site settings → Location → Not allowed → यह साइट), अनुमति देने पर "फिर कोशिश करें" से चला': geoShown && geoTxt.includes('Location') && geoTxt.includes('Site settings') && geoTxt.includes('Not allowed') && geoTxt.includes('127.0.0.1:8080') && geoGone,
-  'GPS जाँच और नक्शा सेव "⚙️ नक्शा सेटिंग" ड्रॉपडाउन में (शुरू में बंद)': setShut,
   'DTR कितना भरा (kW ÷ kVA×0.9): 22% ठीक; 10 kVA पर 139% ओवरलोड — सूची, नक्शा, कुल, WhatsApp': clDtr.includes('22% भरा') && ovList.includes('139% भरा') && ovList.includes('ओवरलोड') && ovMap === 1 && ovSum.includes('ओवरलोड DTR 1') && ovWa.includes('139% भरा') && ovWa.includes('ओवरलोड'),
   'बिना नेट का नक्शा: गाँव का हिस्सा फ़ोन में (150 तक टाइल), नेट बंद होने पर भी नक्शा और सूचना': offSaved && offCount > 0 && offCount <= 400 && offTiles && offNote,
   'फीडर हटाना (पूछकर)': gone,

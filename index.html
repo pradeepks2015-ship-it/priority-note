@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-vYzaKUOQtQuTFnJSS22vN1gGwzfaE3e++ior6Rgc5EA=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-sGLlGPABjVixljJcMJxCPs5pC7QNYEANHTYxYTRVyE0=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -169,6 +169,14 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .geodiag{margin:6px 0;font-weight:600;line-height:1.5}.geodiag.bad{color:var(--p1)}
 .gpsrep{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:6px 0;background:var(--surface)}.gpsrep pre{white-space:pre-wrap;margin:0 0 8px;font:13px/1.5 var(--f-ui)}
 .geohelp{border:1.5px solid var(--p1);border-radius:12px;padding:10px 12px;margin:8px 0;background:var(--surface);line-height:1.55}.geohelp ol{margin:6px 0 8px;padding-left:20px}
+.fdhead .fdmenu{margin-left:auto}
+.drawer-bg{position:fixed;inset:0;background:var(--overlay);opacity:.55;z-index:1100}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(88vw,380px);background:var(--surface);color:var(--ink);z-index:1200;overflow-y:auto;padding:12px 14px 24px;box-shadow:-4px 0 18px rgba(0,0,0,.3)}
+.drawer-hd{display:flex;align-items:center;justify-content:space-between;position:sticky;top:-12px;background:var(--surface);padding:6px 0 8px;z-index:1}
+.dsec{border-top:1px solid var(--line);padding:10px 0}
+.dsh{font-weight:700;margin:0 0 6px}
+.dsec>.btn,.dsec>a.btn{display:flex;width:100%;justify-content:flex-start;margin-top:6px}
+body.noscroll{overflow:hidden}
 .fdlegend .lg{font-weight:700;white-space:nowrap}.fdlegend .lg.h{color:var(--p1)}.fdlegend .lg.l{color:var(--ink)}.fdlegend .lg.w{color:var(--muted)}
 .dtico span{position:absolute;left:50%;top:36px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
 .prev{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -435,7 +443,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
           <p class="hint" style="margin-top:4px">लाइनमैन अपने फ़ोन पर इसी ऐप में सर्वे करके "📤 सर्वे फ़ाइल भेजें" से WhatsApp पर भेजे; वह फ़ाइल यहाँ जोड़ें।</p>
         </div>
         <div id="fdOne" hidden>
-          <div class="row fdhead"><button class="btn ghost sm" id="fdBack" type="button">← सूची</button><b id="fdTitle"></b></div>
+          <div class="row fdhead"><button class="btn ghost sm" id="fdBack" type="button">← सूची</button><b id="fdTitle"></b><button class="btn ghost sm fdmenu" id="fdMenu" type="button" aria-label="मेनू खोलें" aria-expanded="false">☰ मेनू</button></div>
           <input type="text" id="fdBy" placeholder="सर्वे करने वाला (जैसे लाइनमैन का नाम)" aria-label="सर्वे करने वाला" style="margin-top:8px">
           <div class="fdmap" id="fdMap"></div>
           <div class="row fdlayers">
@@ -444,24 +452,6 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost sm" type="button" id="fdMe">◎ मेरी जगह</button>
           </div>
           <p class="geodiag" id="geoDiag" role="status" hidden></p>
-          <details class="more" id="mapSet" style="margin:6px 0">
-            <summary>⚙️ नक्शा सेटिंग</summary>
-            <div style="padding:6px 0 10px">
-              <p class="lbl">🗺️ नक्शे के संकेत</p>
-              <p class="hint fdlegend" style="margin-top:0">नक्शे पर: <b class="lg h">▬ 11kV लाइन (लाल)</b> · <b class="lg l">▬ LT केबल (हुक पर)</b> · <b class="lg l"><svg class="dbic" viewBox="0 0 10 12" width="14" height="17" aria-hidden="true"><rect class="bd" x="0" y="2" width="2" height=".8"/><rect class="bd" x="0" y="9" width="2" height=".8"/><rect class="db" x="1.6" y=".6" width="7.8" height="10.6" rx="1.4"/><path class="dl" d="M1.6 3.2h7.8M1.6 8.6h7.8"/><rect class="dbw" x="3.6" y="4.4" width="3.8" height="2.8" rx=".4"/></svg> DB बॉक्स</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
-              <p class="lbl" style="margin-top:10px">📴 बिना नेट के लिए</p>
-              <div class="row" style="align-items:center">
-                <button class="btn ghost sm" type="button" id="offSave">📥 गाँव का नक्शा फ़ोन में रखें</button>
-                <span class="hint" id="offStat" style="flex:1 1 160px"></span>
-              </div>
-              <p class="lbl" style="margin-top:10px">📍 जगह (GPS) नहीं मिल रही?</p>
-              <div class="row"><button class="btn ghost sm" type="button" id="gpsTest">🔧 GPS जाँच</button></div>
-              <div class="gpsrep" id="gpsRepBox" hidden>
-                <pre id="gpsRep"></pre>
-                <a class="btn wa sm" id="gpsRepWa" href="#" target="_blank" rel="noopener">💬 यह जाँच WhatsApp पर भेजें</a>
-              </div>
-            </div>
-          </details>
           <p class="hint offinfo" id="offInfo" hidden>📴 बिना नेट: फ़ोन में सेव किया नक्शा दिख रहा है (जो हिस्सा पहले देखा या सेव किया था)।</p>
           <p class="fdstat" id="fdStat" role="status"></p>
           <div class="geohelp" id="geoHelp" hidden>
@@ -487,8 +477,6 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost" type="button" id="fdBackH" style="flex:1 1 150px">↩️ DTR से 11kV आगे</button>
             <button class="btn ghost" type="button" id="fdEnd" style="flex:1 1 150px">🏁 सर्वे पूरा</button>
           </div>
-          <p class="hint fdflow" style="margin-top:6px">क्रम: 🔴 11kV खंभे → ⚡ DTR → 🔵 उसकी LT लाइन → LT खत्म होने पर "↩️ DTR से 11kV आगे" → अगला DTR … आख़िरी LT खंभे के बाद "🏁 सर्वे पूरा"।</p>
-          <p class="hint" style="margin-top:6px">चलते समय स्क्रीन चालू और यह ऐप खुला रखें; फ़ोन लॉक होने पर GPS रुक जाती है। खुले में GPS 5–15 मीटर तक सही रहती है।</p>
           <form id="plForm" class="fields dtform" hidden autocomplete="off">
             <p class="sec-title" id="plFormT">नया खंभा</p>
             <label class="lbl" for="plNo">खंभा नंबर</label>
@@ -562,36 +550,62 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
           </form>
           <div class="plinfo" id="plInfo" hidden></div>
           <div class="fdsum" id="fdSum"></div>
-          <label class="lbl" for="fdPoles">खंभे (अनुमान से लिखें)</label>
-          <div class="row"><input type="number" id="fdPoles" inputmode="numeric" min="0" style="flex:1 1 120px"><span class="hint" id="fdPoleHint" style="flex:1 1 160px"></span></div>
           <div id="dtList" style="margin-top:12px"></div>
-          <details class="more" style="margin-top:12px">
-            <summary id="clSum">👥 गाँव की उपभोक्ता सूची (Excel)</summary>
-            <p class="hint">Excel (.xlsx) या CSV: पहली पंक्ति (या ऊपर की कोई पंक्ति) में कॉलम के नाम हों: IVRS, नाम, मोबाइल, श्रेणी/Tariff, फेज़, भार (kW), मीटर नंबर — और जो भी कॉलम हों (पिता का नाम, पता …) वे भी विवरण में दिखेंगे। फिर खंभे पर IVRS, मोबाइल या नाम लिखकर उपभोक्ता चुनें।</p>
-            <div class="row" style="padding:6px 0 10px">
+          <div class="drawer-bg" id="fdDrawerBg" hidden></div>
+          <aside class="drawer" id="fdDrawer" hidden aria-label="फीडर का मेनू">
+            <div class="drawer-hd"><b>☰ मेनू</b><button class="btn ghost sm" type="button" id="fdMenuX" aria-label="मेनू बंद करें">✕</button></div>
+            <section class="dsec">
+              <p class="dsh">📤 भेजें और फ़ाइलें</p>
+              <a class="btn wa" id="fdWa" href="#" target="_blank" rel="noopener">💬 WhatsApp पर सारांश</a>
+              <button class="btn ghost" type="button" id="fdKml">🌍 Google Earth फ़ाइल</button>
+              <button class="btn ghost" type="button" id="fdExp">📤 सर्वे फ़ाइल भेजें</button>
+            </section>
+            <section class="dsec">
+              <p class="dsh">📐 SLD (एकल रेखा आरेख)</p>
+              <button class="btn ghost" type="button" id="fdSldPdf">📐 SLD — PDF / प्रिंट (A3)</button>
+              <button class="btn ghost" type="button" id="fdSldPng">🖼️ SLD — फोटो (PNG)</button>
+            </section>
+            <section class="dsec">
+              <p class="dsh" id="clSum">👥 गाँव की उपभोक्ता सूची (Excel)</p>
+              <p class="hint">Excel (.xlsx) या CSV: पहली पंक्ति (या ऊपर की कोई पंक्ति) में कॉलम के नाम हों: IVRS, नाम, मोबाइल, श्रेणी/Tariff, फेज़, भार (kW), मीटर नंबर — और जो भी कॉलम हों (पिता का नाम, पता …) वे भी विवरण में दिखेंगे। फिर खंभे पर IVRS, मोबाइल या नाम लिखकर उपभोक्ता चुनें।</p>
+              <div class="row" style="padding:6px 0 10px">
               <button class="btn ghost sm" type="button" id="clFileBtn">📥 Excel / CSV से सूची डालें</button>
               <input type="file" id="clFile" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden>
               <button class="btn ghost sm" type="button" id="clDel">🗑️ सूची हटाएँ</button>
             </div>
-          </details>
-          <details class="ddm" id="shareMenu" style="margin-top:12px">
-            <summary class="btn ghost">📤 सारांश, फ़ाइलें और SLD ▾</summary>
-            <div class="ddl">
-              <a class="btn wa" id="fdWa" href="#" target="_blank" rel="noopener">💬 WhatsApp पर सारांश</a>
-              <button class="btn ghost" type="button" id="fdKml">🌍 Google Earth फ़ाइल</button>
-              <button class="btn ghost" type="button" id="fdExp">📤 सर्वे फ़ाइल भेजें</button>
-              <button class="btn ghost" type="button" id="fdSldPdf">📐 SLD — PDF / प्रिंट (A3)</button>
-              <button class="btn ghost" type="button" id="fdSldPng">🖼️ SLD — फोटो (PNG)</button>
-            </div>
-          </details>
-          <details class="more" style="margin-top:12px">
-            <summary>और विकल्प</summary>
-            <div class="row" style="padding:10px 0">
+            </section>
+            <section class="dsec">
+              <p class="dsh">🗺️ नक्शा</p>
+              <p class="lbl">🗺️ नक्शे के संकेत</p>
+              <p class="hint fdlegend" style="margin-top:0">नक्शे पर: <b class="lg h">▬ 11kV लाइन (लाल)</b> · <b class="lg l">▬ LT केबल (हुक पर)</b> · <b class="lg l"><svg class="dbic" viewBox="0 0 10 12" width="14" height="17" aria-hidden="true"><rect class="bd" x="0" y="2" width="2" height=".8"/><rect class="bd" x="0" y="9" width="2" height=".8"/><rect class="db" x="1.6" y=".6" width="7.8" height="10.6" rx="1.4"/><path class="dl" d="M1.6 3.2h7.8M1.6 8.6h7.8"/><rect class="dbw" x="3.6" y="4.4" width="3.8" height="2.8" rx=".4"/></svg> DB बॉक्स</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
+              <p class="lbl" style="margin-top:10px">📴 बिना नेट के लिए</p>
+              <div class="row" style="align-items:center">
+                <button class="btn ghost sm" type="button" id="offSave">📥 गाँव का नक्शा फ़ोन में रखें</button>
+                <span class="hint" id="offStat" style="flex:1 1 160px"></span>
+              </div>
+              <p class="lbl" style="margin-top:10px">📍 जगह (GPS) नहीं मिल रही?</p>
+              <div class="row"><button class="btn ghost sm" type="button" id="gpsTest">🔧 GPS जाँच</button></div>
+              <div class="gpsrep" id="gpsRepBox" hidden>
+                <pre id="gpsRep"></pre>
+                <a class="btn wa sm" id="gpsRepWa" href="#" target="_blank" rel="noopener">💬 यह जाँच WhatsApp पर भेजें</a>
+              </div>
+            </section>
+            <section class="dsec">
+              <p class="dsh">❓ सर्वे का तरीका</p>
+          <p class="hint fdflow">क्रम: 🔴 11kV खंभे → ⚡ DTR → 🔵 उसकी LT लाइन → LT खत्म होने पर "↩️ DTR से 11kV आगे" → अगला DTR … आख़िरी LT खंभे के बाद "🏁 सर्वे पूरा"।</p>
+          <p class="hint">चलते समय स्क्रीन चालू और यह ऐप खुला रखें; फ़ोन लॉक होने पर GPS रुक जाती है। खुले में GPS 5–15 मीटर तक सही रहती है।</p>
+            </section>
+            <section class="dsec">
+              <p class="dsh">⚙️ और</p>
+          <label class="lbl" for="fdPoles">खंभे (अनुमान से लिखें)</label>
+          <div class="row"><input type="number" id="fdPoles" inputmode="numeric" min="0" style="flex:1 1 120px"><span class="hint" id="fdPoleHint" style="flex:1 1 160px"></span></div>
+              <div class="row" style="padding:10px 0 0">
               <button class="btn ghost sm" type="button" id="fdRenum">🔢 नंबर फिर से लगाएँ</button>
               <button class="btn ghost sm" type="button" id="fdClear">रास्ता मिटाएँ</button>
               <button class="btn ghost sm" type="button" id="fdDelete">🗑️ यह फीडर हटाएँ</button>
             </div>
-          </details>
+            </section>
+          </aside>
         </div>
       </section>
     </div>
@@ -1743,8 +1757,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.69',APP_NOTES=[
-    'फीडर के होम पेज पर अब सिर्फ़ सर्वे: WhatsApp सारांश, Google Earth, सर्वे फ़ाइल और SLD एक ड्रॉपडाउन "📤 सारांश, फ़ाइलें और SLD" में; नक्शे के संकेत "⚙️ नक्शा सेटिंग" में'
+  var APP_V='1.70',APP_NOTES=[
+    'फीडर पेज साफ़: ऊपर "☰ मेनू" से साइड मेनू खुलता है — भेजें और फ़ाइलें, SLD, गाँव की उपभोक्ता सूची, नक्शा (संकेत, बिना नेट, GPS जाँच), सर्वे का तरीका, और बाकी विकल्प'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2492,7 +2506,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     g.getCurrentPosition(onFix,geoErr,{enableHighAccuracy:true,maximumAge:0,timeout:30000});
   };
   document.querySelectorAll('.fdlayers [data-l]').forEach(function(b){b.onclick=function(){if(FD.map)setBase(b.dataset.l)}});
-  $('fdBack').onclick=function(){
+  $('fdBack').onclick=function(){menuOpen(false);
     if(FD.rec&&!confirm('नापना चल रहा है। रोककर सूची पर जाएँ?'))return;
     if(FD.rec)stopRec();
     stopWatch();closeDt(true);closePl();FD.open='';FD.find='';$('plQ').value='';renderFeeder();
@@ -2939,8 +2953,18 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     return svg;
   }
   // PDF: print just the SLD (phone's print sheet → "Save as PDF"); A3 landscape.
-  // picking anything in "📤 सारांश, फ़ाइलें और SLD" closes the menu (home page shows only the survey, v1.69)
-  ['fdWa','fdKml','fdExp','fdSldPdf','fdSldPng'].forEach(function(id){$(id).addEventListener('click',function(){$('shareMenu').open=false})});
+  /* Side menu (v1.70): the feeder page keeps only the survey; files, SLD, the consumer list, map tools, the how-to and
+     the rest open from ☰ at the side. A pick that leaves the page (send, file, print, delete …) closes it; Esc, ✕ or a tap
+     outside too. */
+  function menuOpen(on){
+    $('fdDrawer').hidden=!on;$('fdDrawerBg').hidden=!on;$('fdMenu').setAttribute('aria-expanded',String(on));
+    document.body.classList.toggle('noscroll',on);if(on)$('fdMenuX').focus();
+  }
+  $('fdMenu').onclick=function(){menuOpen(true)};
+  $('fdMenuX').onclick=function(){menuOpen(false)};
+  $('fdDrawerBg').onclick=function(){menuOpen(false)};
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('fdDrawer').hidden)menuOpen(false)});
+  ['fdWa','fdKml','fdExp','fdSldPdf','fdSldPng','fdRenum','fdClear','fdDelete'].forEach(function(id){$(id).addEventListener('click',function(){menuOpen(false)})});
   $('fdSldPdf').onclick=function(){
     var f=curF();if(!f)return;var box=$('sldPrint');box.textContent='';box.appendChild(buildSld(f));
     document.body.classList.add('printing');

@@ -127,6 +127,10 @@ and left out of reminders.
   `#geoHelp` also gives Chrome's path ⋮ → Site settings → Location → Not allowed → this site (`#geoHost`) → Allow.
   v1.69: the feeder page shows only the survey — WhatsApp summary, KML, survey file and both SLD outputs sit in one
   folded "📤 सारांश, फ़ाइलें और SLD" (`#shareMenu`, closes on a pick; replaces `#sldMenu`), the legend in `#mapSet`.
+  v1.70: all of that moved into a side menu (drawer) `#fdDrawer`, opened by "☰ मेनू" (`#fdMenu`) in the feeder header:
+  📤 files, 📐 SLD, 👥 village consumer list (`#clSum`), 🗺️ map (legend, offline save, GPS check), ❓ how-to, ⚙️ more
+  (pole estimate, renumber, clear track, delete). `menuOpen()`; closes on a pick that leaves the page, ✕, Esc or the
+  backdrop. `#shareMenu` and `#mapSet` are gone. The feeder page itself holds only the survey.
 - DTR loading (v1.65): `dtLoad(d, dtPoles())` = connected kW ÷ (kVA × `DTR_PF` 0.9); ≥80 % `hi` (yellow, "भरने के पास"),
   ≥100 % `ov` (red, "ओवरलोड"). Shown in the DTR list (`.ld`), as a ring round the DTR on the map (`.dtico.hi/.ov`), the
   "ओवरलोड DTR" total, the search box ("जुड़ा DTR"), WhatsApp and the SLD. Connected load, not measured demand.
