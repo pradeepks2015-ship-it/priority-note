@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-hH9uMEJac06gqN1ml/7BmSdqn3gK2O3wiMj60WP+LPI=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-vYzaKUOQtQuTFnJSS22vN1gGwzfaE3e++ior6Rgc5EA=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -447,7 +447,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
           <details class="more" id="mapSet" style="margin:6px 0">
             <summary>⚙️ नक्शा सेटिंग</summary>
             <div style="padding:6px 0 10px">
-              <p class="lbl">📴 बिना नेट के लिए</p>
+              <p class="lbl">🗺️ नक्शे के संकेत</p>
+              <p class="hint fdlegend" style="margin-top:0">नक्शे पर: <b class="lg h">▬ 11kV लाइन (लाल)</b> · <b class="lg l">▬ LT केबल (हुक पर)</b> · <b class="lg l"><svg class="dbic" viewBox="0 0 10 12" width="14" height="17" aria-hidden="true"><rect class="bd" x="0" y="2" width="2" height=".8"/><rect class="bd" x="0" y="9" width="2" height=".8"/><rect class="db" x="1.6" y=".6" width="7.8" height="10.6" rx="1.4"/><path class="dl" d="M1.6 3.2h7.8M1.6 8.6h7.8"/><rect class="dbw" x="3.6" y="4.4" width="3.8" height="2.8" rx=".4"/></svg> DB बॉक्स</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
+              <p class="lbl" style="margin-top:10px">📴 बिना नेट के लिए</p>
               <div class="row" style="align-items:center">
                 <button class="btn ghost sm" type="button" id="offSave">📥 गाँव का नक्शा फ़ोन में रखें</button>
                 <span class="hint" id="offStat" style="flex:1 1 160px"></span>
@@ -572,19 +574,16 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
               <button class="btn ghost sm" type="button" id="clDel">🗑️ सूची हटाएँ</button>
             </div>
           </details>
-          <div class="row" style="margin-top:12px">
-            <a class="btn wa" id="fdWa" href="#" target="_blank" rel="noopener" style="flex:1 1 150px">💬 WhatsApp पर सारांश</a>
-            <button class="btn ghost" type="button" id="fdKml" style="flex:1 1 150px">🌍 Google Earth फ़ाइल</button>
-            <button class="btn ghost" type="button" id="fdExp" style="flex:1 1 150px">📤 सर्वे फ़ाइल भेजें</button>
-          </div>
-          <details class="ddm" id="sldMenu" style="margin-top:8px">
-            <summary class="btn ghost">📐 SLD (एकल रेखा आरेख) ▾</summary>
+          <details class="ddm" id="shareMenu" style="margin-top:12px">
+            <summary class="btn ghost">📤 सारांश, फ़ाइलें और SLD ▾</summary>
             <div class="ddl">
-              <button class="btn ghost" type="button" id="fdSldPdf">📄 PDF / प्रिंट (A3)</button>
-              <button class="btn ghost" type="button" id="fdSldPng">🖼️ फोटो (PNG)</button>
+              <a class="btn wa" id="fdWa" href="#" target="_blank" rel="noopener">💬 WhatsApp पर सारांश</a>
+              <button class="btn ghost" type="button" id="fdKml">🌍 Google Earth फ़ाइल</button>
+              <button class="btn ghost" type="button" id="fdExp">📤 सर्वे फ़ाइल भेजें</button>
+              <button class="btn ghost" type="button" id="fdSldPdf">📐 SLD — PDF / प्रिंट (A3)</button>
+              <button class="btn ghost" type="button" id="fdSldPng">🖼️ SLD — फोटो (PNG)</button>
             </div>
           </details>
-          <p class="hint fdlegend">नक्शे पर: <b class="lg h">▬ 11kV लाइन (लाल)</b> · <b class="lg l">▬ LT केबल (हुक पर)</b> · <b class="lg l"><svg class="dbic" viewBox="0 0 10 12" width="14" height="17" aria-hidden="true"><rect class="bd" x="0" y="2" width="2" height=".8"/><rect class="bd" x="0" y="9" width="2" height=".8"/><rect class="db" x="1.6" y=".6" width="7.8" height="10.6" rx="1.4"/><path class="dl" d="M1.6 3.2h7.8M1.6 8.6h7.8"/><rect class="dbw" x="3.6" y="4.4" width="3.8" height="2.8" rx=".4"/></svg> DB बॉक्स</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
           <details class="more" style="margin-top:12px">
             <summary>और विकल्प</summary>
             <div class="row" style="padding:10px 0">
@@ -1744,9 +1743,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.68',APP_NOTES=[
-    '"🔧 GPS जाँच" और "📥 गाँव का नक्शा फ़ोन में रखें" अब नक्शे के नीचे "⚙️ नक्शा सेटिंग" ड्रॉपडाउन में',
-    'जगह की अनुमति रुकी हो तो मदद में Chrome का पूरा रास्ता: ⋮ → Settings → Site settings → Location → Not allowed → यह साइट → Allow'
+  var APP_V='1.69',APP_NOTES=[
+    'फीडर के होम पेज पर अब सिर्फ़ सर्वे: WhatsApp सारांश, Google Earth, सर्वे फ़ाइल और SLD एक ड्रॉपडाउन "📤 सारांश, फ़ाइलें और SLD" में; नक्शे के संकेत "⚙️ नक्शा सेटिंग" में'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2941,8 +2939,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     return svg;
   }
   // PDF: print just the SLD (phone's print sheet → "Save as PDF"); A3 landscape.
-  // picking an SLD choice closes the menu
-  ['fdSldPdf','fdSldPng'].forEach(function(id){$(id).addEventListener('click',function(){$('sldMenu').open=false})});
+  // picking anything in "📤 सारांश, फ़ाइलें और SLD" closes the menu (home page shows only the survey, v1.69)
+  ['fdWa','fdKml','fdExp','fdSldPdf','fdSldPng'].forEach(function(id){$(id).addEventListener('click',function(){$('shareMenu').open=false})});
   $('fdSldPdf').onclick=function(){
     var f=curF();if(!f)return;var box=$('sldPrint');box.textContent='';box.appendChild(buildSld(f));
     document.body.classList.add('printing');

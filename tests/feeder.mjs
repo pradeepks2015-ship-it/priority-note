@@ -64,7 +64,11 @@ await page.fill('#fdPoles', '7');
 await page.press('#fdPoles', 'Tab');
 const sum = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
 const wa = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
+// The home page shows only the survey: summary, files and SLD sit in one closed dropdown.
+const shareShut = await page.$eval('#shareMenu', (d) => !d.open && !!d.querySelector('#fdWa') && !!d.querySelector('#fdKml') && !!d.querySelector('#fdExp') && !!d.querySelector('#fdSldPdf'));
+await page.click('#shareMenu summary');
 const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
+const sharePicked = await page.$eval('#shareMenu', (d) => !d.open);
 const kml = readFileSync(await dl.path(), 'utf8');
 // Village survey: an 11kV pole, then two LT poles fed from the DT; the line joins up by itself.
 await page.fill('#fdBy', 'नमूना लाइनमैन');
@@ -139,9 +143,11 @@ const dtSymOk = await page.$$eval('#fdMap .dtico svg .tk', (e) => e.length);
 // DTR as in the JE's picture: two poles, bushings, tank on a plinth, fencing; 1.5× size on the map.
 const dtrPic = await page.$$eval('#fdMap .dtico svg', (e) => e.map((x) => ({ bo: x.querySelectorAll('.bo').length, fe: x.querySelectorAll('.fe').length, w: Math.round(x.getBoundingClientRect().width) })));
 const wa2 = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
+await page.click('#shareMenu summary');
 const [dl2] = await Promise.all([page.waitForEvent('download'), page.click('#fdKml')]);
 const kml2 = readFileSync(await dl2.path(), 'utf8');
 // Survey file out, and back in on the list page (same survey: asks, then replaces; a copy with a new id: added).
+await page.click('#shareMenu summary');
 const [dl3] = await Promise.all([page.waitForEvent('download'), page.click('#fdExp')]);
 const survey = readFileSync(await dl3.path(), 'utf8');
 // LT circuit done: "↩️ DT से 11kV आगे" makes the next 11kV pole continue from DTR-1's tapping pole (pole 1).
@@ -156,15 +162,13 @@ await page.click('#fdEnd');
 const ended = await page.evaluate(() => ({ end: JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0].end, st: JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0].pl[0].st, poleBtn: document.getElementById('fdPoleH').hidden, stat: document.getElementById('fdStat').innerText, endBtn: document.getElementById('fdEnd').innerText }));
 // SLD: printed (PDF) and as a picture.
 await page.evaluate(() => { window.__printed = 0; window.print = () => { window.__printed++; window.__sld = document.getElementById('sldPrint').innerHTML; }; });
-await page.click('#sldMenu summary');
-const sldMenuOpen = await page.$eval('#sldMenu', (d) => d.open);
+await page.click('#shareMenu summary');
 await page.click('#fdSldPdf');
-const sldMenuShut = await page.$eval('#sldMenu', (d) => !d.open);
 await page.waitForFunction(() => window.__printed > 0, null, { timeout: 3000 }).catch(() => {});
 const sldSvg = await page.evaluate(() => window.__sld || '');
-await page.click('#sldMenu summary');
+await page.click('#shareMenu summary');
 const [dl4] = await Promise.all([page.waitForEvent('download'), page.click('#fdSldPng')]);
-const dbLegend = await page.evaluate(() => { const l = document.querySelector('.fdlegend'); return !!l.querySelector('svg.dbic') && !l.textContent.includes('📦') && !!document.querySelector('#plDbL svg.dbic'); });
+const dbLegend = await page.evaluate(() => { const l = document.querySelector('#mapSet .fdlegend'); return !!l.querySelector('svg.dbic') && !l.textContent.includes('📦') && !!document.querySelector('#plDbL svg.dbic'); });
 const sldPng = { name: dl4.suggestedFilename(), size: readFileSync(await dl4.path()).length };
 const uiDtr = await page.evaluate(() => { const t = document.getElementById('feederCard').innerText + document.getElementById('dtN').placeholder; return t.includes('↩️ DTR से 11kV आगे') && !/\bDT\b/.test(t); });
 const hScroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
@@ -371,7 +375,7 @@ const checks = {
   'खंभे पर मोबाइल/नाम/IVRS लिखने पर सूची से उपभोक्ता मिला और जुड़ा; दूसरे खंभे वाला नहीं जुड़ा': hitMob.length === 1 && hitMob[0].includes('सीता बाई') && hitTaken.includes('Ckt-1-1') && clChips === '3334567890,4434567890' && clSaved === '2:3334567890/d/1/0.5,4434567890/nd/3/7.5:3',
   'सूची वाले उपभोक्ता का पूरा विवरण (मोबाइल, पिता का नाम, पता)': clDetail.includes('9826012345') && clDetail.includes('पिता का नाम: रामदीन') && clDetail.includes('पता: वार्ड 3') && clDetail.includes('LV1.2'),
   'DTR में नए उपभोक्ता और भार जुड़े': clDtr.includes('उपभोक्ता 4') && clDtr.includes('भार 12.5 kW'),
-  'SLD के दोनों बटन एक ड्रॉपडाउन में; चुनने पर बंद': sldMenuOpen && sldMenuShut,
+  'होम पेज पर सिर्फ़ सर्वे: WhatsApp, Google Earth, सर्वे फ़ाइल, SLD एक बंद ड्रॉपडाउन में, चुनने पर बंद; संकेत "नक्शा सेटिंग" में': shareShut && sharePicked,
   'संकेत और खंभे के फ़ॉर्म में DB बॉक्स का असली निशान (📦 नहीं)': dbLegend,
   '"◎ मेरी जगह": ताज़ा GPS, नक्शा वहीं ज़ूम होकर, सटीकता का घेरा': meOk && meRing === 18,
   '"🔧 GPS जाँच": अनुमति, Chrome/दूसरा ऐप, तुरंत और GPS वाली जगह की रिपोर्ट, WhatsApp पर भेजने लायक': gpsRep.includes('अनुमति: दी हुई') && gpsRep.includes('तुरंत वाली जगह: ✅') && gpsRep.includes('GPS वाली जगह: ✅') && gpsWa.includes('GPS वाली जगह'),

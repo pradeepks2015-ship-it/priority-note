@@ -115,7 +115,7 @@ and left out of reminders.
   it via `csTake()` (same duplicate rules as typing). `csDetail()` merges the list's record (mobile, columns).
 - Field help (v1.63): location refused (code 1) shows `#geoHelp` (phone Location, Chrome site permission, Android app
   permission) until a fix arrives (`geoOk()`), with "🔄 फिर कोशिश करें". The DB box has its own symbol `dbSym()` (legend,
-  pole form, totals). The SLD choices sit in one dropdown `#sldMenu` (closes on a pick).
+  pole form, totals). The SLD choices sit in a dropdown (v1.69: `#shareMenu`).
   "◎ मेरी जगह" (v1.64) asks for a fresh fix (`getCurrentPosition`, maximumAge 0) besides the watch; the first fix after it
   zooms the map there (≥17, `FD.meGo`) and says the accuracy; `drawMe()` draws the dot and an accuracy ring (`meAcc`).
   v1.66: the button first takes a quick fix (low accuracy, up to 5 min old) and then the GPS one; `#geoDiag` keeps the
@@ -125,6 +125,8 @@ and left out of reminders.
   GPS fix (accuracy and seconds, or the error code — never coordinates) and offers the report on WhatsApp (`#gpsRepWa`).
   v1.68: the GPS check and the offline save sit in the folded "⚙️ नक्शा सेटिंग" (`#mapSet`) under the map buttons;
   `#geoHelp` also gives Chrome's path ⋮ → Site settings → Location → Not allowed → this site (`#geoHost`) → Allow.
+  v1.69: the feeder page shows only the survey — WhatsApp summary, KML, survey file and both SLD outputs sit in one
+  folded "📤 सारांश, फ़ाइलें और SLD" (`#shareMenu`, closes on a pick; replaces `#sldMenu`), the legend in `#mapSet`.
 - DTR loading (v1.65): `dtLoad(d, dtPoles())` = connected kW ÷ (kVA × `DTR_PF` 0.9); ≥80 % `hi` (yellow, "भरने के पास"),
   ≥100 % `ov` (red, "ओवरलोड"). Shown in the DTR list (`.ld`), as a ring round the DTR on the map (`.dtico.hi/.ov`), the
   "ओवरलोड DTR" total, the search box ("जुड़ा DTR"), WhatsApp and the SLD. Connected load, not measured demand.
