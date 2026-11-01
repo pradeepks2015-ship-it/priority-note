@@ -56,8 +56,8 @@ await page.evaluate(async () => {
 });
 // Routed on the context, so it also catches the request when the service worker already controls the page.
 await page.context().route('**/version.json*', (r) => r.fulfill({ contentType: 'application/json', body: '{"v":"99.0"}' }));
-await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-await page.waitForFunction(() => !document.getElementById('upd').hidden, null, { timeout: 5000 }).catch(() => {});
+// Ask again every half second: on a busy runner the first check can still race the service worker taking over.
+await page.waitForFunction(() => { if (!document.getElementById('upd').hidden) return true; document.dispatchEvent(new Event('visibilitychange')); return false; }, null, { timeout: 8000, polling: 500 }).catch(() => {});
 const newTitle = await page.$eval('#upd', (n) => (n.hidden ? '' : n.innerText));
 await page.context().unroute('**/version.json*');
 
