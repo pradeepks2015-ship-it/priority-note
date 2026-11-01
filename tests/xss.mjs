@@ -45,7 +45,8 @@ await step('फीडर नक्शा', async () => {
 });
 await step('SLD', async () => {
   await page.evaluate(() => { window.print = () => {}; });
-  await page.click('#fdSldPdf'); await page.waitForTimeout(200);
+  await page.click('#sldMenu summary'); await page.click('#fdSldPdf'); await page.waitForTimeout(200);
+  await page.click('#sldMenu summary');
   await Promise.all([page.waitForEvent('download', { timeout: 8000 }).catch(() => null), page.click('#fdSldPng')]);
 });
 await step('खंभा खोज', async () => { await page.fill('#plQ', '7'); await page.click('#plFind button[type=submit]'); await page.click('#plInfo .csl button'); });

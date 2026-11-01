@@ -153,10 +153,15 @@ await page.click('#fdEnd');
 const ended = await page.evaluate(() => ({ end: JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0].end, st: JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0].pl[0].st, poleBtn: document.getElementById('fdPoleH').hidden, stat: document.getElementById('fdStat').innerText, endBtn: document.getElementById('fdEnd').innerText }));
 // SLD: printed (PDF) and as a picture.
 await page.evaluate(() => { window.__printed = 0; window.print = () => { window.__printed++; window.__sld = document.getElementById('sldPrint').innerHTML; }; });
+await page.click('#sldMenu summary');
+const sldMenuOpen = await page.$eval('#sldMenu', (d) => d.open);
 await page.click('#fdSldPdf');
+const sldMenuShut = await page.$eval('#sldMenu', (d) => !d.open);
 await page.waitForFunction(() => window.__printed > 0, null, { timeout: 3000 }).catch(() => {});
 const sldSvg = await page.evaluate(() => window.__sld || '');
+await page.click('#sldMenu summary');
 const [dl4] = await Promise.all([page.waitForEvent('download'), page.click('#fdSldPng')]);
+const dbLegend = await page.evaluate(() => { const l = document.querySelector('.fdlegend'); return !!l.querySelector('svg.dbic') && !l.textContent.includes('📦') && !!document.querySelector('#plDbL svg.dbic'); });
 const sldPng = { name: dl4.suggestedFilename(), size: readFileSync(await dl4.path()).length };
 const uiDtr = await page.evaluate(() => { const t = document.getElementById('feederCard').innerText + document.getElementById('dtN').placeholder; return t.includes('↩️ DTR से 11kV आगे') && !/\bDT\b/.test(t); });
 const hScroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
@@ -249,6 +254,23 @@ await page.$eval('#fdOne details.more:has(#fdDelete)', (d) => { d.open = true; }
 await page.click('#fdDelete');
 const gone = await page.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.length === 1);
 
+// Location refused (phone or Chrome): the page says how to turn it on, and "फिर कोशिश करें" works once allowed.
+const ctx2 = await browser.newContext({ viewport: { width: 400, height: 900 } });
+await ctx2.route(/tile\.openstreetmap\.org|arcgisonline\.com/, (r) => r.fulfill({ contentType: 'image/png', body: PNG }));
+await ctx2.addInitScript(() => { localStorage.setItem('priority-note-ver', '99'); if (!localStorage.getItem('priority-note-v2')) localStorage.setItem('priority-note-v2', JSON.stringify({ tasks: [], feeders: [{ id: 'g1', n: 'जगह की जाँच', segs: [], dts: [], pl: [] }] })); });
+const g = await ctx2.newPage();
+await g.goto(url);
+await g.click('#tab-feeder');
+await g.click('#fdItems button');
+await g.click('#fdPoleL');
+const geoShown = await g.waitForSelector('#geoHelp:not([hidden])', { timeout: 8000 }).then(() => true, () => false);
+const geoTxt = geoShown ? await g.$eval('#geoHelp', (n) => n.innerText) : '';
+await ctx2.grantPermissions(['geolocation']);
+await ctx2.setGeolocation({ latitude: 22.5, longitude: 79.2, accuracy: 5 });
+await g.click('#geoRetry');
+const geoGone = await g.waitForSelector('#geoHelp', { state: 'hidden', timeout: 8000 }).then(() => true, () => false);
+await ctx2.close();
+
 await browser.close();
 const checks = {
   'फीडर टैब में नोट वाला हिस्सा छिपा': noteHidden,
@@ -305,6 +327,9 @@ const checks = {
   'खंभे पर मोबाइल/नाम/IVRS लिखने पर सूची से उपभोक्ता मिला और जुड़ा; दूसरे खंभे वाला नहीं जुड़ा': hitMob.length === 1 && hitMob[0].includes('सीता बाई') && hitTaken.includes('Ckt-1-1') && clChips === '3334567890,4434567890' && clSaved === '2:3334567890/d/1/0.5,4434567890/nd/3/7.5:3',
   'सूची वाले उपभोक्ता का पूरा विवरण (मोबाइल, पिता का नाम, पता)': clDetail.includes('9826012345') && clDetail.includes('पिता का नाम: रामदीन') && clDetail.includes('पता: वार्ड 3') && clDetail.includes('LV1.2'),
   'DTR में नए उपभोक्ता और भार जुड़े': clDtr.includes('उपभोक्ता 4') && clDtr.includes('भार 12.5 kW'),
+  'SLD के दोनों बटन एक ड्रॉपडाउन में; चुनने पर बंद': sldMenuOpen && sldMenuShut,
+  'संकेत और खंभे के फ़ॉर्म में DB बॉक्स का असली निशान (📦 नहीं)': dbLegend,
+  'जगह (GPS) की अनुमति नहीं: तरीका दिखा, अनुमति देने पर "फिर कोशिश करें" से चला': geoShown && geoTxt.includes('Location') && geoTxt.includes('Chrome') && geoGone,
   'फीडर हटाना (पूछकर)': gone,
   'कोई JS error नहीं': errors.length === 0,
 };

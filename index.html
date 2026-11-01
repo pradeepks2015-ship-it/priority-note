@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-4psof6ZSIHxpXDo+Qq48v7r9TlRqEAHoSyKZnvi9gdc=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-qgO2HFpUnSbP0uMQ6y+QpkVjBBs0bEf3capQBfQi2n0=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -128,6 +128,8 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .psym .cb{fill:none;stroke:var(--ink);stroke-width:1.8}
 .psym .hk{fill:none;stroke:var(--ink);stroke-width:1.1}
 .psym .sw{fill:none;stroke:var(--ink);stroke-width:.7}
+.dbic{display:inline-block;vertical-align:-3px;flex:none}
+.dbic .db{fill:var(--muted);stroke:var(--ink);stroke-width:.6}.dbic .bd{fill:var(--ink)}.dbic .dl{fill:none;stroke:var(--ink);stroke-width:.45}.dbic .dbw{fill:var(--paper);stroke:var(--ink);stroke-width:.4}
 .psym .db{fill:var(--muted);stroke:var(--ink);stroke-width:.6}
 .psym .bd{fill:var(--ink)}
 .psym .dl{fill:none;stroke:var(--ink);stroke-width:.45}
@@ -158,7 +160,11 @@ details.more summary{cursor:pointer;padding:12px 0;font-weight:600;color:var(--m
 .pli .pic svg{width:auto;height:28px;margin:0}
 .ltline .po{fill:var(--muted)}
 .ltline .cb{fill:none;stroke:var(--ink);stroke-width:1.4}
-.fdlegend .lg{font-weight:700}.fdlegend .lg.h{color:var(--p1)}.fdlegend .lg.l{color:var(--ink)}.fdlegend .lg.w{color:var(--muted)}
+.ddm>summary{list-style:none;width:100%;justify-content:center}.ddm>summary::-webkit-details-marker{display:none}
+.ddm .ddl{display:flex;flex-direction:column;gap:6px;margin-top:6px;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.ddm .ddl .btn{width:100%;justify-content:flex-start}
+.geohelp{border:1.5px solid var(--p1);border-radius:12px;padding:10px 12px;margin:8px 0;background:var(--surface);line-height:1.55}.geohelp ol{margin:6px 0 8px;padding-left:20px}
+.fdlegend .lg{font-weight:700;white-space:nowrap}.fdlegend .lg.h{color:var(--p1)}.fdlegend .lg.l{color:var(--ink)}.fdlegend .lg.w{color:var(--muted)}
 .dtico span{position:absolute;left:50%;top:36px;transform:translateX(-50%);white-space:nowrap;font:700 12px var(--f-ui);background:var(--surface);color:var(--ink);padding:0 4px;border-radius:4px}
 .prev{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .pv{display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -433,6 +439,16 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost sm" type="button" id="fdMe">◎ मेरी जगह</button>
           </div>
           <p class="fdstat" id="fdStat" role="status"></p>
+          <div class="geohelp" id="geoHelp" hidden>
+            <b>📍 फ़ोन की जगह (GPS) नहीं मिल रही — अनुमति चालू करें:</b>
+            <ol>
+              <li>फ़ोन में ऊपर से नीचे खींचें और <b>Location (स्थान)</b> चालू करें।</li>
+              <li>Chrome में ऊपर पते के बाईं ओर 🔒 (या ⚙️) दबाएँ → <b>Permissions / अनुमतियाँ</b> → <b>Location</b> → <b>Allow (अनुमति दें)</b>।</li>
+              <li>न हो तो: फ़ोन की <b>Settings → Apps → Chrome → Permissions → Location</b> → "ऐप इस्तेमाल करते समय अनुमति दें"।</li>
+              <li>होम-स्क्रीन वाले ऐप में भी Chrome की यही अनुमति चलती है।</li>
+            </ol>
+            <button class="btn sm" type="button" id="geoRetry">🔄 फिर कोशिश करें</button>
+          </div>
           <div class="row">
             <button class="btn" type="button" id="fdRec" style="flex:1 1 150px">▶ चलना शुरू करें</button>
             <button class="btn ghost" type="button" id="fdDt" style="flex:1 1 150px">⚡ यहाँ ट्रांसफार्मर</button>
@@ -479,7 +495,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
               </div>
               <button class="btn ghost sm" type="button" id="csAdd">➕ IVRS से उपभोक्ता जोड़ें</button>
             </div>
-            <label class="chk" id="plDbL"><input type="checkbox" id="plDb"> 📦 इस खंभे पर DB बॉक्स लगा है</label>
+            <label class="chk" id="plDbL"><input type="checkbox" id="plDb"> <svg class="dbic" viewBox="0 0 10 12" width="14" height="17" aria-hidden="true"><rect class="bd" x="0" y="2" width="2" height=".8"/><rect class="bd" x="0" y="9" width="2" height=".8"/><rect class="db" x="1.6" y=".6" width="7.8" height="10.6" rx="1.4"/><path class="dl" d="M1.6 3.2h7.8M1.6 8.6h7.8"/><rect class="dbw" x="3.6" y="4.4" width="3.8" height="2.8" rx=".4"/></svg> इस खंभे पर DB बॉक्स लगा है</label>
             <label class="lbl" for="plTo">किससे जुड़ा (लाइन)</label>
             <select id="plTo"></select>
             <input type="text" id="plNote" placeholder="टिप्पणी (वैकल्पिक)" aria-label="खंभे की टिप्पणी">
@@ -537,11 +553,14 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost" type="button" id="fdKml" style="flex:1 1 150px">🌍 Google Earth फ़ाइल</button>
             <button class="btn ghost" type="button" id="fdExp" style="flex:1 1 150px">📤 सर्वे फ़ाइल भेजें</button>
           </div>
-          <div class="row" style="margin-top:8px">
-            <button class="btn ghost" type="button" id="fdSldPdf" style="flex:1 1 150px">📐 SLD (PDF / प्रिंट)</button>
-            <button class="btn ghost" type="button" id="fdSldPng" style="flex:1 1 150px">🖼️ SLD फोटो</button>
-          </div>
-          <p class="hint fdlegend">नक्शे पर: <b class="lg h">▬ 11kV लाइन (लाल)</b> · <b class="lg l">▬ LT केबल (हुक पर) · 📦 DB बॉक्स</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
+          <details class="ddm" id="sldMenu" style="margin-top:8px">
+            <summary class="btn ghost">📐 SLD (एकल रेखा आरेख) ▾</summary>
+            <div class="ddl">
+              <button class="btn ghost" type="button" id="fdSldPdf">📄 PDF / प्रिंट (A3)</button>
+              <button class="btn ghost" type="button" id="fdSldPng">🖼️ फोटो (PNG)</button>
+            </div>
+          </details>
+          <p class="hint fdlegend">नक्शे पर: <b class="lg h">▬ 11kV लाइन (लाल)</b> · <b class="lg l">▬ LT केबल (हुक पर)</b> · <b class="lg l"><svg class="dbic" viewBox="0 0 10 12" width="14" height="17" aria-hidden="true"><rect class="bd" x="0" y="2" width="2" height=".8"/><rect class="bd" x="0" y="9" width="2" height=".8"/><rect class="db" x="1.6" y=".6" width="7.8" height="10.6" rx="1.4"/><path class="dl" d="M1.6 3.2h7.8M1.6 8.6h7.8"/><rect class="dbw" x="3.6" y="4.4" width="3.8" height="2.8" rx=".4"/></svg> DB बॉक्स</b> · <b class="lg w">┅ चला गया रास्ता</b> · ज़ूम करने पर खंभों के निशान और नंबर</p>
           <details class="more" style="margin-top:12px">
             <summary>और विकल्प</summary>
             <div class="row" style="padding:10px 0">
@@ -1701,10 +1720,10 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.62',APP_NOTES=[
-    'गाँव की उपभोक्ता सूची Excel/CSV से डालें ("👥 गाँव की उपभोक्ता सूची"); कॉलम के नाम हिंदी या अंग्रेज़ी में, कोई भी क्रम',
-    'LT खंभे पर IVRS, मोबाइल या नाम लिखते ही सूची से उपभोक्ता मिलता है, एक बार दबाकर जुड़ जाता है',
-    'उपभोक्ता के विवरण में सूची के सारे कॉलम (मोबाइल, पिता का नाम, पता …)'
+  var APP_V='1.63',APP_NOTES=[
+    'जगह (GPS) की अनुमति न हो तो स्क्रीन पर साफ़ तरीका और "🔄 फिर कोशिश करें" बटन',
+    'DB बॉक्स का असली निशान (संकेत, फ़ॉर्म, कुल हिसाब में)',
+    'SLD के दोनों बटन अब एक ड्रॉपडाउन में: "📐 SLD ▾" → PDF / फोटो'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2141,6 +2160,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     [5,17.4,29.8].forEach(function(x){g+='<rect class="po" x="'+x+'" y="3" width="1.8" height="22"/><rect class="po" x="'+(x-2.4)+'" y="3.8" width="6.6" height="1"/>'});
     return g+'</svg>'}
   // A fixed symbol (dtSym / poleSym markup, no data in it) as an element for the info box.
+  // The DB box alone (legend, form, totals): the same box as on the LT pole symbol.
+  function dbSym(){return '<svg class="dbic" viewBox="0 0 10 12" width="14" height="17" aria-hidden="true"><rect class="bd" x="0" y="2" width="2" height=".8"/><rect class="bd" x="0" y="9" width="2" height=".8"/><rect class="db" x="1.6" y=".6" width="7.8" height="10.6" rx="1.4"/><path class="dl" d="M1.6 3.2h7.8M1.6 8.6h7.8"/><rect class="dbw" x="3.6" y="4.4" width="3.8" height="2.8" rx=".4"/></svg>'}
   function symEl(svg){var s=mk('span','pic');
     // eslint-disable-next-line no-unsanitized/method -- fixed SVG markup from dtSym()/poleSym(), no data
     s.insertAdjacentHTML('beforeend',svg);return s}
@@ -2173,9 +2194,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     $('clSum').textContent='👥 गाँव की उपभोक्ता सूची (Excel)'+(f.cl?' ('+f.cl.length+')':'');$('clDel').hidden=!f.cl;
     var t=fdTotals(f),sum=$('fdSum');sum.textContent='';
     var boxes=[['फीडर की लंबाई (GPS)',fmtLen(t.len)],['खंभे'+(t.est?' (अनुमान)':''),t.poles?String(t.poles):'—'],['ट्रांसफार्मर',t.dt+(t.kva?' · '+t.kva+' kVA':'')],['उपभोक्ता (DTR पर लिखे)',String(t.c)],['LT लाइन कुल',fmtLen(t.lt)]];
-    if(f.pl.length)boxes.push(['🔴 11kV खंभे (सर्वे)',String(t.hp)],['🔵 LT खंभे (सर्वे)',String(t.lp)],['खंभों पर उपभोक्ता',String(t.pc)],['जुड़ा भार (kW)',fmtKw(t.kw)],['📦 DB बॉक्स',String(t.db)]);
+    if(f.pl.length)boxes.push(['🔴 11kV खंभे (सर्वे)',String(t.hp)],['🔵 LT खंभे (सर्वे)',String(t.lp)],['खंभों पर उपभोक्ता',String(t.pc)],['जुड़ा भार (kW)',fmtKw(t.kw)],['DB बॉक्स',String(t.db),1]);
     boxes.forEach(function(p){
-      var d=mk('div');d.appendChild(mk('small','',p[0]));d.appendChild(mk('b','',p[1]));sum.appendChild(d);
+      var d=mk('div'),sm=mk('small','',p[0]);if(p[2])sm.insertBefore(symEl(dbSym()),sm.firstChild);d.appendChild(sm);d.appendChild(mk('b','',p[1]));sum.appendChild(d);
     });
     var pe=poleEst(f);
     if(document.activeElement!==$('fdPoles'))$('fdPoles').value=f.poles||'';
@@ -2312,7 +2333,10 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   }
 
   /* GPS */
-  function geoErr(e){toast(e&&e.code===1?'स्थान (GPS) की अनुमति दें: Chrome की सेटिंग में इस साइट के लिए "स्थान" चालू करें':'GPS नहीं मिल रही, खुले में आएँ')}
+  // Location refused (code 1): the steps stay on screen until it works; other errors are a short note.
+  function geoErr(e){if(e&&e.code===1){$('geoHelp').hidden=false;$('geoHelp').scrollIntoView({block:'center'})}else toast('GPS नहीं मिल रही, खुले में आएँ')}
+  function geoOk(){$('geoHelp').hidden=true}
+  $('geoRetry').onclick=function(){FD.fix=null;herePos().then(function(){geoOk();toast('✅ जगह मिल गई')},function(){})};
   function startWatch(){
     if(FD.watch!=null)return true;
     if(!navigator.geolocation){toast('इस फ़ोन/ब्राउज़र में GPS नहीं मिला');return false}
@@ -2320,7 +2344,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     return true;
   }
   function stopWatch(){if(FD.watch!=null){navigator.geolocation.clearWatch(FD.watch);FD.watch=null}}
-  function onFix(p){
+  function onFix(p){geoOk();
     FD.fix={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy||0,t:p.timestamp||Date.now()};
     if(FD.rec)addPoint(FD.fix);
     drawMe();
@@ -2378,7 +2402,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       if(FD.fix&&Date.now()-FD.fix.t<20000&&FD.fix.acc<=GPS_ACC*2){res(FD.fix);return}
       if(!navigator.geolocation){rej();return}
       toast('GPS से जगह ली जा रही है…');
-      navigator.geolocation.getCurrentPosition(function(p){FD.fix={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy||0,t:p.timestamp||Date.now()};drawMe();res(FD.fix)},function(e){geoErr(e);rej()},{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+      navigator.geolocation.getCurrentPosition(function(p){geoOk();FD.fix={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy||0,t:p.timestamp||Date.now()};drawMe();res(FD.fix)},function(e){geoErr(e);rej()},{enableHighAccuracy:true,maximumAge:0,timeout:20000});
     });
   }
   function showDtPos(){var p=FD.dtPos;$('dtPos').textContent=p?'📍 जगह: '+r5(p.lat)+', '+r5(p.lng)+(p.acc?' (±'+Math.round(p.acc)+' मी.)':''):''}
@@ -2807,6 +2831,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     return svg;
   }
   // PDF: print just the SLD (phone's print sheet → "Save as PDF"); A3 landscape.
+  // picking an SLD choice closes the menu
+  ['fdSldPdf','fdSldPng'].forEach(function(id){$(id).addEventListener('click',function(){$('sldMenu').open=false})});
   $('fdSldPdf').onclick=function(){
     var f=curF();if(!f)return;var box=$('sldPrint');box.textContent='';box.appendChild(buildSld(f));
     document.body.classList.add('printing');
