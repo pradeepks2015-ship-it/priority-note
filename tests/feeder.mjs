@@ -262,6 +262,8 @@ const ovMap = await page.$$eval('#fdMap .dtico.ov', (e) => e.length);
 const ovSum = await page.$eval('#fdSum', (n) => n.innerText.replace(/\s+/g, ' '));
 const ovWa = decodeURIComponent(await page.$eval('#fdWa', (a) => a.href));
 // The map without internet: tiles you have seen are kept, and "📥" keeps the village's area (zoom 13–16) on the phone.
+const setShut = await page.$eval('#mapSet', (d) => !d.open && d.querySelector('#offSave') && d.querySelector('#gpsTest') ? true : false);
+await page.click('#mapSet summary');
 await page.click('#offSave');
 const offSaved = await page.waitForFunction(() => document.getElementById('offStat').textContent.startsWith('✅'), null, { timeout: 30000 }).then(() => true, () => false);
 const offCount = await page.evaluate(async () => (await (await caches.open('pn-tiles')).keys()).length);
@@ -303,6 +305,7 @@ const meOk = await g.waitForFunction(() => { const m = window.__fdMap, c = m.get
 const meRing = await g.evaluate(() => { let r = 0; window.__fdMap.eachLayer((l) => { if (l.options && l.options.meAcc) r = Math.round(l.getRadius()); }); return r; });
 const meDiag = await g.$eval('#geoDiag', (n) => !n.hidden && n.textContent);
 // "🔧 GPS जाँच": asks the phone step by step and writes a report that can be sent on WhatsApp.
+await g.click('#mapSet summary');
 await g.click('#gpsTest');
 const gpsRep = await g.waitForFunction(() => { const t = document.getElementById('gpsRep').textContent; return t.includes('GPS वाली जगह:') && t.includes('±') ? t : false; }, null, { timeout: 15000 }).then((h) => h.jsonValue(), () => '');
 const gpsWa = await g.$eval('#gpsRepWa', (a) => decodeURIComponent(a.href));
@@ -373,7 +376,8 @@ const checks = {
   '"◎ मेरी जगह": ताज़ा GPS, नक्शा वहीं ज़ूम होकर, सटीकता का घेरा': meOk && meRing === 18,
   '"🔧 GPS जाँच": अनुमति, Chrome/दूसरा ऐप, तुरंत और GPS वाली जगह की रिपोर्ट, WhatsApp पर भेजने लायक': gpsRep.includes('अनुमति: दी हुई') && gpsRep.includes('तुरंत वाली जगह: ✅') && gpsRep.includes('GPS वाली जगह: ✅') && gpsWa.includes('GPS वाली जगह'),
   'GPS की हालत बटन के नीचे लिखी रहे: जगह मिली (±मी.), न मिले तो क्या चालू करें': !!meDiag && meDiag.includes('जगह मिली') && meDiag.includes('±18') && noFixDiag,
-  'जगह (GPS) की अनुमति नहीं: तरीका दिखा, अनुमति देने पर "फिर कोशिश करें" से चला': geoShown && geoTxt.includes('Location') && geoTxt.includes('Chrome') && geoGone,
+  'जगह (GPS) की अनुमति नहीं: तरीका दिखा (Chrome ⋮ → Site settings → Location → Not allowed → यह साइट), अनुमति देने पर "फिर कोशिश करें" से चला': geoShown && geoTxt.includes('Location') && geoTxt.includes('Site settings') && geoTxt.includes('Not allowed') && geoTxt.includes('127.0.0.1:8080') && geoGone,
+  'GPS जाँच और नक्शा सेव "⚙️ नक्शा सेटिंग" ड्रॉपडाउन में (शुरू में बंद)': setShut,
   'DTR कितना भरा (kW ÷ kVA×0.9): 22% ठीक; 10 kVA पर 139% ओवरलोड — सूची, नक्शा, कुल, WhatsApp': clDtr.includes('22% भरा') && ovList.includes('139% भरा') && ovList.includes('ओवरलोड') && ovMap === 1 && ovSum.includes('ओवरलोड DTR 1') && ovWa.includes('139% भरा') && ovWa.includes('ओवरलोड'),
   'बिना नेट का नक्शा: गाँव का हिस्सा फ़ोन में (150 तक टाइल), नेट बंद होने पर भी नक्शा और सूचना': offSaved && offCount > 0 && offCount <= 400 && offTiles && offNote,
   'फीडर हटाना (पूछकर)': gone,

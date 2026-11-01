@@ -123,6 +123,8 @@ and left out of reminders.
   open in Chrome); the watch has no timeout (it waited and failed every 30 s).
   v1.67: "🔧 GPS जाँच" (`#gpsTest`) reports, step by step, where the page is open, the permission state, a quick fix and a
   GPS fix (accuracy and seconds, or the error code — never coordinates) and offers the report on WhatsApp (`#gpsRepWa`).
+  v1.68: the GPS check and the offline save sit in the folded "⚙️ नक्शा सेटिंग" (`#mapSet`) under the map buttons;
+  `#geoHelp` also gives Chrome's path ⋮ → Site settings → Location → Not allowed → this site (`#geoHost`) → Allow.
 - DTR loading (v1.65): `dtLoad(d, dtPoles())` = connected kW ÷ (kVA × `DTR_PF` 0.9); ≥80 % `hi` (yellow, "भरने के पास"),
   ≥100 % `ov` (red, "ओवरलोड"). Shown in the DTR list (`.ld`), as a ring round the DTR on the map (`.dtico.hi/.ov`), the
   "ओवरलोड DTR" total, the search box ("जुड़ा DTR"), WhatsApp and the SLD. Connected load, not measured demand.

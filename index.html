@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-mPGn8Y7M8iyn8Ali4ujE/vC/g/O1dgviw5T+Ijd3iJk=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-hH9uMEJac06gqN1ml/7BmSdqn3gK2O3wiMj60WP+LPI=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -444,22 +444,30 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
             <button class="btn ghost sm" type="button" id="fdMe">◎ मेरी जगह</button>
           </div>
           <p class="geodiag" id="geoDiag" role="status" hidden></p>
-          <div class="row"><button class="btn ghost sm" type="button" id="gpsTest">🔧 GPS जाँच</button></div>
-          <div class="gpsrep" id="gpsRepBox" hidden>
-            <pre id="gpsRep"></pre>
-            <a class="btn wa sm" id="gpsRepWa" href="#" target="_blank" rel="noopener">💬 यह जाँच WhatsApp पर भेजें</a>
-          </div>
+          <details class="more" id="mapSet" style="margin:6px 0">
+            <summary>⚙️ नक्शा सेटिंग</summary>
+            <div style="padding:6px 0 10px">
+              <p class="lbl">📴 बिना नेट के लिए</p>
+              <div class="row" style="align-items:center">
+                <button class="btn ghost sm" type="button" id="offSave">📥 गाँव का नक्शा फ़ोन में रखें</button>
+                <span class="hint" id="offStat" style="flex:1 1 160px"></span>
+              </div>
+              <p class="lbl" style="margin-top:10px">📍 जगह (GPS) नहीं मिल रही?</p>
+              <div class="row"><button class="btn ghost sm" type="button" id="gpsTest">🔧 GPS जाँच</button></div>
+              <div class="gpsrep" id="gpsRepBox" hidden>
+                <pre id="gpsRep"></pre>
+                <a class="btn wa sm" id="gpsRepWa" href="#" target="_blank" rel="noopener">💬 यह जाँच WhatsApp पर भेजें</a>
+              </div>
+            </div>
+          </details>
           <p class="hint offinfo" id="offInfo" hidden>📴 बिना नेट: फ़ोन में सेव किया नक्शा दिख रहा है (जो हिस्सा पहले देखा या सेव किया था)।</p>
-          <div class="row" style="align-items:center">
-            <button class="btn ghost sm" type="button" id="offSave">📥 गाँव का नक्शा फ़ोन में रखें</button>
-            <span class="hint" id="offStat" style="flex:1 1 160px"></span>
-          </div>
           <p class="fdstat" id="fdStat" role="status"></p>
           <div class="geohelp" id="geoHelp" hidden>
             <b>📍 फ़ोन की जगह (GPS) नहीं मिल रही — अनुमति चालू करें:</b>
             <ol>
               <li>फ़ोन में ऊपर से नीचे खींचें और <b>Location (स्थान)</b> चालू करें।</li>
               <li>Chrome में ऊपर पते के बाईं ओर 🔒 (या ⚙️) दबाएँ → <b>Permissions / अनुमतियाँ</b> → <b>Location</b> → <b>Allow (अनुमति दें)</b>।</li>
+              <li>या Chrome में <b>⋮ → Settings → Site settings → Location</b> → <b>Not allowed</b> वाली सूची में <b id="geoHost"></b> दबाएँ → <b>Allow</b>। (इसी स्क्रीन पर "Expand all requests" चुन लें, तो आगे अनुमति का सवाल साफ़ दिखेगा।)</li>
               <li>न हो तो: फ़ोन की <b>Settings → Apps → Chrome → Permissions → Location</b> → "ऐप इस्तेमाल करते समय अनुमति दें"।</li>
               <li>होम-स्क्रीन वाले ऐप में भी Chrome की यही अनुमति चलती है।</li>
             </ol>
@@ -1736,8 +1744,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.67',APP_NOTES=[
-    'नक्शे के नीचे "🔧 GPS जाँच": अनुमति, ऐप कहाँ खुला है, तुरंत और GPS वाली जगह — हर कदम का नतीजा; "WhatsApp पर भेजें" से रिपोर्ट भेजें'
+  var APP_V='1.68',APP_NOTES=[
+    '"🔧 GPS जाँच" और "📥 गाँव का नक्शा फ़ोन में रखें" अब नक्शे के नीचे "⚙️ नक्शा सेटिंग" ड्रॉपडाउन में',
+    'जगह की अनुमति रुकी हो तो मदद में Chrome का पूरा रास्ता: ⋮ → Settings → Site settings → Location → Not allowed → यह साइट → Allow'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2397,6 +2406,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
       :'⚠️ फ़ोन जगह नहीं दे रहा। फ़ोन की Settings → Location में "Google Location Accuracy" (या "सटीकता बढ़ाएँ") चालू करें, फिर दबाएँ।'+(IN_APP?' यह पेज WhatsApp/दूसरे ऐप के अंदर खुला है — ऊपर ⋮ से "Chrome में खोलें"।':''),true);
   }
   function geoOk(){$('geoHelp').hidden=true}
+  $('geoHost').textContent=location.host||'यह साइट';
   /* "🔧 GPS जाँच" (v1.67): asks the phone step by step — where the page is open, the permission's real state, a quick
      place, then the GPS's own — and writes each answer (accuracy and time, or the error code), never the coordinates.
      The report can go on WhatsApp, so a problem on a phone far away can be seen as it is. */
