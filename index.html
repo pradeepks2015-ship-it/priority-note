@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iaQyVTpWzf3edJgCUa5OXoUNvtFwUDaaApHKuCEmP3I=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-qX/tg5ArqNggV7F8/VGjiRCfX4TNBoOh9ciXRZE9oak=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -663,14 +663,52 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     clearTimeout(saveTimer);
     saveTimer=setTimeout(push,600);
   }
+  /* Online copy (v1.61): the main document users/{uid} holds everything but the feeders, plus fdx = [{id, h}] (h: a
+     fingerprint of that feeder); each feeder is its own document users/{uid}/feeders/{id}, written only when its
+     fingerprint changed, so each one has the 1 MB limit to itself. If Firestore's rules refuse those documents (rules
+     from before v1.61), the app saves everything in the main document as before and says how to update the rules. */
   var CLOUD_KB=980;  // a Firestore document holds 1 MiB; keep a little room for its other fields
+  var split=true,srv={};  // srv: feeder id → fingerprint of the copy online
+  function hashStr(t){var h=5381;for(var i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return (h>>>0).toString(36)+t.length.toString(36)}
+  function kbOf(t){return Math.round(new Blob([t]).size/1024)}
+  function cloudStop(msg){cloud.st='err';cloud.msg=msg+' फ़ोन पर सारा डेटा सुरक्षित है।';renderCloud()}
   function push(){
     if(!ref)return;
-    var js=JSON.stringify(S),kb=Math.round(new Blob([js]).size/1024);
-    // The whole state is one Firestore document (1 MB at most): say so plainly instead of failing quietly.
-    if(kb>CLOUD_KB){cloud.st='err';cloud.msg='डेटा बहुत बड़ा है ('+kb+' KB): ऑनलाइन कॉपी में 1 MB तक ही आता है, इसलिए ऑनलाइन सेव रुका है। फ़ोन पर सारा डेटा सुरक्षित है।';renderCloud();return}
-    var body=JSON.parse(js);
-    chain=chain.then(function(){return ref.set(body)}).then(function(){cloud.at=Date.now();cloud.st='on';renderCloud()},function(e){cloudErr(e)});
+    var body=JSON.parse(JSON.stringify(S)),put=[],gone=[],fdx=null,i;
+    if(split){
+      fdx=[];var now={};
+      for(i=0;i<body.feeders.length;i++){
+        var fd=body.feeders[i],fj=JSON.stringify(fd),h=hashStr(fj),fk=kbOf(fj);
+        if(fk>CLOUD_KB)return cloudStop('फीडर "'+fd.n+'" का डेटा बहुत बड़ा है ('+fk+' KB): एक फीडर ऑनलाइन 1 MB तक ही जाता है, इसलिए ऑनलाइन सेव रुका है। इसे दो फीडर/गाँव में बाँटें।');
+        fdx.push({id:fd.id,h:h});now[fd.id]=1;if(srv[fd.id]!==h)put.push({id:fd.id,s:fj});
+      }
+      Object.keys(srv).forEach(function(id){if(!now[id])gone.push(id)});
+      delete body.feeders;body.fdx=fdx;
+    }
+    var js=JSON.stringify(body),kb=kbOf(js);
+    // The main document is 1 MB at most: say so plainly instead of failing quietly.
+    if(kb>CLOUD_KB)return cloudStop('डेटा बहुत बड़ा है ('+kb+' KB): ऑनलाइन कॉपी में 1 MB तक ही आता है, इसलिए ऑनलाइन सेव रुका है।');
+    chain=chain.then(function(){return ref.save(body,put,gone,!!fdx)}).then(function(){
+      if(fdx){srv={};fdx.forEach(function(e){srv[e.id]=e.h})}
+      cloud.at=Date.now();cloud.st='on';renderCloud();
+    },function(e){
+      if(fdx&&e&&e.code==='permission-denied'){split=false;cloud.rules=true;push();return}  // old rules: one document
+      cloudErr(e);
+    });
+  }
+  // A remote state with fdx: take each feeder from this phone when its fingerprint matches, else fetch its document.
+  var pullSeq=0;
+  function withFeeders(rs){
+    if(!rs||!Array.isArray(rs.fdx)||!ref)return Promise.resolve(rs);
+    var have={};S.feeders.forEach(function(x){have[x.id]=x});
+    return Promise.all(rs.fdx.map(function(e){
+      var l=have[e.id];if(l&&hashStr(JSON.stringify(l))===e.h)return l;
+      return ref.getF(e.id).then(function(t){try{return t?JSON.parse(t):null}catch(er){return null}});
+    })).then(function(list){srv={};rs.fdx.forEach(function(e){srv[e.id]=e.h});rs.feeders=list.filter(Boolean);delete rs.fdx;return rs});
+  }
+  function pullRemote(rs,note){
+    var my=++pullSeq;
+    return withFeeders(rs).then(function(r){if(my!==pullSeq)return;applyRemote(r);if(note)toast(note)},cloudErr);
   }
 
   /* ---------- helpers on lists ---------- */
@@ -1653,11 +1691,9 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.60',APP_NOTES=[
-    'LT खंभे पर उपभोक्ता IVRS नंबर से जोड़ें: नाम, श्रेणी, फेज़, जुड़ा भार (kW), मीटर नंबर',
-    'IVRS दबाने पर उपभोक्ता का पूरा विवरण; खोज में IVRS नंबर से भी खंभा मिलता है',
-    'हर DTR में उसके सभी LT खंभों के उपभोक्ता और कुल जुड़ा भार (kW)',
-    'डेटा 1 MB से बड़ा होने पर ऑनलाइन सेव रुकता है और साफ़ बताता है (फ़ोन पर डेटा सुरक्षित)'
+  var APP_V='1.61',APP_NOTES=[
+    'ऑनलाइन बैकअप: हर फीडर अब अपनी अलग फ़ाइल में सेव होता है, इसलिए 1 MB की सीमा हर फीडर पर अलग से (पूरे केंद्र पर नहीं)',
+    'सिर्फ़ बदला हुआ फीडर ऑनलाइन जाता है, इसलिए सेव और तेज़'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -1737,18 +1773,31 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
           try{rs=data&&data.s?JSON.parse(data.s):null}catch(e){}
           if(first){
             first=false;
-            ref={set:function(body){return f.F.setDoc(d,{s:JSON.stringify(body),t:body._t||Date.now(),v:APP_V,rem:!!body.remind},{merge:true})}};
+            var fdDoc=function(id){return f.F.doc(f.db,'users',user.uid,'feeders',id)},
+              mainOf=function(body){return {s:JSON.stringify(body),t:body._t||Date.now(),v:APP_V,rem:!!body.remind}};
+            ref={
+              // split: the changed feeders, the removed ones and the main document in one batch (all or nothing)
+              save:function(body,put,gone,isSplit){
+                if(!isSplit)return f.F.setDoc(d,mainOf(body),{merge:true});
+                var b=f.F.writeBatch(f.db);
+                put.forEach(function(x){b.set(fdDoc(x.id),{s:x.s,t:Date.now(),v:APP_V})});
+                gone.forEach(function(id){b.delete(fdDoc(id))});
+                b.set(d,mainOf(body),{merge:true});return b.commit();
+              },
+              getF:function(id){return f.F.getDoc(fdDoc(id)).then(function(x){return x.exists()?x.data().s:null})}
+            };
+            srv={};if(rs&&Array.isArray(rs.fdx))rs.fdx.forEach(function(e){srv[e.id]=e.h});
             if(S.remind&&lsGet(PSK))enablePush(true);
             var known=lsGet(FBU)===user.uid,hasLocal=S.tasks.length+S.orders.length+S.staff.length>0;
             lsSet(FBU,user.uid);
             if(!rs){push();return}
             // First login on this phone with data on both sides: ask which to keep.
             if(!known&&hasLocal){
-              if(confirm('ऑनलाइन बैकअप में पहले से डेटा है ('+(rs.tasks||[]).length+' काम, '+(rs.orders||[]).length+' निर्देश).\n\n"OK" = ऑनलाइन वाला डेटा रखें\n"Cancel" = इस फ़ोन वाला डेटा ऑनलाइन सेव करें')){applyRemote(rs)}
+              if(confirm('ऑनलाइन बैकअप में पहले से डेटा है ('+(rs.tasks||[]).length+' काम, '+(rs.orders||[]).length+' निर्देश).\n\n"OK" = ऑनलाइन वाला डेटा रखें\n"Cancel" = इस फ़ोन वाला डेटा ऑनलाइन सेव करें')){pullRemote(rs)}
               else{S.ordNo=Math.max(S.ordNo,rs.ordNo||0);save();return}
-            }else if(!known||(rs._t||0)>(S._t||0))applyRemote(rs);
+            }else if(!known||(rs._t||0)>(S._t||0))pullRemote(rs);
             else if((S._t||0)>(rs._t||0)){push();return}
-          }else if(rs&&(rs._t||0)>(S._t||0)){applyRemote(rs);toast('दूसरे फ़ोन का बदलाव आ गया')}
+          }else if(rs&&(rs._t||0)>(S._t||0))pullRemote(rs,'दूसरे फ़ोन का बदलाव आ गया');
           cloud.st='on';cloud.at=Date.now();renderCloud();
         },cloudErr);
       });
@@ -1767,7 +1816,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   }
   function fbLogout(){
     var tok=lsGet(PSK),d=curDoc;
-    lsSet(FBK,null);lsSet(FBU,null);lsSet(PSK,null);ref=null;curDoc=null;
+    lsSet(FBK,null);lsSet(FBU,null);lsSet(PSK,null);ref=null;curDoc=null;srv={};split=true;cloud.rules=false;
     fbLoad().then(function(f){
       return (tok&&d?f.F.setDoc(d,{fcm:f.F.arrayRemove(tok)},{merge:true}).catch(function(){}):Promise.resolve()).then(function(){return f.A.signOut(f.auth)});
     }).catch(function(){});
@@ -1824,6 +1873,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     box.appendChild(mk('p','','✅ ऑनलाइन सेव चालू'+(cloud.email?' · '+cloud.email:'')));
     if(cloud.at)box.appendChild(mk('p','hint','आख़िरी सेव: '+tm(new Date(cloud.at))));
     box.appendChild(mk('p','hint','पत्र के स्क्रीनशॉट सिर्फ़ इसी फ़ोन में रहते हैं।'));
+    if(cloud.rules)box.appendChild(mk('p','hint','⚠️ हर फीडर अलग सेव हो, इसके लिए Firebase Console → Firestore Database → Rules में नया नियम डालें (रिपॉज़िटरी की firestore.rules फ़ाइल)। तब तक सारा डेटा पहले की तरह एक साथ सेव हो रहा है।'));
     var lo=mk('button','btn ghost sm','लॉग आउट');lo.type='button';lo.style.marginTop='8px';lo.onclick=fbLogout;box.appendChild(lo);
   }
   // Round profile button in the header: 👤 when logged out, the Google photo (or first letter) when logged in.

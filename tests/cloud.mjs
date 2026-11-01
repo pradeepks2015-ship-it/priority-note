@@ -7,7 +7,10 @@ const url = process.env.APP_URL || 'http://127.0.0.1:8080/';
 const SDK = 'https://www.gstatic.com/firebasejs/10.12.5/';
 // on a googleapis address, as the app's CSP only lets it talk to Firebase's own hosts
 const DOC = 'https://firestore.googleapis.com/__fake_doc';
-let doc = null; // users/{uid} as the app wrote it: { s, t, v, rem, fcm }
+// Every document the app wrote, by path: users/u1 is { s, t, v, rem, fcm }; each feeder is users/u1/feeders/{id}.
+const docs = {};
+const MAIN = 'users/u1';
+let oldRules = false; // true: like Firestore rules from before v1.61, the feeders' own documents are refused
 
 const FAKE = {
   'firebase-app.js': `export function initializeApp(c){return {c}}`,
@@ -22,12 +25,19 @@ const FAKE = {
     export function signOut(){user=null;localStorage.removeItem('fake-user');cb&&cb(null);return Promise.resolve()}`,
   'firebase-firestore.js': `
     export function getFirestore(){return {}}
-    export function doc(db,c,id){return {path:c+'/'+id}}
+    export function doc(db,...p){return {path:p.join('/')}}
     export const arrayUnion=(...a)=>({__au:a}), arrayRemove=(...a)=>({__ar:a});
-    export async function setDoc(d,v,o){await fetch('${DOC}',{method:'POST',body:JSON.stringify({v,merge:!!(o&&o.merge)})})}
+    const U=(d)=>'${DOC}?p='+encodeURIComponent(d.path);
+    const denied=()=>{const e=new Error('Missing or insufficient permissions.');e.code='permission-denied';return e};
+    async function post(d,b){const r=await fetch(U(d),{method:'POST',body:JSON.stringify(b)});if(r.status===403)throw denied()}
+    export async function setDoc(d,v,o){await post(d,{v,merge:!!(o&&o.merge)})}
+    export async function getDoc(d){const r=await fetch(U(d));if(r.status===403)throw denied();const t=await r.text();const v=t?JSON.parse(t):null;return {exists:()=>!!v,data:()=>v}}
+    // a batch is all or nothing: if the rules refuse one document, nothing is written
+    export function writeBatch(){const ops=[];return {set(d,v,o){ops.push([d,{v,merge:!!(o&&o.merge)}])},delete(d){ops.push([d,{del:true}])},
+      async commit(){for(const [d] of ops){const r=await fetch(U(d));if(r.status===403)throw denied()}for(const [d,b] of ops)await post(d,b)}}}
     export function onSnapshot(d,next){
       let last=null;
-      const tick=async()=>{const t=await (await fetch('${DOC}')).text();if(t!==last){last=t;const v=t?JSON.parse(t):null;next({exists:()=>!!v,data:()=>v,metadata:{hasPendingWrites:false}})}};
+      const tick=async()=>{const t=await (await fetch(U(d))).text();if(t!==last){last=t;const v=t?JSON.parse(t):null;next({exists:()=>!!v,data:()=>v,metadata:{hasPendingWrites:false}})}};
       tick();const h=setInterval(tick,250);return ()=>clearInterval(h);
     }`,
   'firebase-messaging.js': `
@@ -35,14 +45,14 @@ const FAKE = {
     export function getToken(m,o){return Promise.resolve(o&&o.vapidKey&&o.serviceWorkerRegistration?'tok-'+(localStorage.getItem('fake-dev')||'x'):'')}`,
 };
 // Firestore setDoc with {merge:true}: arrayUnion/arrayRemove change lists, other fields replace.
-function write({ v, merge }) {
-  const cur = merge && doc ? JSON.parse(doc) : {};
+function write(path, { v, merge }) {
+  const cur = merge && docs[path] ? JSON.parse(docs[path]) : {};
   for (const [k, val] of Object.entries(v)) {
     if (val && val.__au) cur[k] = [...new Set([...(cur[k] || []), ...val.__au])];
     else if (val && val.__ar) cur[k] = (cur[k] || []).filter((x) => !val.__ar.includes(x));
     else cur[k] = val;
   }
-  doc = JSON.stringify(cur);
+  docs[path] = JSON.stringify(cur);
 }
 
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
@@ -50,10 +60,16 @@ async function phone(seed) {
   const ctx = await browser.newContext({ viewport: { width: 400, height: 900 } });
   await ctx.grantPermissions(['notifications']);
   await ctx.route(SDK + '*', (r) => r.fulfill({ contentType: 'text/javascript', headers: { 'access-control-allow-origin': '*' }, body: FAKE[r.request().url().slice(SDK.length)] }));
-  await ctx.route(DOC, async (r) => {
+  await ctx.route(/__fake_doc/, async (r) => {
     const cors = { 'access-control-allow-origin': '*' };
-    if (r.request().method() === 'POST') { write(JSON.parse(r.request().postData())); return r.fulfill({ headers: cors, body: '' }); }
-    return r.fulfill({ headers: cors, body: doc || '' });
+    const path = new URL(r.request().url()).searchParams.get('p');
+    if (oldRules && path.includes('/feeders/')) return r.fulfill({ status: 403, headers: cors, body: '' });
+    if (r.request().method() === 'POST') {
+      const b = JSON.parse(r.request().postData());
+      if (b.del) delete docs[path]; else write(path, b);
+      return r.fulfill({ headers: cors, body: '' });
+    }
+    return r.fulfill({ headers: cors, body: docs[path] || '' });
   });
   await ctx.addInitScript((d) => {
     if (sessionStorage.getItem('seeded')) return; sessionStorage.setItem('seeded', '1');
@@ -76,12 +92,16 @@ const tasksOf = (p) => p.evaluate(() => JSON.parse(localStorage.getItem('priorit
 const until = (p, fn, arg) => p.waitForFunction(fn, arg, { timeout: 6000 }).then(() => true, () => false);
 
 // Phone A has data and logs in: its data goes online.
-const A = await phone({ dev: 'A', state: { tasks: [T('a', 'फ़ोन A का काम')], orders: [{ ...T('o', 'नमूना निर्देश'), no: 7 }], ordNo: 7, staff: [], log: [] } });
+const A = await phone({ dev: 'A', state: { tasks: [T('a', 'फ़ोन A का काम')], orders: [{ ...T('o', 'नमूना निर्देश'), no: 7 }], ordNo: 7, staff: [], log: [], feeders: [{ id: 'fa', n: 'फ़ोन A का फीडर', segs: [], dts: [], pl: [{ id: 'p1', no: 'HT-1', k: 'h', lat: 22.5, lng: 79.2 }] }] } });
 const offBtn = await cloudText(A);
 await A.click('#cloudIn');
 const aOn = await until(A, () => document.getElementById('cloudBox').innerText.includes('ऑनलाइन सेव चालू'));
 await A.waitForTimeout(500);
-const uploaded = !!doc && JSON.parse(JSON.parse(doc).s).tasks.some((x) => x.t === 'फ़ोन A का काम');
+const uploaded = !!docs[MAIN] && JSON.parse(JSON.parse(docs[MAIN]).s).tasks.some((x) => x.t === 'फ़ोन A का काम');
+// v1.61: each feeder in its own document; the main one lists them (fdx) and carries no survey.
+const mainA = JSON.parse(JSON.parse(docs[MAIN]).s);
+const fdA = docs['users/u1/feeders/fa'] ? JSON.parse(JSON.parse(docs['users/u1/feeders/fa']).s) : null;
+const splitOk = !('feeders' in mainA) && Array.isArray(mainA.fdx) && mainA.fdx.length === 1 && mainA.fdx[0].id === 'fa' && !!fdA && fdA.pl.length === 1 && fdA.n === 'फ़ोन A का फीडर';
 const footer = await A.$eval('#ver', (n) => n.innerText);
 const meBtn = await A.$eval('#me', (b) => b.textContent + '|' + b.className);
 
@@ -90,6 +110,7 @@ const B = await phone(null);
 await B.click('#cloudIn');
 const bGot = await until(B, () => (JSON.parse(localStorage.getItem('priority-note-v2') || '{}').tasks || []).some((x) => x.t === 'फ़ोन A का काम'));
 const bOrdNo = await B.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).ordNo);
+const bFeeder = await until(B, () => (JSON.parse(localStorage.getItem('priority-note-v2')).feeders || []).some((f) => f.id === 'fa' && f.pl.length === 1));
 
 // A change on B shows up on A by itself.
 await B.click('#tab-tasks');
@@ -97,15 +118,37 @@ await B.fill('#txt', 'फ़ोन B का काम');
 await B.press('#txt', 'Enter');
 const aGot = await until(A, () => JSON.parse(localStorage.getItem('priority-note-v2')).tasks.some((x) => x.t === 'फ़ोन B का काम'));
 
+// A new feeder on B: its own document; A gets it. Only that feeder is written (A's stays as it was).
+const faBefore = docs['users/u1/feeders/fa'];
+await B.click('#tab-feeder');
+await B.fill('#fdName', 'फ़ोन B का गाँव');
+await B.click('#fdNew button[type=submit]');
+const aGotFeeder = await until(A, () => (JSON.parse(localStorage.getItem('priority-note-v2')).feeders || []).some((f) => f.n === 'फ़ोन B का गाँव'));
+const bFid = await B.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders.find((f) => f.n === 'फ़ोन B का गाँव').id);
+const newDoc = !!docs['users/u1/feeders/' + bFid] && docs['users/u1/feeders/fa'] === faBefore;
+
+// Firebase rules not yet updated: the app falls back to one document and says what to do; nothing is lost.
+oldRules = true;
+await B.click('#fdBack');
+await B.fill('#fdName', 'पुराने नियम वाला गाँव');
+await B.click('#fdNew button[type=submit]');
+await B.waitForTimeout(1200);
+const fallback = JSON.parse(JSON.parse(docs[MAIN]).s);
+const fallbackOk = Array.isArray(fallback.feeders) && fallback.feeders.some((f) => f.n === 'पुराने नियम वाला गाँव');
+if (await B.$eval('#mePanel', (n) => n.hidden)) await B.click('#me');
+const rulesNote = await cloudText(B);
+oldRules = false;
+await B.click('#tab-tasks');
+
 // Hourly reminder on: each phone's token is saved, the rest of the document stays.
 await A.click('#tab-tasks');
 await A.click('#bell');
 const aPush = await until(A, () => document.getElementById('pushBox').innerText.includes('ऐप बंद होने पर भी इस फ़ोन पर सूचना आएगी'));
-const afterA = JSON.parse(doc);
+const afterA = JSON.parse(docs[MAIN]);
 await B.click('#bell');
 await until(B, () => document.getElementById('pushBox').innerText.includes('ऐप बंद होने पर भी'));
 await B.waitForTimeout(400);
-const afterB = JSON.parse(doc);
+const afterB = JSON.parse(docs[MAIN]);
 
 // Phone C has its own data: it asks; "OK" keeps the online data.
 const C = await phone({ dev: 'C', state: { tasks: [T('c', 'फ़ोन C का पुराना काम')], orders: [], staff: [], log: [] } });
@@ -121,11 +164,11 @@ const bigName = 'नमूना उपभोक्ता का बहुत �
 const bigPl = Array.from({ length: 3000 }, (_, i) => ({ id: 'p' + i, no: 'Ckt-1-' + (i + 1), k: 'l', to: i ? 'p' + (i - 1) : 'd1', lat: 22.5 + i * 1e-5, lng: 79.2, cs: [{ i: 'A' + i, n: bigName, kw: 1 }, { i: 'B' + i, n: bigName, kw: 2 }] }));
 const D = await phone({ dev: 'D', state: { tasks: [T('d', 'फ़ोन D का काम')], orders: [], staff: [], log: [], feeders: [{ id: 'big', n: 'बड़ा सर्वे', segs: [], dts: [{ id: 'd1', n: 'DTR-1', lat: 22.5, lng: 79.2 }], pl: bigPl }] } });
 D.on('dialog', (d) => d.dismiss());
-const docBefore = doc;
+const docBefore = docs[MAIN];
 await D.click('#cloudIn');
 const dWarned = await until(D, () => document.getElementById('cloudBox').innerText.includes('1 MB'));
 await D.waitForTimeout(800);
-const dNotSent = doc === docBefore;
+const dNotSent = docs[MAIN] === docBefore && !docs['users/u1/feeders/big'];
 const dKept = await D.evaluate(() => JSON.parse(localStorage.getItem('priority-note-v2')).feeders[0].pl.length === 3000);
 await D.context().close();
 
@@ -141,10 +184,14 @@ const aOff = await until(A, () => !!document.getElementById('cloudIn'));
 const aStill = (await tasksOf(A)).includes('फ़ोन B का काम');
 const meOff = await A.$eval('#me', (b) => b.textContent);
 await A.waitForTimeout(400);
-const afterLogout = JSON.parse(doc);
+const afterLogout = JSON.parse(docs[MAIN]);
 
 await browser.close();
 const checks = {
+  'हर फीडर अपनी अलग ऑनलाइन फ़ाइल में, मुख्य फ़ाइल में सिर्फ़ सूची': splitOk,
+  'दूसरे फ़ोन में फीडर आया': bFeeder,
+  'नया फीडर अलग फ़ाइल में, दूसरे फ़ोन में आया; बाकी फीडर दोबारा नहीं भेजे': aGotFeeder && newDoc,
+  'पुराने Firebase नियम: एक फ़ाइल में सेव, और नियम डालने की सूचना': fallbackOk && rulesNote.includes('Rules'),
   'बहुत बड़ा डेटा (1 MB से ऊपर): साफ़ चेतावनी, ऑनलाइन नहीं भेजा, फ़ोन पर सुरक्षित': dWarned && dNotSent && dKept,
   'लॉगिन से पहले "Google से लॉगिन करें" दिखे': offBtn.includes('Google से लॉगिन करें: सारा डेटा'),
   'लॉगिन के बाद "ऑनलाइन सेव चालू"': aOn,

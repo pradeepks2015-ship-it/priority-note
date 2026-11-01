@@ -28,8 +28,14 @@ and left out of reminders.
   - `localStorage` key `priority-note-v2` — tasks, orders, staff, log, settings.
   - IndexedDB `priority-note-img`, store `img` — letter screenshots (blobs).
 
-- Online backup (Firebase project `priority-note-467fa`, Spark/free plan): Google login, then the whole
-  state `S` is stored as a JSON string in Firestore `users/{uid}` (`{s, t, v}`). The SDK (10.12.5 from
+- Online backup (Firebase project `priority-note-467fa`, Spark/free plan): Google login, then the state `S` is stored
+  as a JSON string in Firestore `users/{uid}` (`{s, t, v}`). Since v1.61 each feeder is its own document
+  `users/{uid}/feeders/{id}` (`{s, t, v}`); the main `s` has no `feeders`, only `fdx: [{id, h}]` (h = `hashStr()` of the
+  feeder's JSON). `push()` writes only feeders whose fingerprint differs from `srv` (what is online), deletes removed
+  ones, and the main document, in one `writeBatch`. `withFeeders()` / `pullRemote()` rebuild a remote state, reusing this
+  phone's copy when the fingerprint matches. If the rules refuse the feeder documents (`permission-denied`), it saves
+  everything in the main document as before and the 👤 panel asks to paste the new `firestore.rules`. Older app
+  versions ignore `fdx` and keep their own feeders. `CLOUD_KB` (980) is checked per feeder and for the main document. The SDK (10.12.5 from
   gstatic) loads only after the first login (`localStorage` `priority-note-fb`). Newer `S._t` wins; first
   login on a phone with data on both sides asks which to keep. Letter screenshots are not uploaded.
   Security rules: `firestore.rules` (paste into Firestore → Rules). The web config in `index.html` is public by design.
@@ -99,8 +105,8 @@ and left out of reminders.
   (`cleanCs()`, ≤200 per pole). With a list, `c` is the list's length (the count field is locked). The pole form adds/edits
   them (`renderCs`, `csOpen`); the search box shows IVRS buttons, a tap shows `csDetail()`; search finds a pole by IVRS
   too. `poleKw()` sums kW: totals (`t.kw`), each DTR (`dtPoles().kw`), DTR list, WhatsApp, SLD and KML show it.
-  Size: the whole state is one Firestore document; `push()` refuses above `CLOUD_KB` (980 KB) with a plain message, the
-  phone keeps everything. A full DC's consumers will need their own documents (per feeder) — planned.
+  Size: each feeder is its own Firestore document (v1.61), so the 1 MB limit is per feeder; `push()` refuses a feeder
+  above `CLOUD_KB` (980 KB) with a plain message (split it into two villages), the phone keeps everything.
 - Structures and SLD (v1.45): 11kV poles have `st` (pcc | dp | tp | 4p, `SLD_ST`), chosen in the pole form; map symbol
   (`strSym()`, v1.48, after the JE's DP drawing): H-beam poles, guarding channel with disc insulators, a second channel with
   pin insulators, belts and X-bracing (4-pole two pairs). TP (`tpSym()`, after the JE's photo) is three poles in an L that
@@ -132,8 +138,8 @@ and left out of reminders.
   Check speed with a big survey (thousands of poles) before shipping map work: the map uses the canvas renderer
   (`preferCanvas`), pole numbers are drawn only for poles in view when zoomed in (`drawLabels`, max 300), the network is
   indexed once per change (`net()`), and search only moves the highlight ring (`drawHl`), not the whole map.
-  (v1.42: 1500 poles open in ~0.2 s, search ~0.04 s; 5000 poles ~0.4 s.) The whole state is one Firestore document
-  (1 MB limit): about 5000 poles is ~420 KB, so very large surveys may need their own documents later.
+  (v1.42: 1500 poles open in ~0.2 s, search ~0.04 s; 5000 poles ~0.4 s.) Each feeder is one Firestore document
+  (1 MB limit, v1.61): about 5000 poles is ~420 KB; with consumers, keep a feeder entry to a village or a few DTRs.
 - All UI text is Hindi (Devanagari). Keep it plain, short and in office vocabulary.
 - Phone-first: test at 400px width; no horizontal scroll.
 - Colours are CSS tokens on `:root` with dark-mode overrides; don't hard-code colours in components.
@@ -181,5 +187,4 @@ online backup and push tokens across several "phones" with a stand-in Firebase (
 the note text changes.
 
 ## Planned next steps
-- Consumers (and big surveys) in their own Firestore documents per feeder, so the 1 MB limit stops mattering.
 - Upload letter screenshots to Storage (needs the Blaze plan).
