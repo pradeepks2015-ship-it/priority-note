@@ -2,7 +2,7 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-qgO2HFpUnSbP0uMQ6y+QpkVjBBs0bEf3capQBfQi2n0=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-EZ8y5qp6m+hlWKJ9XGWSfXeeibMURPyFdHDFI1lbOs4=' 'sha256-ygS1soy1Iihn5bus3kCUxjr9ai6Bdp8CvjXaUILzonI=' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://tile.openstreetmap.org https://server.arcgisonline.com https://*.googleusercontent.com https://www.gstatic.com; connect-src 'self' blob: https://*.googleapis.com https://www.gstatic.com https://apis.google.com https://www.google.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2F5DA8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1720,10 +1720,8 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
 
   /* ---------- version: "updated" banner after a fix, "new version" banner while open ---------- */
   // After every fix: raise APP_V, write what changed in APP_NOTES, and put the same v in version.json.
-  var APP_V='1.63',APP_NOTES=[
-    'जगह (GPS) की अनुमति न हो तो स्क्रीन पर साफ़ तरीका और "🔄 फिर कोशिश करें" बटन',
-    'DB बॉक्स का असली निशान (संकेत, फ़ॉर्म, कुल हिसाब में)',
-    'SLD के दोनों बटन अब एक ड्रॉपडाउन में: "📐 SLD ▾" → PDF / फोटो'
+  var APP_V='1.64',APP_NOTES=[
+    '"◎ मेरी जगह": हर बार ताज़ा GPS, नक्शा सीधे आपकी जगह पर ज़ूम होकर; नीला बिंदु और उसके चारों ओर सटीकता का घेरा (± मीटर)'
   ],VK='priority-note-ver';
   function showUpd(title,items,btn,act){
     $('updT').textContent=title;var ul=$('updList');ul.textContent='';
@@ -2270,7 +2268,7 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
   }
   function drawLayers(fit){
     var f=curF();if(!f||!FD.map)return;
-    FD.grp.clearLayers();FD.me=null;FD.live=null;
+    FD.grp.clearLayers();FD.me=null;FD.meAcc=null;FD.live=null;
     var all=[];
     f.segs.forEach(function(sg,i){
       var pl=L.polyline(sg,lineStyle()).addTo(FD.grp);all=all.concat(sg);
@@ -2324,12 +2322,19 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     if(!FD.map)return;FD.hl.clearLayers();var f=curF(),p=f&&FD.find?node(f,FD.find):null;
     if(p&&p.p)L.circleMarker([p.p.lat,p.p.lng],{radius:12,color:INK,weight:3,fill:false}).addTo(FD.hl);
   }
+  // You on the map: a blue dot and a ring as wide as the GPS's own accuracy (how sure it is).
   function drawMe(){
     if(!FD.map||!FD.fix)return;
-    var ll=[FD.fix.lat,FD.fix.lng];
-    if(FD.me)FD.me.setLatLng(ll);
-    else FD.me=L.circleMarker(ll,{radius:8,color:tok('--surface')||'white',weight:3,fillColor:tok('--accent')||'blue',fillOpacity:1}).addTo(FD.grp);
-    if(FD.follow)FD.map.panTo(ll);
+    var ll=[FD.fix.lat,FD.fix.lng],acc=Math.max(1,FD.fix.acc||0),blue=tok('--accent')||'blue';
+    if(FD.meAcc&&FD.grp.hasLayer(FD.meAcc)){FD.meAcc.setLatLng(ll);FD.meAcc.setRadius(acc)}
+    else FD.meAcc=L.circle(ll,{radius:acc,color:blue,weight:1,fillColor:blue,fillOpacity:.12,interactive:false,meAcc:true}).addTo(FD.grp);
+    if(FD.me&&FD.grp.hasLayer(FD.me))FD.me.setLatLng(ll);
+    else FD.me=L.circleMarker(ll,{radius:8,color:tok('--surface')||'white',weight:3,fillColor:blue,fillOpacity:1}).addTo(FD.grp);
+    FD.me.bringToFront();
+    // after "◎ मेरी जगह": go there, zoomed in, once; then just follow
+    if(FD.meGo){FD.meGo=false;FD.map.setView(ll,Math.max(FD.map.getZoom(),17));
+      toast(FD.fix.acc>100?'📍 जगह मोटे अनुमान से (±'+Math.round(FD.fix.acc)+' मी.) — खुले में रहें, GPS कुछ सेकंड में ठीक होगी':'📍 आपकी जगह (±'+Math.round(FD.fix.acc)+' मी.)')}
+    else if(FD.follow)FD.map.panTo(ll);
   }
 
   /* GPS */
@@ -2382,7 +2387,11 @@ details.card summary{cursor:pointer;font-weight:700;min-height:32px}
     if(FD.fix&&Date.now()-FD.fix.t<15000)addPoint(FD.fix);
     toast('नापना शुरू · फीडर के साथ चलें');fdStat();
   };
-  $('fdMe').onclick=function(){FD.follow=true;if(startWatch()&&FD.fix&&FD.map)FD.map.setView([FD.fix.lat,FD.fix.lng],Math.max(FD.map.getZoom(),16))};
+  // A fresh fix every time (not an old one), then the map goes there; the watch keeps the dot moving.
+  $('fdMe').onclick=function(){
+    FD.follow=true;if(!startWatch())return;FD.meGo=true;toast('GPS से आपकी जगह ली जा रही है…');
+    navigator.geolocation.getCurrentPosition(onFix,geoErr,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+  };
   document.querySelectorAll('.fdlayers [data-l]').forEach(function(b){b.onclick=function(){if(FD.map)setBase(b.dataset.l)}});
   $('fdBack').onclick=function(){
     if(FD.rec&&!confirm('नापना चल रहा है। रोककर सूची पर जाएँ?'))return;

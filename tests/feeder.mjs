@@ -269,6 +269,12 @@ await ctx2.grantPermissions(['geolocation']);
 await ctx2.setGeolocation({ latitude: 22.5, longitude: 79.2, accuracy: 5 });
 await g.click('#geoRetry');
 const geoGone = await g.waitForSelector('#geoHelp', { state: 'hidden', timeout: 8000 }).then(() => true, () => false);
+// "◎ मेरी जगह": a fresh fix, and the map goes there zoomed in, with the accuracy ring.
+await g.waitForTimeout(500);
+await ctx2.setGeolocation({ latitude: 23.1, longitude: 79.9, accuracy: 18 });
+await g.click('#fdMe');
+const meOk = await g.waitForFunction(() => { const m = window.__fdMap, c = m.getCenter(); return Math.abs(c.lat - 23.1) < 0.001 && Math.abs(c.lng - 79.9) < 0.001 && m.getZoom() >= 17; }, null, { timeout: 8000 }).then(() => true, () => false);
+const meRing = await g.evaluate(() => { let r = 0; window.__fdMap.eachLayer((l) => { if (l.options && l.options.meAcc) r = Math.round(l.getRadius()); }); return r; });
 await ctx2.close();
 
 await browser.close();
@@ -329,6 +335,7 @@ const checks = {
   'DTR में नए उपभोक्ता और भार जुड़े': clDtr.includes('उपभोक्ता 4') && clDtr.includes('भार 12.5 kW'),
   'SLD के दोनों बटन एक ड्रॉपडाउन में; चुनने पर बंद': sldMenuOpen && sldMenuShut,
   'संकेत और खंभे के फ़ॉर्म में DB बॉक्स का असली निशान (📦 नहीं)': dbLegend,
+  '"◎ मेरी जगह": ताज़ा GPS, नक्शा वहीं ज़ूम होकर, सटीकता का घेरा': meOk && meRing === 18,
   'जगह (GPS) की अनुमति नहीं: तरीका दिखा, अनुमति देने पर "फिर कोशिश करें" से चला': geoShown && geoTxt.includes('Location') && geoTxt.includes('Chrome') && geoGone,
   'फीडर हटाना (पूछकर)': gone,
   'कोई JS error नहीं': errors.length === 0,

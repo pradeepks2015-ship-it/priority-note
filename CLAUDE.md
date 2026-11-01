@@ -116,6 +116,8 @@ and left out of reminders.
 - Field help (v1.63): location refused (code 1) shows `#geoHelp` (phone Location, Chrome site permission, Android app
   permission) until a fix arrives (`geoOk()`), with "🔄 फिर कोशिश करें". The DB box has its own symbol `dbSym()` (legend,
   pole form, totals). The SLD choices sit in one dropdown `#sldMenu` (closes on a pick).
+  "◎ मेरी जगह" (v1.64) asks for a fresh fix (`getCurrentPosition`, maximumAge 0) besides the watch; the first fix after it
+  zooms the map there (≥17, `FD.meGo`) and says the accuracy; `drawMe()` draws the dot and an accuracy ring (`meAcc`).
 - Structures and SLD (v1.45): 11kV poles have `st` (pcc | dp | tp | 4p, `SLD_ST`), chosen in the pole form; map symbol
   (`strSym()`, v1.48, after the JE's DP drawing): H-beam poles, guarding channel with disc insulators, a second channel with
   pin insulators, belts and X-bracing (4-pole two pairs). TP (`tpSym()`, after the JE's photo) is three poles in an L that
